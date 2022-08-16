@@ -1,0 +1,6727 @@
+openapi: 3.0.3
+info:
+  title: Footprint OpenAPI Schema
+  version: 7.12.16
+  description: 📦 This is the basic description for Footprint backend endpoints. If
+    more accounts are available, you can select which one to retrieve data from by
+    adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
+    you require from the `/api/common/auth/session/accounts/` request
+paths:
+  # added by Tag
+  /admin/users/:
+    get:
+      operationId: adminUsersRetrieve
+      description: Provides paginated listing of users.
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+        '401':
+          description: Returned if the logged in user is not a MSP user
+  /admin/registrations/:
+    get:
+      operationId: adminRegistrationsRetrieve
+      description: Provides paginated listing of active registrations.
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum:
+              - active_clients
+              - all
+              - managed
+              - registrations
+              - sales_pipeline
+          description: Category of registrations you want. Defaults to all.
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page that you want to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on page
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRegistrationList'
+          description: ''
+        '401':
+          description: Returned if the logged in user is not a MSP user
+    put:
+      operationId: adminRegistrationsUpdate
+      description: |-
+        Registrations view endpoint for admin
+
+        This endpoint provides methods for managing any registration via the new RegistrationsController
+      tags:
+        - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationCreate'
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+          description: ''
+        '400':
+          description: Returned if provided data is invalid
+        '401':
+          description: Returned if the logged in user is not a MSP user
+        '406':
+          description: Returned if a registration with the same e-mail address exists
+  /admin/registrations/{registrationId}/:
+    get:
+      operationId: adminRegistrationsRetrieve2
+      description: Lists a single registration
+      parameters:
+        - in: path
+          name: registrationId
+          schema:
+            type: integer
+          required: true
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+          description: ''
+        '401':
+          description: Returned if the logged in user is not a MSP user
+    post:
+      operationId: adminRegistrationsCreate
+      description: Edits a single registration
+      parameters:
+        - in: path
+          name: registrationId
+          schema:
+            type: integer
+          required: true
+      tags:
+        - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationEdit'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registration'
+          description: ''
+        '400':
+          description: Returned if the provided data is invalid
+        '401':
+          description: Logged in user is not a MSP user, or does not have permission
+            to edit registration
+    delete:
+      operationId: adminRegistrationsDestroy
+      description: Deletes a registration
+      parameters:
+        - in: path
+          name: registrationId
+          schema:
+            type: integer
+          required: true
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Returned on successful delete
+        '401':
+          description: Logged in user is not a MSP user, or does not have permission
+            to delete registration
+  /admin/registrations/light/:
+    get:
+      operationId: adminRegistrationsLightRetrieve
+      description: Provides a lighter, summary listing of registrations
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum:
+              - active_clients
+              - all
+              - managed
+              - registrations
+              - sales_pipeline
+          description: Category of registrations you want. Defaults to all.
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page that you want to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on page
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRegistrationLightList'
+          description: ''
+        '401':
+          description: Returned if the logged in user is not a MSP user
+  /admin/reports/usageReport/{year}/{month}/:
+    get:
+      operationId: adminReportsUsageReportRetrieve
+      description: |-
+        Returns an usage report for a certain period, if it exists.
+        If not, returns the list of periods with available reports.
+      parameters:
+        - in: path
+          name: month
+          schema:
+            type: integer
+          description: Month of the report
+          required: true
+        - in: path
+          name: year
+          schema:
+            type: integer
+          description: Year of the report
+          required: true
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsageReport'
+          description: ''
+  /admin/scanners/:
+    get:
+      operationId: adminScannersList
+      description: Returns the list of all scanners that can be used by all tenants.
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentlessScannerSrz'
+          description: ''
+        '500':
+          description: Returned if an unexpected error occurs.
+  /admin/scanners/{scannerId}/:
+    patch:
+      operationId: adminScannersPartialUpdate
+      description: Edits values and parameters of a scanner
+      parameters:
+        - in: path
+          name: scannerId
+          schema:
+            type: string
+          description: ID of the scanner you want to edit the label
+          required: true
+      tags:
+        - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentlessScannerEdit'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Scanner was removed.
+        '500':
+          description: Returned if an unexpected error occurs.
+        '404':
+          description: Returned if the scanner was not found.
+    delete:
+      operationId: adminScannersDestroy
+      description: Delete a configured internal scanner
+      parameters:
+        - in: path
+          name: scannerId
+          schema:
+            type: string
+          description: ID of the scanner you want to delete
+          required: true
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Scanner was removed.
+        '500':
+          description: Returned if an unexpected error occurs.
+        '404':
+          description: Returned if the scanner was not found.
+  /admin/scanners/setup/:
+    get:
+      operationId: adminScannersSetupRetrieve
+      description: Returns the credentials needed by a scanner.
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScannerSetup'
+          description: ''
+        '500':
+          description: Returned if an unexpected error occurs.
+  /admin/serverStats/:
+    get:
+      operationId: adminServerStatsRetrieve
+      description: Endpoint that retrieves status info on the machine
+      tags:
+        - admin
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsView'
+          description: ''
+  /auth/token/:
+    post:
+      operationId: authTokenCreate
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+        - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /auth/token/refresh/:
+    post:
+      operationId: authTokenRefreshCreate
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+        - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /branding/:
+    get:
+      operationId: brandingRetrieve
+      description: Retrieves branding information
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: integer
+          description: Optional tenant ID, to retrieve custom branding
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - branding
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandingResponse'
+          description: ''
+  /common/auth/session/:
+    get:
+      operationId: commonAuthSessionRetrieve
+      description: Returns the current session information
+      tags:
+        - common
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+    post:
+      operationId: commonAuthSessionCreate
+      description: Authenticates a user
+      tags:
+        - common
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SessionLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SessionLogin'
+        required: true
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionLogin'
+          description: ''
+        '400':
+          description: Returned on invalid username/password
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+    delete:
+      operationId: commonAuthSessionDestroy
+      description: Logs out the current user
+      tags:
+        - common
+      security:
+        - jwtAuth: [ ]
+        - { }
+      responses:
+        '204':
+          description: No response body
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /common/auth/session/accounts/:
+    get:
+      operationId: commonAuthSessionAccountsList
+      description: 📃 Lists accounts into which the current user can login
+      tags:
+        - common
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+    post:
+      operationId: commonAuthSessionAccountsCreate
+      description: |-
+        🔃 Switches the current profile_fk tenant ID with the one provided.
+
+        This endpoint is only relevant for the Footprint client application
+      tags:
+        - common
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountSwitch'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AccountSwitch'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AccountSwitch'
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/agent/:
+    get:
+      operationId: consoleAgentRetrieve
+      description: Lists installed agents
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentListingResponse'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/elements/application/{applicationId}/:
+    get:
+      operationId: consoleElementsApplicationRetrieve
+      description: Return generic data about an application
+      parameters:
+        - in: path
+          name: applicationId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationDetails'
+          description: ''
+    delete:
+      operationId: consoleElementsApplicationDestroy
+      description: |-
+        Delete an existing application from database and all daemons, webapps,
+        runtimes, virtual hosts and hostnames.
+      parameters:
+        - in: path
+          name: applicationId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '204':
+          description: No response body
+  /console/elements/application/{applicationId}/attackavenues/:
+    get:
+      operationId: consoleElementsApplicationAttackavenuesList
+      description: Displays advanced scanner findings
+      parameters:
+        - in: path
+          name: applicationId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualVulnerability'
+          description: ''
+    post:
+      operationId: consoleElementsApplicationAttackavenuesCreate
+      description: Updates the state of an advanced scanner finding
+      parameters:
+        - in: path
+          name: applicationId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityChange'
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VirtualVulnerability'
+          description: ''
+  /console/elements/application/{applicationId}/vulnerabilities/:
+    get:
+      operationId: consoleElementsApplicationVulnerabilitiesRetrieve
+      description: Return vulnerabilities on a application
+      parameters:
+        - in: path
+          name: applicationId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVulnerabilityList'
+          description: ''
+    post:
+      operationId: consoleElementsApplicationVulnerabilitiesCreate
+      description: Updates the state of a vulnerability finding
+      parameters:
+        - in: path
+          name: applicationId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityChange'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityChange'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VulnerabilityChange'
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vulnerability'
+          description: ''
+  /console/elements/applications/:
+    get:
+      operationId: consoleElementsApplicationsRetrieve
+      description: |-
+        Application listing endpoints
+
+        Lists the applications with optional filtering parameters
+      parameters:
+        - in: query
+          name: filter
+          schema:
+            type: string
+          description: Text filter
+        - in: query
+          name: risk_level
+          schema:
+            type: string
+            enum:
+              - all
+              - critical
+              - nonvisible
+              - secure
+              - vulnerable
+          description: Risk level filter
+        - in: query
+          name: scan_type
+          schema:
+            type: string
+            enum:
+              - all
+              - discovered
+              - scanned
+          description: Scan type filter
+        - in: query
+          name: scope
+          schema:
+            type: string
+            enum:
+              - all
+              - external
+              - internal
+          description: Scan scope filter
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApplicationInListingList'
+          description: ''
+  /console/elements/contexts/business/:
+    get:
+      operationId: consoleElementsContextsBusinessRetrieve
+      description: Returns listing of available business contexts
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: risk_level
+          schema:
+            type: string
+            enum:
+              - all
+              - critical
+              - nonvisible
+              - secure
+              - vulnerable
+          description: Risk level filter
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContextList'
+          description: ''
+  /console/elements/contexts/business/{contextId}/:
+    get:
+      operationId: consoleElementsContextsBusinessRetrieve2
+      description: Returns details of a certain context
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Context'
+          description: ''
+  /console/elements/contexts/business/{contextId}/setOwnerGroup/:
+    patch:
+      operationId: consoleElementsContextsBusinessSetOwnerGroupPartialUpdate
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBCOwnerGroup'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+        '400':
+          description: Returned if provided data is invalid
+        '404':
+          description: Returned if context_id is not found
+        '500':
+          description: Returned if a server error occurs
+  /console/elements/contexts/business/{contextId}/setOwnerUser/:
+    patch:
+      operationId: consoleElementsContextsBusinessSetOwnerUserPartialUpdate
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBCOwnerUser'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+        '400':
+          description: Returned if provided data is invalid
+        '404':
+          description: Returned if context_id is not found
+        '500':
+          description: Returned if a server error occurs
+  /console/elements/contexts/technical/:
+    get:
+      operationId: consoleElementsContextsTechnicalRetrieve
+      description: Returns list of available technical contexts
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: risk_level
+          schema:
+            type: string
+            enum:
+              - all
+              - critical
+              - nonvisible
+              - secure
+              - vulnerable
+          description: Risk level filter
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechnicalContext'
+          description: ''
+  /console/elements/contexts/technical/{contextId}/:
+    get:
+      operationId: consoleElementsContextsTechnicalRetrieve2
+      description: Returns details of a certain technical context
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Context'
+          description: ''
+  /console/elements/contexts/technical/{contextId}/applications/:
+    get:
+      operationId: consoleElementsContextsTechnicalApplicationsRetrieve
+      description: Returns a certain page of applications for a technical context
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApplicationInListingList'
+          description: ''
+  /console/elements/contexts/technical/{contextId}/devices/:
+    get:
+      operationId: consoleElementsContextsTechnicalDevicesRetrieve
+      description: Returns a certain page of devices for a technical context
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeviceList'
+          description: ''
+  /console/elements/contexts/technical/{contextId}/setOwnerGroup/:
+    patch:
+      operationId: consoleElementsContextsTechnicalSetOwnerGroupPartialUpdate
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTCOwnerGroup'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+        '400':
+          description: Returned if provided data is invalid
+        '404':
+          description: Returned if context_id is not found
+        '500':
+          description: Returned if a server error occurs
+  /console/elements/contexts/technical/{contextId}/setOwnerUser/:
+    patch:
+      operationId: consoleElementsContextsTechnicalSetOwnerUserPartialUpdate
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTCOwnerUser'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+        '400':
+          description: Returned if provided data is invalid
+        '404':
+          description: Returned if context_id is not found
+        '500':
+          description: Returned if a server error occurs
+  /console/elements/device/{deviceId}/applications/:
+    get:
+      operationId: consoleElementsDeviceApplicationsRetrieve
+      description: Return applications on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApplicationDetailsList'
+          description: ''
+  /console/elements/device/{deviceId}/attackavenues/:
+    get:
+      operationId: consoleElementsDeviceAttackavenuesList
+      description: Lists available attack avenues on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VirtualVulnerability'
+          description: ''
+  /console/elements/device/{deviceId}/dnsEntries/:
+    get:
+      operationId: consoleElementsDeviceDnsEntriesList
+      description: Returns DNS entries of a device, if it is scanned by an agentless
+        scanner.
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceDNSEntries'
+          description: ''
+        '501':
+          description: Returned if trying to retrieve DNS entries on agent-based devices.
+            This is not supported yet.
+  /console/elements/device/{deviceId}/drivers/:
+    get:
+      operationId: consoleElementsDeviceDriversList
+      description: Return drivers on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceDrivers'
+          description: ''
+  /console/elements/device/{deviceId}/installedUpdates/:
+    get:
+      operationId: consoleElementsDeviceInstalledUpdatesRetrieve
+      description: Return patches on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceInstalledUpdates'
+          description: ''
+  /console/elements/device/{deviceId}/jobs/:
+    get:
+      operationId: consoleElementsDeviceJobsList
+      description: Return jobs on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceJobs'
+          description: ''
+  /console/elements/device/{deviceId}/networkConnections/:
+    get:
+      operationId: consoleElementsDeviceNetworkConnectionsRetrieve
+      description: Return network connections list on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+  /console/elements/device/{deviceId}/networkDevices/:
+    get:
+      operationId: consoleElementsDeviceNetworkDevicesRetrieve
+      description: Return network devices on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+  /console/elements/device/{deviceId}/networkEdge/:
+    get:
+      operationId: consoleElementsDeviceNetworkEdgeRetrieve
+      description: Return available network edge results for a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+  /console/elements/device/{deviceId}/networkEdge/{testId}/:
+    get:
+      operationId: consoleElementsDeviceNetworkEdgeRetrieve2
+      description: Return a certain network edge result for a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: testId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+  /console/elements/device/{deviceId}/os/:
+    get:
+      operationId: consoleElementsDeviceOsRetrieve
+      description: |-
+        💻 Device Operating System view
+
+        Returns info on a certain device's operating system
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceOS'
+          description: ''
+  /console/elements/device/{deviceId}/overview/:
+    get:
+      operationId: consoleElementsDeviceOverviewRetrieve
+      description: |-
+        Return general info of the device, if the device is
+        discovered from an agent
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceOverview'
+          description: ''
+  /console/elements/device/{deviceId}/patches/:
+    get:
+      operationId: consoleElementsDevicePatchesRetrieve
+      description: Return patches on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceInstalledUpdates'
+          description: ''
+  /console/elements/device/{deviceId}/processes/:
+    get:
+      operationId: consoleElementsDeviceProcessesRetrieve
+      description: Return process list on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+  /console/elements/device/{deviceId}/system/:
+    get:
+      operationId: consoleElementsDeviceSystemRetrieve
+      description: Get computer system info if agent source
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+  /console/elements/device/{deviceId}/users/:
+    get:
+      operationId: consoleElementsDeviceUsersList
+      description: Return users on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceUser'
+          description: ''
+  /console/elements/device/{deviceId}/vulnerabilities/:
+    get:
+      operationId: consoleElementsDeviceVulnerabilitiesList
+      description: Return vulnerabilities on a device
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vulnerability'
+          description: ''
+  /console/elements/devices/:
+    get:
+      operationId: consoleElementsDevicesRetrieve
+      description: Returns list of discovered devices
+      parameters:
+        - in: query
+          name: filter
+          schema:
+            type: string
+          description: IP address filter
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+        - in: query
+          name: riskLevel
+          schema:
+            type: string
+            enum:
+              - all
+              - critical
+              - nonvisible
+              - secure
+              - vulnerable
+          description: Risk level filter
+        - in: query
+          name: scanType
+          schema:
+            type: string
+            enum:
+              - all
+              - discovered
+              - scanned
+          description: Scan type filter
+        - in: query
+          name: scannerId
+          schema:
+            type: integer
+          description: Optional scanner ID filter. If not set or invalid, falls back
+            on all scanners
+        - in: query
+          name: scope
+          schema:
+            type: string
+            enum:
+              - all
+              - external
+              - internal
+          description: Scan scope filter
+        - in: query
+          name: showDevicesWithNoApps
+          schema:
+            type: boolean
+          description: Also show devices without discovered applications
+        - in: query
+          name: sortColumn
+          schema:
+            type: string
+            enum:
+              - discoveredOn
+              - lastScanned
+              - name
+          description: Sorting column
+        - in: query
+          name: sortDirection
+          schema:
+            type: string
+            enum:
+              - ascending
+              - descending
+          description: Sorting direction
+        - in: query
+          name: source
+          schema:
+            type: string
+            enum:
+              - agentbased
+              - agentless
+              - all
+              - nessusimport
+          description: Source filter
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeviceList'
+          description: ''
+  /console/notifications/:
+    get:
+      operationId: consoleNotificationsRetrieve
+      description: 🔔 Returns the list of available notifications (alerts) on the platform
+      parameters:
+        - in: query
+          name: level
+          schema:
+            type: string
+            enum:
+              - critical
+              - informational
+              - warnings
+          description: Comma-separated risk level filter values
+        - in: query
+          name: message
+          schema:
+            type: string
+          description: Free text filter based on alert message
+        - in: query
+          name: module
+          schema:
+            type: string
+            enum:
+              - Agents
+              - Availability
+              - Configuration
+              - InternalScanner
+              - Platform
+              - Vulnerability
+          description: Module filter
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page you want to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of items you want on a page
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /console/report/{reportType}/:
+    get:
+      operationId: consoleReportRetrieve
+      description: Returns available report dates
+      parameters:
+        - in: path
+          name: reportType
+          schema:
+            type: string
+            enum:
+              - historic
+              - snapshot
+          description: The type of the CVR report
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+          description: List of datetime strings
+  /console/report/{reportType}/{reportDate}/:
+    get:
+      operationId: consoleReportRetrieve2
+      description: Returns the available CVR report, or the requested CVR report if
+        type and date are provided
+      parameters:
+        - in: path
+          name: reportDate
+          schema:
+            type: string
+          description: The generation date of the report being requested
+          required: true
+        - in: path
+          name: reportType
+          schema:
+            type: string
+            enum:
+              - historic
+              - snapshot
+          description: The type of the CVR report
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CVR'
+          description: The CVR in JSON format. This can be quite large.
+  /console/reporting/acceptRiskReport/:
+    get:
+      operationId: consoleReportingAcceptRiskReportRetrieve
+      description: Provides a listing of vulnerabilities that have been marked as
+        risk accepted
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVulnerabilityList'
+          description: ''
+  /console/reporting/actionPlanReport/:
+    get:
+      operationId: consoleReportingActionPlanReportRetrieve
+      description: Provides a listing of vulnerabilities that have been added to action
+        plan
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVulnerabilityList'
+          description: ''
+  /console/reporting/contextualRiskReport/:
+    get:
+      operationId: consoleReportingContextualRiskReportRetrieve
+      description: Retrieves the contextual risk report
+      parameters:
+        - in: query
+          name: contextLabel
+          schema:
+            type: string
+          description: Label of the business context you want the report for
+        - in: query
+          name: deviceLabel
+          schema:
+            type: string
+          description: Label of the device you want the report for
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page you want to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of items you want on a page
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContextualRiskReportEntryList'
+          description: ''
+  /console/reporting/contextualRiskReport/businessContextsLabels/:
+    get:
+      operationId: consoleReportingContextualRiskReportBusinessContextsLabelsRetrieve
+      description: Get list of contexts for which a CRS report is available
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { }
+                description: Unspecified response body
+              examples:
+                ListOfContexts:
+                  value:
+                    - Organizational Footprint
+                  summary: List of contexts
+          description: List of context labels
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/reporting/contextualRiskReport/devicesLabels/:
+    get:
+      operationId: consoleReportingContextualRiskReportDevicesLabelsRetrieve
+      description: Get device labels for which a CRSR is available
+      parameters:
+        - in: query
+          name: context_label
+          schema:
+            type: string
+          description: Context label from which to get devices
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { }
+                description: Unspecified response body
+              examples:
+                ListOfDevices:
+                  value:
+                    - a.com
+                    - b.com
+                  summary: List of devices
+          description: List of device labels
+  /console/reporting/contextualRiskReport/status/:
+    get:
+      operationId: consoleReportingContextualRiskReportStatusRetrieve
+      description: |-
+        Retrieves the contextual risk reports status for a certain tenant.
+
+        We consider status for all the reports (for all business contexts that
+        have a related report). We don't keep a status for each business context.
+
+        There are multiple states:
+
+        1. No assets in scope (new account or the data was deleted)
+        2. Contextual Risk Report is in progress -> add percentage and estimated time to completion. If we have a previous report - add the generated date, else it means that we don't have a previous report
+        3. An extend scan is currently running
+        4. There are new changes in data, but the report isn't up to date and the job is not running yet.
+
+        Note:
+            If the user goes to page between the deletion of previous report and the save of the new report
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContextualRiskReportStatus'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/reporting/remediationReport/:
+    get:
+      operationId: consoleReportingRemediationReportRetrieve
+      description: Retrieves the remediation report
+      parameters:
+        - in: query
+          name: context
+          schema:
+            type: integer
+          description: ID of the context you want the RR for
+        - in: query
+          name: device
+          schema:
+            type: integer
+          description: ID of the device you want the RR for
+        - in: query
+          name: filter
+          schema:
+            type: string
+          description: Text filter
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page you want to request
+        - in: query
+          name: risk_level
+          schema:
+            type: string
+            enum:
+              - critical
+              - nonvisible
+              - secure
+              - vulnerable
+          description: Risk level filter
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on page
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedRemediationReportList'
+          description: ''
+  /console/reporting/remediationReport/businessContext/{contextId}/devices/:
+    get:
+      operationId: consoleReportingRemediationReportBusinessContextDevicesList
+      description: Get devices for business context
+      parameters:
+        - in: path
+          name: contextId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RemediationReportDeviceLabel'
+          description: ''
+  /console/reporting/remediationReport/businessContextsLabels/:
+    get:
+      operationId: consoleReportingRemediationReportBusinessContextsLabelsList
+      description: Get business contexts that have remediation reports
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RemediationReportBCLabel'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/scanSurface/:
+    get:
+      operationId: consoleScanSurfaceRetrieve
+      description: Retrieve list of user inputs and the resulting assets
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page you want to request
+        - in: query
+          name: scannerId
+          schema:
+            type: integer
+          description: Optional scanner ID filter. If not set or invalid, falls back
+            on all scanners
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedScanSurfaceEntryList'
+          description: ''
+    post:
+      operationId: consoleScanSurfaceCreate
+      description: 🎯 Endpoint that updates the scan surface with new data (extend
+        scan surface modal)
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtendMessage'
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Scan processed and queued for starting
+        '400':
+          description: Returned if requested scan items are invalid
+        '401':
+          description: Returned if user does not have necessary permissions to start
+            a new scan
+        '402':
+          description: Returned if user attempts scan in trial mode after trial limits
+            expired
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/scanSurface/currentTargets/{targetId}/:
+    patch:
+      operationId: consoleScanSurfaceCurrentTargetsPartialUpdate
+      description: 🎯 Endpoint that edits existing scan entries scope (in/out)
+      parameters:
+        - in: path
+          name: targetId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScopeChange'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Scope successfully changed for a current target
+        '400':
+          description: Returned if requested scope is invalid
+        '401':
+          description: Returned if user does not have necessary permissions to change
+            a current target scope
+  /console/scanSurface/currentTargets/ports/:
+    get:
+      operationId: consoleScanSurfaceCurrentTargetsPortsRetrieve
+      description: Retrieve user input, current targets, port.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page you want to request
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCurrentTargetsPortsList'
+          description: ''
+  /console/scanSurface/rescan/:
+    patch:
+      operationId: consoleScanSurfaceRescanPartialUpdate
+      description: 🎯 Endpoint that rescans all user inputs from Scan Surface for each
+        active Agentless Scanner.
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScanSurfaceRescan'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Rescan accepted and will start in a few moments
+        '401':
+          description: User does not have necessary permissions to start a rescan
+        '402':
+          description: User attempts to rescan user inputs and trial is expired
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/scanSurface/rescan/{scannerId}/:
+    patch:
+      operationId: consoleScanSurfaceRescanPartialUpdate2
+      description: 🎯 Endpoint that rescans all user inputs from Scan Surface for requested
+        Agentless Scanner.
+      parameters:
+        - in: path
+          name: scannerId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Rescan accepted and will start in a few moments
+        '400':
+          description: Returned if requested scanner id is invalid
+        '401':
+          description: User does not have necessary permissions to start a rescan
+            for a certain scanner
+        '402':
+          description: User attempts to rescan actual user inputs and his trial is
+            expired
+        '404':
+          description: User attempts to rescan user inputs from an inexistent scanner
+            id
+        '405':
+          description: The requested scanner is already running an extend scan
+        '406':
+          description: User attempts to rescan user inputs from an inactive scanner
+  /console/scanSurface/scanners/:
+    get:
+      operationId: consoleScanSurfaceScannersList
+      description: Get list of available scanners. This includes the default Cloud
+        Scanner, as well as internal scanners
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AgentlessScannerSrz'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+    post:
+      operationId: consoleScanSurfaceScannersCreate
+      description: Sends commands to scanners. Currently this is a stub.
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '501':
+          description: Not implemented
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+    patch:
+      operationId: consoleScanSurfaceScannersPartialUpdate
+      description: Edits values and parameters of a scanner
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAgentlessScannerEdit'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Scanner updated successfully
+        '400':
+          description: Scanner edit info invalid
+        '401':
+          description: Permissions required to remove the scanner.
+        '404':
+          description: Scanner ID not found
+        '500':
+          description: Returned if a server error occurs
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+    delete:
+      operationId: consoleScanSurfaceScannersDestroy
+      description: Delete a configured internal scanner
+      parameters:
+        - in: path
+          name: scannerId
+          schema:
+            type: string
+          description: ID of the scanner you want to delete
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Scanner removed successfully
+        '401':
+          description: Permissions required to remove the scanner.
+        '404':
+          description: Scanner ID not found
+        '500':
+          description: Returned if a server error occurs
+  /console/scanSurface/userInputs/{userInputId}/rescan/:
+    patch:
+      operationId: consoleScanSurfaceUserInputsRescanPartialUpdate
+      description: Allows uploading a file that defines tags to be automatically added
+        on devices
+      parameters:
+        - in: path
+          name: userInputId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScanSurfaceUserInputRequest'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Rescan was started successfully
+        '404':
+          description: User input doesn't exist
+        '406':
+          description: If an extend scan is already running on the scanner related
+            to the user input
+  /console/scanSurface/userInputs/customTags/:
+    put:
+      operationId: consoleScanSurfaceUserInputsCustomTagsUpdate
+      description: Allows uploading a file that defines tags to be automatically added
+        on devices
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScanSurfaceUserInputRequest'
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: File was processed successfully
+        '400':
+          description: File is missing
+        '406':
+          description: File invalid or invalid format
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/scheduler/:
+    get:
+      operationId: consoleSchedulerList
+      description: |-
+        ⌚ Retrieves schedulers listing
+
+        This lists all available background services that Footprint runs periodically
+      parameters:
+        - in: query
+          name: scannerId
+          schema:
+            type: string
+            minLength: 1
+          description: Scanner ID for which you want to list the queues. You can get
+            this from the /api/console/scanSurface/scanners/ endpoint
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+          description: ''
+        '404':
+          description: Returned if no scanner ID is specified
+  /console/scheduler/{taskId}/:
+    post:
+      operationId: consoleSchedulerCreate
+      description: ⌚ Edits a task's parameters
+      parameters:
+        - in: path
+          name: taskId
+          schema:
+            type: string
+          description: ID of the task/entry you want to edit
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskEdit'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskEdit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskEdit'
+        required: true
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /console/scheduler/{taskId}/{action}/:
+    post:
+      operationId: consoleSchedulerCreate2
+      description: |-
+        ⌚ Allows multiple operations on a certain task.
+
+        If no operation is provided (/scheduler/{id}/operation/), the default
+        is to edit the scheduler.
+      parameters:
+        - in: path
+          name: action
+          schema:
+            type: string
+            enum:
+              - disable
+              - enable
+              - reset
+              - start
+              - stop
+          description: Type of action you want to execute. If blank, assumes parameter
+            edit
+          required: true
+        - in: path
+          name: taskId
+          schema:
+            type: string
+          description: ID of the task/entry you want to edit
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+  /console/settings/tenant/:
+    get:
+      operationId: consoleSettingsTenantRetrieve
+      description: Change tenant field from settings.
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Auto contexts generation enabled or disabled
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+    patch:
+      operationId: consoleSettingsTenantPartialUpdate
+      description: Change tenant field from settings.
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTenantInfoEdit'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTenantInfoEdit'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          description: Auto contexts generation enabled or disabled
+        '400':
+          description: Wrong key in body or invalid value for field
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/status/:
+    get:
+      operationId: consoleStatusRetrieve
+      description: Retrieves current server status.
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+  /console/status/scan/:
+    get:
+      operationId: consoleStatusScanRetrieve
+      description: Provides information regarding currently active scans
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanStatus'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+components:
+  schemas:
+    Account:
+      type: object
+      description: |-
+        Short-form serializer for tenant
+
+        Used as an account listing form
+      properties:
+        id:
+          type: integer
+          description: ID of the account
+        name:
+          type: string
+          description: Name of the account
+        photo:
+          type: string
+          description: Base64-encoded photo of the account
+        lastLogin:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the last login into this account
+        isPrimaryAccount:
+          type: string
+          readOnly: true
+      required:
+        - id
+        - isPrimaryAccount
+        - name
+        - photo
+    AccountSwitch:
+      type: object
+      description: Account switch
+      properties:
+        id:
+          type: integer
+          description: Account ID that you want to switch to
+      required:
+        - id
+    ActiveTaskStatus:
+      type: object
+      properties:
+        isRunning:
+          type: boolean
+        progress:
+          type: integer
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        startDate:
+          type: string
+          format: date-time
+          readOnly: true
+        scanner:
+          allOf:
+            - $ref: '#/components/schemas/TaskScanner'
+          readOnly: true
+      required:
+        - description
+        - id
+        - message
+        - progress
+        - scanner
+        - startDate
+    AgentApplicationInformationOrigin:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        originModule:
+          enum:
+            - registries
+            - store_apps
+            - processes
+            - drivers
+            - optional_features
+            - executables
+            - windows_packages
+          type: string
+        lastModified:
+          type: string
+          format: date-time
+        information:
+          type: string
+        agentApplication:
+          type: integer
+      required:
+        - agentApplication
+        - id
+        - originModule
+    AgentCommandData:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Command ID
+        commandText:
+          type: string
+          nullable: true
+          description: Command ID
+        commandArgs:
+          type: object
+          additionalProperties: { }
+          nullable: true
+          description: Command arguments
+        commandStatus:
+          type: string
+          nullable: true
+          description: Command Status
+        addedOn:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when command was added
+        pulledOn:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when command was pulled by agent
+        respondedOn:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date when command was acknowledged by agent
+        agent:
+          type: integer
+          nullable: true
+          description: Agent ID
+      required:
+        - addedOn
+        - agent
+        - commandArgs
+        - commandStatus
+        - commandText
+        - id
+        - pulledOn
+        - respondedOn
+    AgentListing:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the agent
+        label:
+          type: string
+          description: Label of the agent
+        hostname:
+          type: string
+          description: Hostname of the agent
+        installedOn:
+          type: string
+          format: date-time
+          description: Date when the agent was installed
+        operatingSystem:
+          type: string
+          description: Agent operating system
+        agentVersion:
+          type: string
+          description: Agent version
+        status:
+          type: string
+          description: Status of the agent
+        installationType:
+          enum:
+            - local
+            - ad
+          type: string
+          description: Type of agent install
+        installationScope:
+          type: string
+          description: Install scope of the agent
+        domainName:
+          type: string
+        privateIp:
+          type: string
+          description: Private IP address of the agent
+        publicIp:
+          type: string
+          description: Public IP address of the agent
+        adScope:
+          type: string
+          description: AD installation scope
+        lastCheckin:
+          type: string
+          format: date-time
+          description: Timestamp when we received the last checkin from the agent
+        lastUpdate:
+          type: string
+          format: date-time
+          description: Timestamp when we received the last update from the agent
+        scanEntries:
+          type: array
+          items: { }
+          description: Scan Entries
+        noOfScanEntries:
+          type: integer
+          description: Number of scan entries
+        associatedElements:
+          type: array
+          items:
+            type: integer
+          description: IDs of discovered associated elements
+        agentCommandData:
+          $ref: '#/components/schemas/AgentCommandData'
+        restartRequired:
+          type: boolean
+          description: Whether a restart is required to update the OS
+        systemUpdateInProgress:
+          type: boolean
+          description: Whether a system update is in progress
+        isScanningPaused:
+          type: boolean
+          description: Whether scanning is paused
+        isInternalScannerInstalled:
+          type: boolean
+          description: Whether an internal scanner is installed
+        isISRequirementsMet:
+          type: boolean
+          description: Whether an internal scanner can be installed via the agent
+        installProgressIS:
+          type: string
+          description: Internal Scanner install progress
+      required:
+        - adScope
+        - agentCommandData
+        - agentVersion
+        - associatedElements
+        - domainName
+        - hostname
+        - id
+        - installProgressIS
+        - installationScope
+        - installationType
+        - installedOn
+        - isISRequirementsMet
+        - isInternalScannerInstalled
+        - isScanningPaused
+        - label
+        - lastCheckin
+        - lastUpdate
+        - noOfScanEntries
+        - operatingSystem
+        - privateIp
+        - publicIp
+        - restartRequired
+        - scanEntries
+        - status
+        - systemUpdateInProgress
+    AgentListingResponse:
+      type: object
+      description: Agent listing
+      properties:
+        token:
+          type: string
+          description: Token to install new agents
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentListing'
+          description: List of installed agents
+      required:
+        - agents
+        - token
+    AgentlessScannerSrz:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        state:
+          type: string
+          readOnly: true
+        administrativeState:
+          type: string
+          readOnly: true
+        schedulerConfig:
+          allOf:
+            - $ref: '#/components/schemas/AgentlessSchedulerConfig'
+          readOnly: true
+        numberOfUserInputs:
+          type: integer
+          readOnly: true
+          description: Number of user inputs scanned by this scanner.
+        numberOfIpsScanned:
+          type: integer
+          readOnly: true
+          description: Number of IP addresses scanned by this scanner.
+        privateIp:
+          type: string
+          nullable: true
+          readOnly: true
+        guid:
+          type: string
+          nullable: true
+          maxLength: 36
+        publicIp:
+          type: string
+          nullable: true
+          maxLength: 50
+        hostname:
+          type: string
+          nullable: true
+          maxLength: 1000
+        label:
+          type: string
+          nullable: true
+          maxLength: 1000
+        advancedScannerStatus:
+          type: string
+          nullable: true
+          maxLength: 100
+        isBrokerAccessibleByScanner:
+          type: boolean
+        containersStatus:
+          # modified by Tag
+          type: array
+          items:
+            type: object
+            additionalProperties: { }
+        isDefaultCloudScanner:
+          type: boolean
+        operatingSystem:
+          type: string
+          nullable: true
+          maxLength: 100
+        workerVersion:
+          type: string
+          nullable: true
+          maxLength: 12
+        controllerVersion:
+          type: string
+          nullable: true
+          maxLength: 12
+        installType:
+          enum:
+            - agent_based
+            - standalone
+          type: string
+        installDate:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        lastUpdate:
+          type: string
+          format: date-time
+          nullable: true
+        messageBrokerUsername:
+          type: string
+          nullable: true
+          maxLength: 50
+        virtualHost:
+          type: string
+          nullable: true
+          maxLength: 512
+        type:
+          enum:
+            - internal
+            - external
+          type: string
+        extendScanRunning:
+          type: boolean
+        isShared:
+          type: boolean
+        tenant:
+          type: integer
+        agent:
+          type: integer
+          nullable: true
+      required:
+        - administrativeState
+        - id
+        - numberOfIpsScanned
+        - numberOfUserInputs
+        - privateIp
+        - schedulerConfig
+        - state
+        - tenant
+    AgentlessSchedulerConfig:
+      type: object
+      properties:
+        noScanWindowStartInterval:
+          type: string
+          format: time
+        noScanWindowStopInterval:
+          type: string
+          format: time
+        agentlessScanner:
+          type: integer
+      required:
+        - agentlessScanner
+        - noScanWindowStartInterval
+        - noScanWindowStopInterval
+    ApplicationDetails:
+      type: object
+      properties:
+        id:
+          type: integer
+        icon:
+          type: string
+          default: ''
+        name:
+          type: string
+        type:
+          type: string
+          default: Application
+        riskLevel:
+          enum:
+            - 0
+            - 2
+            - 1
+            - 3
+          type: integer
+          readOnly: true
+        isOnline:
+          type: boolean
+        applicationType:
+          enum:
+            - DAEMON
+            - OS
+            - PACKAGE
+            - RUNTIME
+            - WEBAPP
+            - __class__
+            - __delattr__
+            - __dict__
+            - __dir__
+            - __doc__
+            - __eq__
+            - __format__
+            - __ge__
+            - __getattribute__
+            - __gt__
+            - __hash__
+            - __init__
+            - __init_subclass__
+            - __le__
+            - __lt__
+            - __module__
+            - __ne__
+            - __new__
+            - __reduce__
+            - __reduce_ex__
+            - __repr__
+            - __setattr__
+            - __sizeof__
+            - __str__
+            - __subclasshook__
+            - __weakref__
+          type: string
+        discoveredOn:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        ip:
+          type: string
+        cpe:
+          type: string
+        url:
+          type: string
+        version:
+          type: string
+        protocol:
+          type: string
+        port:
+          type: integer
+        hostname:
+          type: string
+          readOnly: true
+        isAttackAvenuesAvailable:
+          type: boolean
+          readOnly: true
+        isDiscoveredByAgent:
+          type: boolean
+          readOnly: true
+        userEdited:
+          type: boolean
+          readOnly: true
+        portInfo:
+          type: object
+          additionalProperties: { }
+          readOnly: true
+        osName:
+          type: string
+          readOnly: true
+        numberOfCves:
+          type: integer
+          readOnly: true
+        numberOfAttackAvenues:
+          type: integer
+          readOnly: true
+        informationOrigin:
+          allOf:
+            - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
+          readOnly: true
+      required:
+        - applicationType
+        - cpe
+        - discoveredOn
+        - hostname
+        - id
+        - informationOrigin
+        - ip
+        - isAttackAvenuesAvailable
+        - isDiscoveredByAgent
+        - isOnline
+        - lastSeen
+        - name
+        - numberOfAttackAvenues
+        - numberOfCves
+        - osName
+        - port
+        - portInfo
+        - protocol
+        - riskLevel
+        - url
+        - userEdited
+        - version
+    ApplicationInListing:
+      type: object
+      properties:
+        id:
+          type: integer
+        icon:
+          type: string
+          default: ''
+        name:
+          type: string
+        type:
+          type: string
+          default: Application
+        riskLevel:
+          enum:
+            - 0
+            - 2
+            - 1
+            - 3
+          type: integer
+          readOnly: true
+        isOnline:
+          type: boolean
+        applicationType:
+          enum:
+            - DAEMON
+            - OS
+            - PACKAGE
+            - RUNTIME
+            - WEBAPP
+            - __class__
+            - __delattr__
+            - __dict__
+            - __dir__
+            - __doc__
+            - __eq__
+            - __format__
+            - __ge__
+            - __getattribute__
+            - __gt__
+            - __hash__
+            - __init__
+            - __init_subclass__
+            - __le__
+            - __lt__
+            - __module__
+            - __ne__
+            - __new__
+            - __reduce__
+            - __reduce_ex__
+            - __repr__
+            - __setattr__
+            - __sizeof__
+            - __str__
+            - __subclasshook__
+            - __weakref__
+          type: string
+        discoveredOn:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        lastScanned:
+          type: string
+          format: date-time
+        ip:
+          type: string
+        cpe:
+          type: string
+        url:
+          type: string
+        version:
+          type: string
+        protocol:
+          type: string
+        port:
+          type: integer
+        hostname:
+          type: string
+          readOnly: true
+        isAttackAvenuesAvailable:
+          type: boolean
+          readOnly: true
+        isDiscoveredByAgent:
+          type: boolean
+          readOnly: true
+        userEdited:
+          type: boolean
+          readOnly: true
+        portInfo:
+          type: object
+          additionalProperties: { }
+          readOnly: true
+        osName:
+          type: string
+          readOnly: true
+        informationOrigin:
+          allOf:
+            - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
+          readOnly: true
+      required:
+        - applicationType
+        - cpe
+        - discoveredOn
+        - hostname
+        - id
+        - informationOrigin
+        - ip
+        - isAttackAvenuesAvailable
+        - isDiscoveredByAgent
+        - isOnline
+        - lastScanned
+        - lastSeen
+        - name
+        - osName
+        - port
+        - portInfo
+        - protocol
+        - riskLevel
+        - url
+        - userEdited
+        - version
+    BrandingResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates the request completed successfully
+        data:
+          $ref: '#/components/schemas/WLBranding'
+      required:
+        - data
+        - success
+    CRRMetaStatus:
+      type: object
+      description: Serializer for the Meta key in `CRRStatus Serializer`
+      properties:
+        progress:
+          type: integer
+          description: Progress of the report generation
+        eta:
+          type: string
+          description: Estimated time of completion
+        isPreviousReportAvailable:
+          type: boolean
+          description: Whether there is a previous report available
+        lastGenerationDate:
+          type: string
+          format: date-time
+          description: Last generation date
+      required:
+        - eta
+        - isPreviousReportAvailable
+        - lastGenerationDate
+        - progress
+    CVR:
+      type: object
+      properties:
+        meta:
+          allOf:
+            - $ref: '#/components/schemas/CVRMeta'
+          description: Metadata and overview information
+        perimeter:
+          allOf:
+            - $ref: '#/components/schemas/CVRPerimeter'
+          description: Perimeter and targets included in the report
+        executiveSummary:
+          allOf:
+            - $ref: '#/components/schemas/CVRExecutiveSummary'
+          description: Overview of the business/executive impact of vulnerabilities
+            on the organization
+        businessReport:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRContext'
+          description: Business contexts report
+        # added by Tag
+        technicalReport:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRContext'
+          description: Technical contexts report
+        securityInsights:
+          allOf:
+            - $ref: '#/components/schemas/CVRSecurityInsights'
+          description: Insights into the most vulnerable applications
+        remediationTracking:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRRemTrackVuln'
+          description: Remediation Tracking overview
+      required:
+        - businessReport
+        - executiveSummary
+        - meta
+        - perimeter
+        - remediationTracking
+        - securityInsights
+    CVRContext:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the context
+        name:
+          type: string
+          description: Name of the context
+        createdBy:
+          type: string
+          description: Name of the user who created the context
+        businessImpact:
+          type: integer
+          description: Business impact level
+        stats:
+          allOf:
+            - $ref: '#/components/schemas/CVRContextStats'
+          description: Statistics regarding the context
+        levels:
+          allOf:
+            - $ref: '#/components/schemas/CVRContextLevels'
+          description: Security levels of the context
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRContextLevels'
+          description: Alerts on the context
+      required:
+        - alerts
+        - businessImpact
+        - createdBy
+        - id
+        - levels
+        - name
+        - stats
+    CVRContextLevels:
+      type: object
+      properties:
+        critical:
+          type: number
+          format: float
+        vulnerable:
+          type: number
+          format: float
+        nonvisible:
+          type: number
+          format: float
+        secure:
+          type: number
+          format: float
+      required:
+        - critical
+        - nonvisible
+        - secure
+        - vulnerable
+    CVRContextStats:
+      type: object
+      properties:
+        uptime:
+          type: number
+          format: float
+        applications:
+          type: integer
+        applicationsUp:
+          type: integer
+      required:
+        - applications
+        - applicationsUp
+        - uptime
+    CVRESOrgExposure:
+      type: object
+      properties:
+        indicators:
+          allOf:
+            - $ref: '#/components/schemas/CVROrgExpIndicators'
+          description: Current values for org exposure
+        newIndicators:
+          allOf:
+            - $ref: '#/components/schemas/CVROrgExpIndicators'
+          description: Potential outlook if top vulnerabilities are fixed
+        topScenarios:
+          # modified by Tag
+          type: array
+          items:
+            $ref: '#/components/schemas/TopScenario'
+          description: Most critical scenarios from an exposure point of view
+      required:
+        - indicators
+        - newIndicators
+        - topScenarios
+    CVRExecutiveSummary:
+      type: object
+      properties:
+        organizationExposure:
+          allOf:
+            - $ref: '#/components/schemas/CVRESOrgExposure'
+          description: Organization Exposure on various points
+        riskExposureTimeline:
+          allOf:
+            - $ref: '#/components/schemas/CVRRiskExposure'
+          description: Risk exposure analysis and estimates
+        topApplications:
+          allOf:
+            - $ref: '#/components/schemas/CVRTopApps'
+          description: Prioritization of the most important and risky applications
+        internalExternalRisk:
+          allOf:
+            - $ref: '#/components/schemas/CVRInternalExternalRisk'
+          description: Internal/External risk calculation
+        regulationChecks:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRRegulationCheck'
+          description: List of contexts that caused potential regulation issues
+        scenariosPerExposure:
+          allOf:
+            - $ref: '#/components/schemas/CVRScenariosPerExposure'
+          description: Scenarios per every exposure and their effect
+      required:
+        - internalExternalRisk
+        - organizationExposure
+        - regulationChecks
+        - riskExposureTimeline
+        - scenariosPerExposure
+        - topApplications
+    CVRFaia:
+      type: object
+      properties:
+        isLevelPassed:
+          type: boolean
+          description: Whether the FAIA indicator level is passed
+        levelPassDate:
+          type: string
+          format: date-time
+          description: Date when the FAIA indicator level passed
+        levelPassLevel:
+          enum:
+            - critical
+            - vulnerable
+          type: string
+          description: FAIA criticality level
+      required:
+        - isLevelPassed
+        - levelPassDate
+        - levelPassLevel
+    CVRInternalExternalRisk:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total items
+        vulnerable:
+          type: integer
+          description: Total vulnerable items
+        nonvisible:
+          type: integer
+          description: Total nonvisible items
+        vulnerableInternal:
+          type: integer
+          description: Total vulnerable internal items
+        vulnerableExternal:
+          type: integer
+          description: Total vulnerable external items
+        external:
+          type: integer
+          description: Total external items
+        internal:
+          type: integer
+          description: Total internal items
+      required:
+        - external
+        - internal
+        - nonvisible
+        - total
+        - vulnerable
+        - vulnerableExternal
+        - vulnerableInternal
+    CVRMeta:
+      type: object
+      properties:
+        generationDate:
+          type: string
+          format: date-time
+          description: Generation date of the report
+        reportDataFrom:
+          type: string
+          format: date-time
+          description: Date from which the report data is included
+        reportVersion:
+          type: string
+          description: Report version
+        tenant:
+          type: string
+          description: Name of the tenant the report is generated for
+        tenantLogo:
+          type: string
+          description: Base64-encoded photo of the tenant
+        reportAuthor:
+          type: string
+          description: Name of the report author
+        internalAssetsCount:
+          type: integer
+          description: Number of internal assets
+        externalAssetsCount:
+          type: integer
+          description: Number of external assets
+        totalVulnsCount:
+          type: integer
+          description: Number of total vulnerabilities in the report
+        uniqueVulnsCount:
+          type: integer
+          description: Number of unique vulnerabilities in the report
+        exploitableVulnsCount:
+          type: integer
+          description: Number of exploitable vulnerabilities in the report
+        totalDevicesCount:
+          type: integer
+          description: Number of total devices in the report
+        webappsCount:
+          type: integer
+          description: Number of webapps in the report
+        criticalLevel:
+          type: number
+          format: float
+          description: Criticality level of the data in the report
+        averageDowntime:
+          type: number
+          format: float
+          description: Average downtime over the period in the report
+        mspName:
+          type: string
+          description: MSP Company name
+        mspContact:
+          type: string
+          description: MSP Representative name
+        mspEmail:
+          type: string
+          format: email
+          description: MSP Contact e-mail
+        mspLogo:
+          type: string
+          description: Base64-encoded logo of the MSP
+      required:
+        - averageDowntime
+        - criticalLevel
+        - exploitableVulnsCount
+        - externalAssetsCount
+        - generationDate
+        - internalAssetsCount
+        - mspContact
+        - mspEmail
+        - mspLogo
+        - mspName
+        - reportAuthor
+        - reportDataFrom
+        - reportVersion
+        - tenant
+        - tenantLogo
+        - totalDevicesCount
+        - totalVulnsCount
+        - uniqueVulnsCount
+        - webappsCount
+    CVRMostVulnServer:
+      type: object
+      properties:
+        id:
+          type: integer
+        hostname:
+          type: string
+        ip:
+          type: string
+        riskLevel:
+          type: integer
+        applicationCount:
+          type: integer
+        vulnerabilitiesCount:
+          $ref: '#/components/schemas/CVRPerimeterVulnsCount'
+        sumCvssScores:
+          type: number
+          format: float
+          description: Sum of all CVSS scores on the device
+        vulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRVulnerability'
+      required:
+        - applicationCount
+        - hostname
+        - id
+        - ip
+        - riskLevel
+        - sumCvssScores
+        - vulnerabilities
+        - vulnerabilitiesCount
+    CVROrgExpIndicators:
+      type: object
+      properties:
+        money:
+          type: number
+          format: float
+          description: Financial exposure of the organization
+        time:
+          type: number
+          format: float
+          description: Time exposure of the organization
+        notoriety:
+          type: number
+          format: float
+          description: Notoriety/brand exposure of the organization
+        legal:
+          type: number
+          format: float
+          description: Legal exposure of the organization
+      required:
+        - legal
+        - money
+        - notoriety
+        - time
+    CVRPerimeter:
+      type: object
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRPerimeterEntry'
+        externalServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRPerimeterEntry'
+        internalServers:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRPerimeterEntry'
+      required:
+        - agents
+        - externalServers
+        - internalServers
+    CVRPerimeterEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the device
+        ip:
+          type: string
+          description: IP Address of the device
+        hostnames:
+          type: array
+          items:
+            type: string
+          description: List of associated hostnames
+        applications:
+          type: integer
+          description: Number of applications on the device
+        discoveredOn:
+          type: string
+          format: date-time
+          description: Date when the device was discovered
+        vulnerabilitiesCount:
+          allOf:
+            - $ref: '#/components/schemas/CVRPerimeterVulnsCount'
+          description: Distribution of vulnerabilities on the device based on criticality
+      required:
+        - applications
+        - discoveredOn
+        - hostnames
+        - id
+        - ip
+        - vulnerabilitiesCount
+    CVRPerimeterVulnsCount:
+      type: object
+      properties:
+        low:
+          type: integer
+          description: Number of low vulnerabilities
+        medium:
+          type: integer
+          description: Number of medium vulnerabilities
+        high:
+          type: integer
+          description: Number of high vulnerabilities
+        critical:
+          type: integer
+          description: Number of critical vulnerabilities
+      required:
+        - critical
+        - high
+        - low
+        - medium
+    CVRRegulationCheck:
+      type: object
+      properties:
+        context:
+          $ref: '#/components/schemas/CVRRegulationCheckCtx'
+        vulnerability:
+          allOf:
+            - $ref: '#/components/schemas/CVRRegulationCheckVuln'
+          description: Vulnerability that triggered the regulation check
+      required:
+        - context
+        - vulnerability
+    CVRRegulationCheckCtx:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - id
+        - name
+    CVRRegulationCheckVuln:
+      type: object
+      properties:
+        cve:
+          type: string
+        description:
+          type: string
+        isCritical:
+          type: boolean
+        isExploitable:
+          type: boolean
+      required:
+        - cve
+        - description
+        - isCritical
+        - isExploitable
+    CVRRemTrackVuln:
+      type: object
+      properties:
+        cve:
+          type: string
+        score:
+          type: number
+          format: float
+        state:
+          type: string
+      required:
+        - cve
+        - score
+        - state
+    CVRRemediationEffort:
+      type: object
+      properties:
+        daysToFix:
+          type: number
+          format: float
+          description: Estimated days required to fix most critical issues
+        minManDays:
+          type: number
+          format: float
+          description: Minimum man-days required to fix most critical issues
+        maxManDays:
+          type: number
+          format: float
+          description: Maximum man-days required to fix most critical issues
+        fixDate:
+          type: string
+          format: date-time
+          description: Estimated completion date of issues
+      required:
+        - daysToFix
+        - fixDate
+        - maxManDays
+        - minManDays
+    CVRRiskExposure:
+      type: object
+      properties:
+        faiaIndicator:
+          allOf:
+            - $ref: '#/components/schemas/CVRFaia'
+          description: FAIA is the Footprint AI indicator representing a criticality
+            threshold calculated based on the information on the scan surface
+        remediationEffort:
+          allOf:
+            - $ref: '#/components/schemas/CVRRemediationEffort'
+          description: Remediation effort estimates
+      required:
+        - faiaIndicator
+        - remediationEffort
+    CVRScenarioPerExposure:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Scenario name
+        status:
+          enum:
+            - secure
+            - nonvisible
+            - vulnerable
+            - critical
+          type: string
+          description: Scenario criticality
+        percentage:
+          type: number
+          format: float
+          description: Weight of the CVR scenario in the related exposure
+      required:
+        - name
+        - percentage
+        - status
+    CVRScenariosPerExposure:
+      type: object
+      properties:
+        money:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRScenarioPerExposure'
+        time:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRScenarioPerExposure'
+        notoriety:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRScenarioPerExposure'
+        legal:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRScenarioPerExposure'
+      required:
+        - legal
+        - money
+        - notoriety
+        - time
+    CVRSecurityInsights:
+      type: object
+      properties:
+        mostVulnerableServer:
+          $ref: '#/components/schemas/CVRMostVulnServer'
+        mostImportantVulnerability:
+          type: string
+        mostCommonVulnerable_CPEs:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRVulnerableCpe'
+        topVulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRVulnerability'
+        topVulnerableHosts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRMostVulnServer'
+        weaponizedVulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRVulnerability'
+        mostCommonVulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRVulnerability'
+        topVulnerableApplications:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRVulnerableApp'
+      required:
+        - mostCommonVulnerabilities
+        - mostCommonVulnerable_CPEs
+        - mostImportantVulnerability
+        - mostVulnerableServer
+        - topVulnerabilities
+        - topVulnerableApplications
+        - topVulnerableHosts
+        - weaponizedVulnerabilities
+    CVRTopApp:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the application
+        name:
+          type: string
+          description: Name of the application
+        icon:
+          type: string
+          nullable: true
+          description: Base64-encoded icon of the application
+      required:
+        - icon
+        - id
+        - name
+    CVRTopApps:
+      type: object
+      properties:
+        important:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRTopApp'
+        risky:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRTopApp'
+        riskyImportant:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRTopApp'
+      required:
+        - important
+        - risky
+        - riskyImportant
+    CVRVulnerability:
+      type: object
+      properties:
+        cve:
+          type: string
+        summary:
+          type: string
+        cvssScore:
+          type: number
+          format: float
+        cvssImpact:
+          type: number
+          format: float
+        cvssExploit:
+          type: number
+          format: float
+        datePublished:
+          type: string
+          format: date-time
+        dateModified:
+          type: string
+          format: date-time
+        attackVector:
+          $ref: '#/components/schemas/CVRVulnerabilityAttackVector'
+        integrityImpact:
+          type: string
+        discoveredOn:
+          type: string
+          format: date-time
+        exploitUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+      required:
+        - attackVector
+        - cve
+        - cvssExploit
+        - cvssImpact
+        - cvssScore
+        - dateModified
+        - datePublished
+        - discoveredOn
+        - exploitUrls
+        - integrityImpact
+        - summary
+    CVRVulnerabilityAttackVector:
+      type: object
+      properties:
+        accessVector:
+          type: string
+        accessComplexity:
+          type: string
+        authenticationRequired:
+          type: string
+      required:
+        - accessComplexity
+        - accessVector
+        - authenticationRequired
+    CVRVulnerableApp:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        ip:
+          type: string
+        port:
+          type: integer
+        sumCvssScores:
+          type: number
+          format: float
+      required:
+        - ip
+        - name
+        - port
+        - sumCvssScores
+        - version
+    CVRVulnerableCpe:
+      type: object
+      properties:
+        cpe:
+          type: string
+        count:
+          type: integer
+      required:
+        - count
+        - cpe
+    Context:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the context
+        name:
+          type: string
+          description: Name of the context
+        modified:
+          type: string
+          format: date-time
+          description: Timestamp when the context was last modified
+        state:
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+          type: integer
+          description: Security state of the context
+        type:
+          enum:
+            - bs
+            - ts
+          type: string
+          description: Type of the context - bs = business, ts = technical
+        icon:
+          type: string
+          description: Base64-encoded icon of the context, if provided
+        info:
+          allOf:
+            - $ref: '#/components/schemas/ContextInfo'
+          description: Details on the context
+      required:
+        - icon
+        - id
+        - info
+        - modified
+        - name
+        - state
+        - type
+    ContextInfo:
+      type: object
+      properties:
+        levels:
+          allOf:
+            - $ref: '#/components/schemas/ContextLevels'
+          description: Risk levels of the elements in the context
+        uptime:
+          type: integer
+          description: Uptime percentage of devices in the context
+        businessImpact:
+          type: integer
+          description: Business impact level of the context
+        applications:
+          type: integer
+          description: Number of applications in the context
+        applicationsUp:
+          type: integer
+          description: Number of applications detected as online in the context
+        accessibleBy:
+          type: string
+          description: The Accessibility posture of the context
+        assetZone:
+          type: string
+          description: The Asset Zone posture of the context
+      required:
+        - accessibleBy
+        - applications
+        - applicationsUp
+        - assetZone
+        - businessImpact
+        - levels
+        - uptime
+    ContextLevels:
+      type: object
+      properties:
+        critical:
+          type: integer
+        vulnerable:
+          type: integer
+        nonvisible:
+          type: integer
+        secure:
+          type: integer
+      required:
+        - critical
+        - nonvisible
+        - secure
+        - vulnerable
+    ContextualRiskReportEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        dnsNames:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        vulnerabilityState:
+          enum:
+            - discovered
+            - addedToActionPlan
+            - fixPendingConfirmation
+            - fixNotConfirmed
+            - fixConfirmed
+            - falsePositive
+            - acceptRisk
+          type: string
+          readOnly: true
+        index:
+          type: integer
+          readOnly: true
+        cve:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        ip:
+          type: string
+          maxLength: 40
+        deviceLabel:
+          type: string
+        deviceId:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        applicationName:
+          type: string
+          maxLength: 300
+        applicationId:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        cpe:
+          type: string
+          nullable: true
+          maxLength: 300
+        cvssV2BaseScore:
+          type: number
+          format: float
+          nullable: true
+        cvssV3BaseScore:
+          type: number
+          format: float
+          nullable: true
+        cvssNormalized:
+          type: number
+          format: float
+          nullable: true
+        cvssNormalizedSeverity:
+          type: string
+          maxLength: 20
+        cvssAv:
+          type: number
+          format: float
+          nullable: true
+        attackVector:
+          type: string
+          nullable: true
+          maxLength: 20
+        port:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        protocol:
+          type: string
+          nullable: true
+          maxLength: 20
+        solution:
+          type: string
+          nullable: true
+        weaponized:
+          type: boolean
+        exploitable:
+          type: boolean
+        campaign:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        clientSystem:
+          type: string
+          maxLength: 300
+        clientSystemId:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        assetZone:
+          type: string
+          maxLength: 300
+        accessibleBy:
+          type: string
+          maxLength: 300
+        businessImpact:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        zoneExposure:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        userExposure:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        exploitScore:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        crsProbability:
+          type: number
+          format: float
+        crss:
+          type: number
+          format: float
+        crssSeverity:
+          type: string
+          maxLength: 20
+      required:
+        - accessibleBy
+        - applicationName
+        - assetZone
+        - businessImpact
+        - clientSystem
+        - crsProbability
+        - crss
+        - crssSeverity
+        - cvssNormalizedSeverity
+        - deviceLabel
+        - dnsNames
+        - exploitScore
+        - exploitable
+        - id
+        - index
+        - ip
+        - userExposure
+        - vulnerabilityState
+        - weaponized
+        - zoneExposure
+    ContextualRiskReportStatus:
+      type: object
+      properties:
+        state:
+          type: string
+          readOnly: true
+        meta:
+          allOf:
+            - $ref: '#/components/schemas/CRRMetaStatus'
+          readOnly: true
+      required:
+        - meta
+        - state
+    CurrentTargetCountStats:
+      type: object
+      properties:
+        count:
+          type: integer
+      required:
+        - count
+    CurrentTargetResults:
+      type: object
+      properties:
+        applications:
+          $ref: '#/components/schemas/CurrentTargetCountStats'
+        devices:
+          $ref: '#/components/schemas/CurrentTargetCountStats'
+      required:
+        - applications
+        - devices
+    CurrentTargetsPort:
+      type: object
+      properties:
+        port:
+          type: integer
+          maximum: 65535
+          minimum: 1
+        transportProtocol:
+          enum:
+            - udp
+            - tcp
+          type: string
+      required:
+        - port
+        - transportProtocol
+    CurrentTargetsPorts:
+      type: object
+      properties:
+        userInput:
+          type: string
+          description: User input
+        ipAddress:
+          type: string
+          description: IP Address resulted from user input
+        portTransportProtocolList:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrentTargetsPort'
+      required:
+        - ipAddress
+        - portTransportProtocolList
+        - userInput
+    Device:
+      type: object
+      properties:
+        type:
+          enum:
+            - AgentDevice
+            - Server
+          type: string
+          description: Type of the device
+        id:
+          type: integer
+          description: ID of the device
+        agentStatus:
+          type: string
+          description: Status of the linked agent, if device came from one
+        disclaimer:
+          type: string
+          description: Disclaimer notice for special cases
+        provider:
+          type: string
+          description: Cloud provider of the device
+        isAttackAvenuesAvailable:
+          type: boolean
+          description: Whether device has attack avenues available
+        isOnline:
+          type: string
+          description: Whether device is online
+        riskLevel:
+          enum:
+            - 0
+            - 1
+            - 2
+            - 3
+          type: integer
+          description: Device risk level
+        ip:
+          type: string
+          description: IP address of the device
+        name:
+          type: string
+          description: Name of the device
+        originalName:
+          type: string
+          description: Original name of the device (from scan)
+        discoveredOn:
+          type: string
+          format: date-time
+          description: Date the device was discovered
+        lastSeen:
+          type: string
+          format: date-time
+          description: Date the device was last seen
+        hostnames:
+          type: array
+          items:
+            type: string
+          description: List of hostnames of the device
+        applicationsCount:
+          type: integer
+          description: Number of applications on the device
+        protocols:
+          type: array
+          items:
+            type: string
+          description: Protocols running on the device
+        agentId:
+          type: integer
+          description: Agent ID (if device from agent)
+        hasScapResults:
+          type: boolean
+          description: Whether the device has SCAP results available
+        hasAgentInstalled:
+          type: boolean
+          description: Whether the device has agent installed
+        isNetworkEdgeScanDisabled:
+          type: string
+          description: Whether the device has network edge scans disabled
+        numberOfCves:
+          type: integer
+          description: Number of CVEs discovered on the device
+        numberOfAttackAvenues:
+          type: integer
+          description: Number of virtual vulnerabilities discovered on the device
+        avoidBruteForce:
+          type: boolean
+          description: Whether to avoid brute force scans on this device
+      required:
+        - agentId
+        - agentStatus
+        - applicationsCount
+        - avoidBruteForce
+        - disclaimer
+        - discoveredOn
+        - hasAgentInstalled
+        - hasScapResults
+        - hostnames
+        - id
+        - ip
+        - isAttackAvenuesAvailable
+        - isNetworkEdgeScanDisabled
+        - isOnline
+        - lastSeen
+        - name
+        - numberOfAttackAvenues
+        - numberOfCves
+        - originalName
+        - protocols
+        - provider
+        - riskLevel
+        - type
+    DeviceDNSEntries:
+      type: object
+      properties:
+        name:
+          type: string
+        content:
+          type: string
+        type:
+          type: string
+        lastSeen:
+          type: string
+          format: date-time
+      required:
+        - content
+        - lastSeen
+        - name
+        - type
+    DeviceDrivers:
+      type: object
+      properties:
+        displayName:
+          type: string
+        driverType:
+          type: string
+        path:
+          type: string
+        startMode:
+          type: string
+        state:
+          type: string
+        status:
+          type: string
+      required:
+        - displayName
+        - driverType
+        - path
+        - startMode
+        - state
+        - status
+    DeviceInstalledUpdates:
+      type: object
+      properties:
+        kb:
+          type: string
+          description: KB ID of the update
+        title:
+          type: string
+        description:
+          type: string
+        size:
+          type: string
+        cves:
+          type: array
+          items:
+            type: string
+        affects:
+          type: string
+        resources:
+          type: string
+        releaseDate:
+          type: string
+      required:
+        - affects
+        - cves
+        - description
+        - kb
+        - releaseDate
+        - resources
+        - size
+        - title
+    DeviceJobs:
+      type: object
+      properties:
+        hidden:
+          type: string
+        lastResult:
+          type: string
+        lastRun:
+          type: string
+        path:
+          type: string
+        state:
+          type: string
+      required:
+        - hidden
+        - lastResult
+        - lastRun
+        - path
+        - state
+    DeviceOS:
+      type: object
+      properties:
+        isOutdated:
+          type: boolean
+          description: Whether the OS on the device is outdated
+        isSpring4shellAvailable:
+          type: boolean
+          nullable: true
+          description: Whether Spring4Shell scanning is available
+      required:
+        - isOutdated
+        - isSpring4shellAvailable
+    DeviceOverview:
+      type: object
+      properties:
+        os:
+          type: string
+          description: Operating system on the device
+        installDate:
+          type: string
+          format: date-time
+          description: Date the device last installed updates
+        lastBootupDate:
+          type: string
+          format: date-time
+          description: Date the device last booted up
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationDetails'
+          description: Applications on the device
+        installedUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceInstalledUpdates'
+          description: Number of updates installed on the device
+      required:
+        - applications
+        - installDate
+        - installedUpdates
+        - lastBootupDate
+        - os
+    DeviceUser:
+      type: object
+      properties:
+        accountType:
+          type: string
+        description:
+          type: string
+        disabled:
+          type: string
+        name:
+          type: string
+        passwordExpires:
+          type: string
+      required:
+        - accountType
+        - description
+        - disabled
+        - name
+        - passwordExpires
+    DockerStat:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the container
+        name:
+          type: string
+          description: Name of the container
+        state:
+          type: string
+          description: State of the container
+        status:
+          type: string
+          description: Status of the container
+      required:
+        - id
+        - name
+        - state
+        - status
+    E2EResult:
+      type: object
+      properties:
+        status:
+          enum:
+            - pending
+            - success
+            - failure
+          type: string
+      required:
+        - status
+    ExtendMessage:
+      type: object
+      description: Serializer that validates user inputted data
+      properties:
+        scanTargets:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+          description: Targets to scan. Accepted values are IP addresses, IP ranges
+            in CIDR format (e.g. 0.0.0.0/24) URLs and e-mail addresses.
+        scanners:
+          type: array
+          items:
+            type: integer
+      required:
+        - scanTargets
+        - scanners
+    Notification:
+      type: object
+      description: Serializer for the Notification item
+      properties:
+        id:
+          type: integer
+          description: ID of the notification
+        title:
+          type: string
+          description: Optional title of the notification
+        message:
+          type: string
+          description: Main text of the notification
+        checked:
+          type: boolean
+          description: DEPRECATED
+        priority:
+          type: integer
+          description: Priority of the notification. Higher number means lower priority
+        refType:
+          type: string
+          description: Type of the referred element
+        refId:
+          type: integer
+          description: ID of the referred element
+        module:
+          enum:
+            - Vulnerability
+            - Configuration
+            - Availability
+            - Platform
+            - Agents
+            - InternalScanner
+          type: string
+          description: Module which the alert refers to
+        type:
+          enum:
+            - New
+            - Fixed
+            - Change
+            - Error
+            - Up
+            - Down
+            - Success
+          type: string
+          description: Alert type
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the notification
+        source:
+          type: integer
+          description: Alert source ID
+      required:
+        - checked
+        - id
+        - message
+        - module
+        - priority
+        - refId
+        - refType
+        - source
+        - timestamp
+        - title
+        - type
+    PaginatedApplicationDetailsList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationDetails'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedApplicationInListingList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationInListing'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedContextList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Context'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedContextualRiskReportEntryList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContextualRiskReportEntry'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedCurrentTargetsPortsList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrentTargetsPorts'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedDeviceList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedNotificationList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedRegistrationLightList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationLight'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedRegistrationList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Registration'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedRemediationReportList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RemediationReport'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedScanSurfaceEntryList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanSurfaceEntry'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedVulnerabilityList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vulnerability'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PatchedAgentlessScannerEdit:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Label of the scanner
+    PatchedBCOwnerGroup:
+      type: object
+      properties:
+        ownerGroupId:
+          type: integer
+          nullable: true
+    PatchedBCOwnerUser:
+      type: object
+      properties:
+        ownerUserId:
+          type: integer
+          nullable: true
+    PatchedScanSurfaceRescan:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the request completed successfully or not
+    PatchedScanSurfaceUserInputRequest:
+      type: object
+      properties:
+        userInputTags:
+          type: array
+          items: { }
+          description: List of dictionaries having the following keys
+    PatchedScopeChange:
+      type: object
+      description: Serializer that validates a scope change value
+      properties:
+        scope:
+          type: string
+    PatchedTCOwnerGroup:
+      type: object
+      properties:
+        ownerGroupId:
+          type: integer
+          nullable: true
+    PatchedTCOwnerUser:
+      type: object
+      properties:
+        ownerUserId:
+          type: integer
+          nullable: true
+    PatchedTenantInfoEdit:
+      type: object
+      description: Serializer for Tenant Info edit.
+      properties:
+        isAutoContextsGenerationEnabled:
+          type: boolean
+          description: Auto contexts generation enabled or disabled
+    RRDeviceEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the device
+        ip:
+          type: string
+          description: IP address of the device
+        hostname:
+          type: string
+          description: Hostname of the device
+        riskLevel:
+          enum:
+            - secure
+            - nonvisible
+            - vulnerable
+            - critical
+          type: string
+          description: Risk level of the device
+        totalVulnerabilities:
+          type: integer
+          description: Total number of vulns on the device
+        vulnsPotentiallyFixed:
+          type: array
+          items:
+            $ref: '#/components/schemas/RRVulnEntry'
+          description: List of vulnerabilities fixed by resolving this remediation
+      required:
+        - hostname
+        - id
+        - ip
+        - riskLevel
+        - totalVulnerabilities
+        - vulnsPotentiallyFixed
+    RRVulnEntry:
+      type: object
+      properties:
+        cpe:
+          type: string
+          description: CPE string
+        cve:
+          type: string
+          description: CVE string
+        summary:
+          type: string
+          description: Summary string
+        crss:
+          type: number
+          format: float
+          description: CRSS value
+        cvssBase:
+          type: number
+          format: float
+          description: CVSS Base value
+        isWeaponized:
+          type: boolean
+          description: Whether the vuln is weaponized
+        port:
+          type: integer
+          description: Port of the application that is exposed
+        riskFactor:
+          type: number
+          format: float
+          description: Risk factor of the vuln and app
+        severity:
+          enum:
+            - NONE
+            - LOW
+            - MEDIUM
+            - HIGH
+            - CRITICAL
+          type: string
+          description: Severity level of the vuln
+        attackVector:
+          enum:
+            - NONE
+            - LOCAL
+            - REMOTE
+            - NETWORK
+          type: string
+          description: Attack vector of the vuln
+        pluginDescription:
+          type: string
+          description: Plugin description
+      required:
+        - attackVector
+        - cpe
+        - crss
+        - cve
+        - cvssBase
+        - isWeaponized
+        - pluginDescription
+        - port
+        - riskFactor
+        - severity
+        - summary
+    Registration:
+      type: object
+      description: |-
+        Registration Serializer
+
+        Converts between a Registration entry and a JSON representation of it.
+
+        You can specify a 'fields' key in the context to trim extra fields.
+        https://stackoverflow.com/a/47120048
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        managerId:
+          type: integer
+          nullable: true
+          readOnly: true
+          description: |-
+            ID of a MSP user that is managing this account.
+                    The manager can always edit and update the registration.
+        state:
+          enum:
+            - undefined
+            - registered
+            - pending_activation
+            - pending_enablement
+            - pending_password
+            - email_sent
+            - email_opened
+            - email_clicked
+            - trial_mode
+            - trial_expired
+            - trial_extended
+            - paying
+            - suspended
+            - deleted
+            - clicked_learn_more_sc
+            - clicked_remediate_with_fp_sc
+          type: string
+          readOnly: true
+        type:
+          enum:
+            - not_available
+            - user_signup
+            - msp_created
+            - msp_checkup_invited
+            - msp_signup_invited
+          type: string
+          readOnly: true
+        friendlyType:
+          type: string
+          readOnly: true
+        signupData:
+          type: object
+          additionalProperties: { }
+          readOnly: true
+        token:
+          type: string
+          description: |-
+            Token used for signup,
+                        as well as identifying the associated account when configuring agents or internal scanners
+          maxLength: 512
+        description:
+          type: string
+          description: Optional description text
+        meta:
+          type: object
+          additionalProperties: { }
+          readOnly: true
+        groups:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+          description: Associated MSP user groups. Users in those groups can edit
+            the registration
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/RegistrationHistory'
+          description: History of the registration's states
+        photo:
+          type: string
+          readOnly: true
+        managers:
+          type: array
+          items:
+            type: integer
+          readOnly: true
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          description: If an active tenant is associated to this registration, lists
+            the users on that tenant
+        statistics:
+          allOf:
+            - $ref: '#/components/schemas/RegistrationStatistics'
+          readOnly: true
+          description: Statistics on elements that have been scanned with this tenant
+        managedType:
+          enum:
+            - self_managed
+            - co_managed
+            - fully_managed
+          type: string
+          readOnly: true
+          description: "Manage type is derived from the users that have\n        access\
+            \ to an account.\n    * \U0001F7E7 `Fully Managed` - represents an account\
+            \ that is only accessible by MSP users\n    * \U0001F7E9 `Co Managed`\
+            \ - represents an account that is accessible by both regular Footprint\
+            \ users as well as MSP users\n    * \U0001F7E6 `Self Managed` - represents\
+            \ an account that is accessible only by regular Footprint users assigned\n\
+            \        to that account\n    "
+        isEditableByLoggedInUser:
+          type: boolean
+          readOnly: true
+          description: Whether the logged in user has access to edit the registration
+      required:
+        - friendlyType
+        - groups
+        - history
+        - id
+        - isEditableByLoggedInUser
+        - label
+        - managedType
+        - managerId
+        - managers
+        - meta
+        - photo
+        - signupData
+        - state
+        - statistics
+        - token
+        - type
+        - users
+    RegistrationAssetsCountType:
+      type: object
+      properties:
+        agentless:
+          type: integer
+        agentbased:
+          type: integer
+        total:
+          type: integer
+      required:
+        - agentbased
+        - agentless
+        - total
+    RegistrationCreate:
+      type: object
+      description: Serializer containing the create fields for a registration
+      properties:
+        label:
+          type: string
+          description: The name of the registration, as it appears in listings
+        description:
+          type: string
+          description: Optional registration description
+        photo:
+          type: string
+          default: ''
+          description: Base64 representation of a photo that is associated with this
+            registration
+        associatedMspUserIds:
+          type: array
+          items:
+            type: integer
+          nullable: true
+          description: |-
+            List of MSP user ids that should be associated with this registration.
+                        If None, it will be ignored
+        managerId:
+          type: integer
+          nullable: true
+          description: |-
+            Optional manager user ID.
+                    Only taken into account if the user requesting the edit has the Global Admin role
+        manageType:
+          enum:
+            - self_managed
+            - co_managed
+            - fully_managed
+            - no_tenant
+          type: string
+          description: Type of management for the registration
+        associatedMspGroupIds:
+          type: array
+          items:
+            type: integer
+          nullable: true
+          description: |2-
+
+                    Groups of MSP users that should be associated with this registration
+                    If None, it will be ignored
+        signupData:
+          allOf:
+            - $ref: '#/components/schemas/RegistrationSignupData'
+          description: "\n        Optional overrides for the signup data.\n      \
+            \  If a tenant is not created yet, this can be used to change the default\
+            \ username\n        account that will be created\n        "
+        isPayingCustomer:
+          type: boolean
+          description: Change a tenant from trial to paying or vice versa
+        isAllMspAccessible:
+          type: boolean
+          description: Whether the tenant should be accessible by all MSP users
+      required:
+        - description
+        - label
+        - manageType
+    RegistrationEdit:
+      type: object
+      description: Serializer containing the edit fields for a registration
+      properties:
+        label:
+          type: string
+          description: The name of the registration, as it appears in listings
+        description:
+          type: string
+          description: The registration description
+        photo:
+          type: string
+          description: Base64 representation of a photo that is associated with this
+            registration
+        associatedMspUserIds:
+          type: array
+          items:
+            type: integer
+          nullable: true
+          description: |-
+            List of MSP user ids that should be associated with this registration.
+                        If None, it will be ignored
+        managerId:
+          type: integer
+          nullable: true
+          description: |-
+            Optional manager user ID.
+                    Only taken into account if the user requesting the edit has the Global Admin role
+        manageType:
+          enum:
+            - self_managed
+            - co_managed
+            - fully_managed
+            - no_tenant
+          type: string
+          description: Type of management for the registration
+        associatedMspGroupIds:
+          type: array
+          items:
+            type: integer
+          nullable: true
+          description: |2-
+
+                    Groups of MSP users that should be associated with this registration
+                    If None, it will be ignored
+        signupData:
+          allOf:
+            - $ref: '#/components/schemas/RegistrationSignupData'
+          description: "\n        Optional overrides for the signup data.\n      \
+            \  If a tenant is not created yet, this can be used to change the default\
+            \ username\n        account that will be created\n        "
+        isPayingCustomer:
+          type: boolean
+          description: Change a tenant from trial to paying or vice versa
+        isAllMspAccessible:
+          type: boolean
+          description: Whether the tenant should be accessible by all MSP users
+    RegistrationHistory:
+      type: object
+      description: Serializer for registration state change history entries
+      properties:
+        state:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+        userAgent:
+          type: string
+          readOnly: true
+      required:
+        - state
+        - timestamp
+        - userAgent
+    RegistrationLight:
+      type: object
+      description: |-
+        Registration Serializer
+
+        Lighter serializer version for registration entries
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          readOnly: true
+        state:
+          enum:
+            - undefined
+            - registered
+            - pending_activation
+            - pending_enablement
+            - pending_password
+            - email_sent
+            - email_opened
+            - email_clicked
+            - trial_mode
+            - trial_expired
+            - trial_extended
+            - paying
+            - suspended
+            - deleted
+            - clicked_learn_more_sc
+            - clicked_remediate_with_fp_sc
+          type: string
+          readOnly: true
+        description:
+          type: string
+          description: Optional description text
+      required:
+        - id
+        - label
+        - state
+    RegistrationOnlineOfflineCount:
+      type: object
+      properties:
+        online:
+          type: integer
+        offline:
+          type: integer
+        total:
+          type: integer
+      required:
+        - offline
+        - online
+        - total
+    RegistrationSignupData:
+      type: object
+      description: |-
+        Data that the user provides during signup.
+        It is used to generate tenant information, and can be edited at any time.
+      properties:
+        firstName:
+          type: string
+          description: First name of the user
+        lastName:
+          type: string
+          description: Last name of the user
+        email:
+          type: string
+          format: email
+          description: E-mail address of the user
+        companyWebsite:
+          type: string
+          description: Company website of the user
+        marketingOptIn:
+          type: boolean
+          description: Whether the user has checked the promotional materials check
+            or not
+      required:
+        - companyWebsite
+        - email
+        - firstName
+        - lastName
+    RegistrationStatistics:
+      type: object
+      properties:
+        assetsCount:
+          $ref: '#/components/schemas/RegistrationAssetsCountType'
+        agentsCount:
+          $ref: '#/components/schemas/RegistrationOnlineOfflineCount'
+        internalScannersCount:
+          $ref: '#/components/schemas/RegistrationOnlineOfflineCount'
+        webappsCount:
+          type: integer
+        securityLevel:
+          type: number
+          format: float
+      required:
+        - agentsCount
+        - assetsCount
+        - internalScannersCount
+        - securityLevel
+        - webappsCount
+    RemediationReport:
+      type: object
+      properties:
+        crss:
+          type: integer
+          description: CRSS score for this entry
+        title:
+          type: string
+          description: Title of the entry
+        information:
+          type: string
+          description: Description of the entry
+        isWeaponized:
+          type: boolean
+          description: Whether there is any weaponized vuln in the finding
+        riskIndicator:
+          type: number
+          format: float
+          description: Risk indicator score
+        devicesAffected:
+          type: array
+          items:
+            $ref: '#/components/schemas/RRDeviceEntry'
+          description: Device entries
+      required:
+        - crss
+        - devicesAffected
+        - information
+        - isWeaponized
+        - riskIndicator
+        - title
+    RemediationReportBCLabel:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the context
+        label:
+          type: string
+          description: Label of the context
+      required:
+        - id
+        - label
+    RemediationReportDeviceLabel:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the device
+        name:
+          type: string
+          description: Name of the context
+      required:
+        - id
+        - name
+    ScanStatus:
+      type: object
+      properties:
+        areaScanJobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveTaskStatus'
+          description: Extend scan area jobs
+        runningJobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveTaskStatus'
+          description: Other scan jobs
+      required:
+        - areaScanJobs
+        - runningJobs
+    ScanSurfaceCurrentTarget:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the current target
+        ip:
+          type: string
+          description: IP Address of the target
+        organization:
+          type: string
+          description: Discovered organization match
+        description:
+          type: string
+          description: Description of the target
+        hostnames:
+          type: array
+          items:
+            type: string
+          description: List of associated hostnames
+        range:
+          type: string
+          description: Matching IP range
+        isRangeScanned:
+          type: boolean
+          description: Whether the IP range is scanned during periodic scans
+        isTargetStopped:
+          type: boolean
+          description: Whether the target IP is scanned during periodic scans
+        isTargetPaused:
+          type: boolean
+          description: Whether the target IP is banned from periodic scans
+        results:
+          allOf:
+            - $ref: '#/components/schemas/CurrentTargetResults'
+          description: Overview of discovered assets
+      required:
+        - description
+        - hostnames
+        - id
+        - ip
+        - isRangeScanned
+        - isTargetPaused
+        - isTargetStopped
+        - organization
+        - range
+        - results
+    ScanSurfaceEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID of the scan entry
+        user:
+          $ref: '#/components/schemas/ScanSurfaceUser'
+        scanDate:
+          type: string
+          format: date-time
+          description: Date when the scan was performed
+        input:
+          type: string
+          description: Input that was scanned
+        scanners:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanSurfaceScannerEntry'
+      required:
+        - id
+        - input
+        - scanDate
+        - scanners
+        - user
+    ScanSurfacePotentialTarget:
+      type: object
+      properties:
+        value:
+          type: string
+          description: Value discovered
+        source:
+          type: string
+          description: Where the value was extracted from
+      required:
+        - source
+        - value
+    ScanSurfaceScannerEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Scanner ID
+        label:
+          type: string
+          description: Scanner Label
+        potentialTargets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanSurfacePotentialTarget'
+          description: Suggested targets based on input
+        currentTargets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanSurfaceCurrentTarget'
+          description: Discovered associated targets
+      required:
+        - currentTargets
+        - id
+        - label
+        - potentialTargets
+    ScanSurfaceUser:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: User first name
+        lastName:
+          type: string
+          description: User last name
+        photo:
+          type: string
+          description: Base64-encoded photo of the user
+      required:
+        - firstName
+        - lastName
+        - photo
+    ScanSurfaceUserInputRequest:
+      type: object
+      properties:
+        userInputTags:
+          type: array
+          items: { }
+          description: List of dictionaries having the following keys
+      required:
+        - userInputTags
+    ScannerSetup:
+      type: object
+      properties:
+        serverUrl:
+          type: string
+          format: uri
+        token:
+          type: string
+          maxLength: 200
+      required:
+        - serverUrl
+        - token
+    Session:
+      $ref: '#/components/schemas/SessionLoggedInOrOut'
+    SessionLoggedInOrOut:
+      type: object
+      description: Response when user is logged in
+      properties:
+        isLoggedIn:
+          type: boolean
+        id:
+          type: integer
+          description: The user ID
+        email:
+          type: string
+          format: email
+          description: User e-mail address
+        tenantPhoto:
+          type: string
+          description: Base64-encoded tenant photo
+        username:
+          type: string
+          description: Username - usually same as e-mail
+        role:
+          enum:
+            - admin
+            - technical
+            - business
+          type: string
+          description: User Footprint role
+        lastName:
+          type: string
+          description: User last name
+        photo:
+          type: string
+          description: Base64-encoded user photo
+        firstName:
+          type: string
+          description: User first name
+        releaseChannel:
+          enum:
+            - develop-
+            - master-
+            - master-production
+          type: string
+          description: Footprint installation release channel
+        accountId:
+          type: integer
+          description: ID of the account the user last logged into
+        registrationToken:
+          type: string
+          description: Token of the associated registration of the user
+        trialDaysRemaining:
+          type: integer
+          description: Number of trial days remaining, if user account is in trial
+            mode
+        weeklyCvrEnabled:
+          type: boolean
+          description: Whether weekly CVR report e-mail notifications are enabled
+        syncEmails:
+          type: boolean
+          description: Whether periodic e-mail reports are enabled
+        syncPeriod:
+          enum:
+            - daily
+            - weekly
+            - monthly
+          type: string
+          description: Sync e-mail period
+        asyncEmails:
+          type: boolean
+          description: Whether vulnerability e-mails are enabled
+        usageReportEmails:
+          type: boolean
+          description: Whether usage report e-mails are enabled (valid only for MSP
+            users)
+        domainsRemaining:
+          type: integer
+          description: Number of domain scans remaining (only in trial mode)
+        isTrialMode:
+          type: boolean
+          description: Whether the user account is in trial mode
+        isTrialExpired:
+          type: boolean
+          description: Whether the user account trial is expired
+        clearDatabaseRemaining:
+          type: integer
+          description: Number of clear database operations remaining (only in trial
+            mode)
+        isInstallationAdmin:
+          type: boolean
+          description: Whether the user is an installation admin
+        isCustomBrandingApplied:
+          type: boolean
+          description: Whether the tenant has custom branding
+        refresh:
+          type: string
+          description: JWT Refresh token
+        access:
+          type: string
+          description: JWT Access token
+      required:
+        - access
+        - accountId
+        - asyncEmails
+        - clearDatabaseRemaining
+        - domainsRemaining
+        - email
+        - firstName
+        - id
+        - isCustomBrandingApplied
+        - isInstallationAdmin
+        - isTrialExpired
+        - isTrialMode
+        - isLoggedIn
+        - lastName
+        - photo
+        - refresh
+        - registrationToken
+        - releaseChannel
+        - role
+        - syncEmails
+        - syncPeriod
+        - tenantPhoto
+        - trialDaysRemaining
+        - usageReportEmails
+        - username
+        - weeklyCvrEnabled
+    SessionLogin:
+      type: object
+      description: Username and password login for user
+      properties:
+        username:
+          type: string
+          description: The username/e-mail address of the user
+        password:
+          type: string
+          description: The password of the user
+      required:
+        - password
+        - username
+    Stat:
+      type: object
+      properties:
+        type:
+          enum:
+            - RAM
+            - Disk
+            - CPU
+          type: string
+          description: Type of the stat
+        currentValue:
+          type: integer
+          description: Last value of the stat
+        history:
+          type: array
+          items:
+            type: integer
+          description: Last recorded values for the stat
+        isOverLimit:
+          type: boolean
+          description: Whether the value is over the warning threshold
+      required:
+        - currentValue
+        - history
+        - isOverLimit
+        - type
+    StatsView:
+      type: object
+      properties:
+        e2e:
+          allOf:
+            - $ref: '#/components/schemas/E2EResult'
+          description: Instance E2E test result status
+        docker:
+          type: array
+          items:
+            $ref: '#/components/schemas/DockerStat'
+          description: Status of containers on the machine
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stat'
+          description: Status of machine
+      required:
+        - docker
+        - e2e
+        - stats
+    Status:
+      type: object
+      properties:
+        count:
+          type: object
+          additionalProperties: { }
+          description: Counts of contexts, applications and devices
+        internalScanners:
+          type: array
+          items:
+            type: object
+            additionalProperties: { }
+          description: List of installed internal scanners and their statuses
+      required:
+        - count
+        - internalScanners
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        isRunning:
+          type: boolean
+          readOnly: true
+        isDisabled:
+          type: boolean
+          readOnly: true
+        isPortEditable:
+          type: boolean
+          readOnly: true
+        priority:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        name:
+          type: string
+          readOnly: true
+        scannerId:
+          type: integer
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        progress:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        executesEverySec:
+          type: integer
+          readOnly: true
+        lastDurationSec:
+          type: integer
+          readOnly: true
+        #        scanScope:
+        #          oneOf:
+        #          - type: string
+        #          - type: array
+        #            items:
+        #              type: integer
+        #          readOnly: true
+        lastRun:
+          type: string
+          format: date-time
+          nullable: true
+        firstRun:
+          type: string
+          format: date-time
+          nullable: true
+        enqueuedIn:
+          type: array
+          items: { }
+          readOnly: true
+      required:
+        - description
+        - enqueuedIn
+        - executesEverySec
+        - id
+        - isDisabled
+        - isPortEditable
+        - isRunning
+        - lastDurationSec
+        - name
+        - priority
+        - scanScope
+        - scannerId
+    TaskEdit:
+      type: object
+      properties:
+        priority:
+          type: integer
+        executesEverySec:
+          type: integer
+      required:
+        - executesEverySec
+        - priority
+    TaskScanner:
+      type: object
+      properties:
+        scannerId:
+          type: integer
+        taskId:
+          type: integer
+        hostname:
+          type: string
+      required:
+        - hostname
+        - scannerId
+        - taskId
+    TechnicalContext:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Context'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+        - access
+        - password
+        - refresh
+        - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+        - access
+        - refresh
+    TopScenario:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          enum:
+            - secure
+            - nonvisible
+            - vulnerable
+            - critical
+          type: string
+      required:
+        - name
+        - status
+    UsageReport:
+      type: object
+      description: Serializer for Usage Report
+      properties:
+        photo:
+          type: string
+          description: Client photo
+        clientName:
+          type: string
+          description: The tenant name
+        clientType:
+          enum:
+            - managed
+            - nonmanaged
+          type: string
+          description: Client type
+        currentAssets:
+          type: integer
+          description: Number of currently available assets (same as MSP listing)
+        billableAssets:
+          type: integer
+          description: Max number of assets in report
+        reportYear:
+          type: integer
+          description: The year of the report
+        reportMonth:
+          type: integer
+          description: The month of the report. Each report is generated for a 30-day
+            month.
+        timestamp:
+          type: string
+          description: The date the report was generated (e.g. now())
+        assetsCountHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsageReportHistoryCountEntry'
+          description: Historic entry list. Used for charts
+      required:
+        - assetsCountHistory
+        - billableAssets
+        - clientName
+        - clientType
+        - currentAssets
+        - photo
+        - reportMonth
+        - reportYear
+        - timestamp
+    UsageReportHistoryCountEntry:
+      type: object
+      description: |-
+        Serializers for Usage Report History
+
+        TODO: Replace type with serializer
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp of the recorded entry (multiple entries can exist
+            for same day
+        assetCount:
+          type: integer
+          description: The number of assets recorded at that day.
+      required:
+        - assetCount
+        - timestamp
+    User:
+      type: object
+      properties:
+        isLoggedIn:
+          type: boolean
+          readOnly: true
+          default: true
+        id:
+          type: integer
+          readOnly: true
+        firstName:
+          type: string
+        lastName:
+          type: string
+        isActive:
+          type: boolean
+        email:
+          type: string
+          readOnly: true
+        groups:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        photo:
+          type: string
+        isSsoOnly:
+          type: boolean
+        password:
+          type: string
+          writeOnly: true
+        newPassword:
+          type: string
+          writeOnly: true
+        accountId:
+          type: integer
+          readOnly: true
+        trialDaysRemaining:
+          type: integer
+          readOnly: true
+        domainsRemaining:
+          type: integer
+          readOnly: true
+        clearDatabaseRemaining:
+          type: integer
+          readOnly: true
+        asyncEmails:
+          type: boolean
+        syncEmails:
+          type: boolean
+        syncPeriod:
+          type: string
+        usageReportEmails:
+          type: boolean
+        isInstallationAdmin:
+          type: boolean
+          readOnly: true
+        role:
+          type: string
+        rolePermissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        roleLimitations:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        position:
+          type: string
+          nullable: true
+        manager:
+          type: string
+      required:
+        - accountId
+        - asyncEmails
+        - clearDatabaseRemaining
+        - domainsRemaining
+        - email
+        - firstName
+        - groups
+        - id
+        - isActive
+        - isInstallationAdmin
+        - isLoggedIn
+        - isSsoOnly
+        - lastName
+        - manager
+        - photo
+        - position
+        - roleLimitations
+        - rolePermissions
+        - syncEmails
+        - syncPeriod
+        - trialDaysRemaining
+        - usageReportEmails
+    VirtualVulnerability:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Vulnerability ID
+        elementId:
+          type: integer
+          description: Related element ID
+        title:
+          type: string
+          description: Vulnerability title
+        state:
+          type: string
+          description: Vulnerability state
+        motivationText:
+          type: string
+          description: Vulnerability motivation
+        discoveredOn:
+          type: string
+          format: date-time
+          description: Date the vulnerability was discovered on
+        cvssBase:
+          type: string
+          description: Base CVSS score
+        impact:
+          type: string
+          description: Vulnerability impact
+        severity:
+          type: string
+          description: Vulnerability severity
+        vulnerabilityDetectionResult:
+          type: string
+          description: Vulnerability detection result
+        vulnerabilityDetectionMethod:
+          type: string
+          description: Vulnerability detection method
+        vulnerabilityInsight:
+          type: string
+          description: Vulnerability insight
+        solution:
+          type: string
+          description: Vulnerability solution
+        ref:
+          type: array
+          items:
+            type: string
+          description: References
+        affectedSoftwareOS:
+          type: string
+          description: Affected operating system
+        qualityOfDetection:
+          type: string
+          description: Quality of detection
+        summary:
+          type: string
+          description: Vulnerability summary
+        vulnerabilities:
+          type: array
+          items:
+            type: string
+          description: Associated CVEs
+      required:
+        - affectedSoftwareOS
+        - cvssBase
+        - discoveredOn
+        - elementId
+        - id
+        - impact
+        - motivationText
+        - qualityOfDetection
+        - ref
+        - severity
+        - solution
+        - state
+        - summary
+        - title
+        - vulnerabilities
+        - vulnerabilityDetectionMethod
+        - vulnerabilityDetectionResult
+        - vulnerabilityInsight
+    Vulnerability:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Vulnerability ID
+        elementId:
+          type: integer
+          description: Associated element ID
+        cve:
+          type: string
+          description: CVE of the vulnerability
+        affected:
+          type: string
+          description: Affected software
+        summary:
+          type: string
+          description: Vulnerability Summary
+        discovered:
+          type: string
+          format: date-time
+          description: 'Date when the vulnerability was '
+        publishedDate:
+          type: string
+          format: date-time
+          description: 'Date when the vulnerability was '
+        lastModified:
+          type: string
+          format: date-time
+          description: 'Date when the vulnerability was '
+        cvssScore:
+          type: number
+          format: float
+          description: CVSS score of the vulnerability
+        cvssImpact:
+          type: number
+          format: float
+          description: CVSS impact of the vulnerability
+        cvssExploit:
+          type: number
+          format: float
+          description: CVSS exploit of the vulnerability
+        cvssConfidentialityImpact:
+          type: string
+          description: CVSS confidentiality impact of the vulnerability
+        cvssAvailabilityImpact:
+          type: string
+          description: CVSS availability impact of the vulnerability
+        cvssVectorString:
+          type: string
+          description: CVSS vector string of the vulnerability
+        cvssIntegrityImpact:
+          type: string
+          description: CVSS integrity impact of the vulnerability
+        isCritical:
+          type: boolean
+          description: Whether the vulnerability is critical
+        isVulnerable:
+          type: boolean
+          description: Whether the vulnerability is vulnerable
+        isLowSeverity:
+          type: boolean
+          description: Whether the vulnerability is low severity
+        isMediumSeverity:
+          type: boolean
+          description: Whether the vulnerability is medium severity
+        isHighSeverity:
+          type: boolean
+          description: Whether the vulnerability is high severity
+        isCriticalSeverity:
+          type: boolean
+          description: Whether the vulnerability is critical severity
+        isPublicExploitAvailable:
+          type: boolean
+          description: Whether the vulnerability has a public exploit available
+        references:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Useful references relating to the vulnerabilities
+        exploits:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Links to publicly available exploits, if any
+        obtainAllPrivilege:
+          type: boolean
+          description: Whether the vulnerability has obtain_all_privilege risk
+        obtainOtherPrivilege:
+          type: boolean
+          description: Whether the vulnerability has obtain_other_privilege risk
+        obtainUserPrivilege:
+          type: boolean
+          description: Whether the vulnerability has obtain_user_privilege risk
+        userInteractionRequired:
+          type: boolean
+          description: Whether the vulnerability requires user interaction to be exploited
+        severity:
+          type: string
+          description: The vulnerability severity
+        state:
+          enum:
+            - discovered
+            - addedToActionPlan
+            - fixPendingConfirmation
+            - fixNotConfirmed
+            - fixConfirmed
+            - falsePositive
+            - acceptRisk
+          type: string
+          description: State of the vulnerability
+        motivationText:
+          type: string
+          description: Motivation text
+        stateFixedReason:
+          type: string
+          nullable: true
+          description: Reason why the vulnerability was fixed
+        stateLastChangedOn:
+          type: string
+          format: date-time
+          description: Date when the vulnerability last changed state
+        remediation:
+          type: string
+          description: Vulnerability remediation
+        hasRLE:
+          type: boolean
+          description: Whether the vulnerability has a Real Life Exploitation module
+      required:
+        - affected
+        - cve
+        - cvssAvailabilityImpact
+        - cvssConfidentialityImpact
+        - cvssExploit
+        - cvssImpact
+        - cvssIntegrityImpact
+        - cvssScore
+        - cvssVectorString
+        - discovered
+        - elementId
+        - exploits
+        - hasRLE
+        - id
+        - isCritical
+        - isCriticalSeverity
+        - isHighSeverity
+        - isLowSeverity
+        - isMediumSeverity
+        - isPublicExploitAvailable
+        - isVulnerable
+        - lastModified
+        - motivationText
+        - obtainAllPrivilege
+        - obtainOtherPrivilege
+        - obtainUserPrivilege
+        - publishedDate
+        - references
+        - remediation
+        - severity
+        - state
+        - stateFixedReason
+        - stateLastChangedOn
+        - summary
+        - userInteractionRequired
+    VulnerabilityChange:
+      type: object
+      description: Request for changing a vulnerability's state
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+          description: ID of vulnerabilities you want to change
+        state:
+          enum:
+            - discovered
+            - addedToActionPlan
+            - fixPendingConfirmation
+            - fixNotConfirmed
+            - fixConfirmed
+            - falsePositive
+            - acceptRisk
+          type: string
+          description: New state of vulnerability
+        motivationText:
+          type: string
+          description: Motivation text. Required for action plan state
+      required:
+        - ids
+        - motivationText
+        - state
+    WLBranding:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        supportName:
+          type: string
+        supportEmail:
+          type: string
+        mainLogo:
+          type: string
+        badgeLogo:
+          type: string
+        favicon:
+          type: string
+        primaryColor:
+          type: string
+          maxLength: 8
+        secondaryColor:
+          type: string
+          maxLength: 8
+        gaCode:
+          type: string
+        footprintDomain:
+          type: string
+        companyName:
+          type: string
+        fromEmail:
+          type: string
+        fromEmailName:
+          type: string
+        appName:
+          type: string
+          maxLength: 256
+        dateFormat:
+          type: string
+          maxLength: 255
+        timezone:
+          type: string
+          maxLength: 512
+        enableCaptcha:
+          type: boolean
+        moderateSignups:
+          type: boolean
+        hideInstallPatchesButton:
+          type: boolean
+      required:
+        - id
+        - supportEmail
+        - supportName
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+servers:
+  - url: '{protocol}://{instance}/{basePath}'
+    variables:
+      instance:
+        default: dev.codacloud.net
+        description: Your instance URL
+      protocol:
+        default: https
+        enum:
+          - http
+          - https
+      basePath:
+        default: api
+        enum:
+          - api
