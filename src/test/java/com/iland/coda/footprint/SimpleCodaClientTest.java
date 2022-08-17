@@ -17,6 +17,7 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.TestValues.TEST_DESCRIPTION;
 import static com.iland.coda.footprint.TestValues.TEST_LABEL;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,6 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.CVR;
+import net.codacloud.model.CVRMostVulnServer;
+import net.codacloud.model.CVRVulnerability;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.User;
 import org.junit.jupiter.api.AfterAll;
@@ -113,10 +116,28 @@ class SimpleCodaClientTest {
 			client.listAccounts(null).stream().map(Account::getId)
 				.map(this::getReports).map(Map::values)
 				.flatMap(Collection::stream).findFirst().get().retrieve();
-
 		assertNotNull(report);
+
+		final List<CVRMostVulnServer> technicalReport =
+			report.getTechnicalReport();
+		assertFalse(technicalReport.isEmpty());
+
+		technicalReport.forEach(techReport -> {
+			assertNotNullOrEmpty(techReport.getHostname());
+			assertNotNullOrEmpty(techReport.getIp());
+
+			final List<CVRVulnerability> vulnerabilities =
+				techReport.getVulnerabilities();
+			assertFalse(vulnerabilities.isEmpty());
+			vulnerabilities.stream().map(CVRVulnerability::getSummary)
+				.forEach(SimpleCodaClientTest::assertNotNullOrEmpty);
+		});
 	}
 
+	private static void assertNotNullOrEmpty(final String value) {
+		assertNotNull(value);
+		assertNotEquals("", value);
+	}
 
 	private Map<String, CodaClient.LazyCVR> getReports(
 		final Integer accountId) {
