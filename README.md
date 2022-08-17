@@ -6,7 +6,7 @@ An Unofficial SDK for CODA Footprint written in Java
 ## Developers
 Required:
 
-* [x] Java >= 11
+* [x] Java >= 8
 * [x] Maven
 
 Clone repo then execute:
