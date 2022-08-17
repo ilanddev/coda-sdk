@@ -3,11 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.codacloud</groupId>
     <artifactId>footprint</artifactId>
-    <packaging>jar</packaging>
-    <name>footprint</name>
     <version>1.0-SNAPSHOT</version>
-    <url>https://github.com/ilanddev/coda-sdk</url>
+    <packaging>jar</packaging>
+
+    <name>CODA Footprint</name>
     <description>Unofficial Java SDK for CODA Footprint</description>
+    <url>https://github.com/ilanddev/coda-sdk</url>
 
     <properties>
         <java.version>11</java.version>
@@ -33,6 +34,63 @@
         <com.google.guava.version>31.1-jre</com.google.guava.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
     </properties>
+
+    <licenses>
+        <license>
+            <name>BSD 3-Clause License</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <developerConnection>
+            scm:git:https://github.com/ilanddev/coda-sdk.git
+        </developerConnection>
+        <url>https://github.com/ilanddev/coda-sdk.git</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>iland-maven-foss-snapshot</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
+            </url>
+        </snapshotRepository>
+        <repository>
+            <id>iland-maven-foss</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
+            </url>
+        </repository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>iland-maven-foss-snapshot</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
+            </url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>iland-maven-foss</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
+            </url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
