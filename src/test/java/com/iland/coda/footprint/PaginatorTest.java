@@ -28,11 +28,11 @@ class PaginatorTest {
 
 	@Test
 	void testThatAllItemsAreFetched() throws Throwable {
-		final CodaClient client = Clients.cachingCodaClient.login();
+		final SimpleCodaClient client =
+			(SimpleCodaClient) Clients.simpleCodaClient.login();
 
 		final PaginatedRegistrationLightList firstPage =
-			Clients.simpleCodaClient.adminApi.adminRegistrationsLightRetrieve(
-				null, 1, 1);
+			client.adminApi.adminRegistrationsLightRetrieve(null, 1, 1);
 
 		final Set<Integer> ids =
 			client.listRegistrations().stream().map(RegistrationLight::getId)
