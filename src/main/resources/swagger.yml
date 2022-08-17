@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.12.16
+  version: 7.12.27
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -213,12 +213,27 @@ paths:
         Returns an usage report for a certain period, if it exists.
         If not, returns the list of periods with available reports.
       parameters:
+        - in: query
+          name: filter
+          schema:
+            type: string
+          description: Text filter for entries
         - in: path
           name: month
           schema:
             type: integer
           description: Month of the report
           required: true
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page of the report to retrieve
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements to be present on the page
         - in: path
           name: year
           schema:
@@ -234,7 +249,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UsageReport'
+                $ref: '#/components/schemas/PaginatedUsageReportList'
           description: ''
   /admin/scanners/:
     get:
@@ -2039,13 +2054,15 @@ paths:
 
         There are multiple states:
 
-        1. No assets in scope (new account or the data was deleted)
-        2. Contextual Risk Report is in progress -> add percentage and estimated time to completion. If we have a previous report - add the generated date, else it means that we don't have a previous report
-        3. An extend scan is currently running
-        4. There are new changes in data, but the report isn't up to date and the job is not running yet.
-
-        Note:
-            If the user goes to page between the deletion of previous report and the save of the new report
+        get_report_status_state gets the state of the report as follow:
+            1. No assets in scope (new tenant or the data was deleted)
+            2. No required contexts:
+                - To run the report, a context with devices should be present.
+            3. Remediation Report is in progress -> add percentage and estimated time to completion
+            4. An extend scan is currently running
+            5. There are new changes in data, but the report isn't up to date and the job is not running yet.
+            6. Report not generated -> when all the prerequisites are fullfiled but the task did not run ever.
+            7. Are_assets_secure - No report should be load
       tags:
         - console
       security:
@@ -2740,6 +2757,34 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+  /internalScanner/register/:
+    post:
+      operationId: internalScannerRegisterCreate
+      parameters:
+        - in: header
+          name: User-Agent
+          schema:
+            type: string
+            default: Footprint Internal Scanner
+          description: User agent. Must include `Footprint Internal Scanner` for all
+            endpoints on the `/internalscanner/` route
+          required: true
+      tags:
+        - internalScanner
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ISRegister'
+      security:
+        - jwtAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalScannerRegisterResponseSrz'
+          description: ''
 components:
   schemas:
     Account:
@@ -3404,28 +3449,6 @@ components:
       required:
         - data
         - success
-    CRRMetaStatus:
-      type: object
-      description: Serializer for the Meta key in `CRRStatus Serializer`
-      properties:
-        progress:
-          type: integer
-          description: Progress of the report generation
-        eta:
-          type: string
-          description: Estimated time of completion
-        isPreviousReportAvailable:
-          type: boolean
-          description: Whether there is a previous report available
-        lastGenerationDate:
-          type: string
-          format: date-time
-          description: Last generation date
-      required:
-        - eta
-        - isPreviousReportAvailable
-        - lastGenerationDate
-        - progress
     CVR:
       type: object
       properties:
@@ -3451,7 +3474,7 @@ components:
         technicalReport:
           type: array
           items:
-            $ref: '#/components/schemas/CVRContext'
+            $ref: '#/components/schemas/CVRMostVulnServer'
           description: Technical contexts report
         securityInsights:
           allOf:
@@ -4413,11 +4436,9 @@ components:
       properties:
         state:
           type: string
-          readOnly: true
         meta:
-          allOf:
-            - $ref: '#/components/schemas/CRRMetaStatus'
-          readOnly: true
+          type: object
+          additionalProperties: { }
       required:
         - meta
         - state
@@ -4780,6 +4801,73 @@ components:
       required:
         - scanTargets
         - scanners
+    ISRegister:
+      type: object
+      properties:
+        token:
+          type: string
+          nullable: true
+          description: Tenant token
+        workerVersion:
+          type: string
+          nullable: true
+          description: Internal scanner worker version
+        controllerVersion:
+          type: string
+          nullable: true
+          description: Internal scanner controller version
+        hostname:
+          type: string
+          nullable: true
+          description: Internal scanner hostname
+        publicIp:
+          type: string
+          nullable: true
+          description: Internal scanner public_ip
+        privateIp:
+          type: string
+          nullable: true
+          description: Internal scanner private_ip
+        operatingSystem:
+          type: string
+          nullable: true
+          description: Internal scanner OS
+        agentGuid:
+          type: string
+          nullable: true
+          description: Internal scanner Agent GUID (if installed via agent)
+        scannerGuid:
+          type: string
+          nullable: true
+          description: Internal scanner GUID (if previously installed)
+    InternalScannerRegisterResponseSrz:
+      type: object
+      properties:
+        guid:
+          type: string
+        virtualHost:
+          type: string
+        messageBrokerUsername:
+          type: string
+        ecrAccessKey:
+          type: string
+        ecrSecretAccessKey:
+          type: string
+        password:
+          type: string
+        port:
+          type: string
+        fqdn:
+          type: string
+      required:
+        - ecrAccessKey
+        - ecrSecretAccessKey
+        - fqdn
+        - guid
+        - messageBrokerUsername
+        - password
+        - port
+        - virtualHost
     Notification:
       type: object
       description: Serializer for the Notification item
@@ -5076,6 +5164,27 @@ components:
         - page
         - totalCount
         - totalPages
+    PaginatedUsageReportList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UsageReport'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
     PaginatedVulnerabilityList:
       type: object
       properties:
@@ -5274,6 +5383,7 @@ components:
             ID of a MSP user that is managing this account.
                     The manager can always edit and update the registration.
         state:
+          # modified by Tag; formerly oneOf
           enum:
             - undefined
             - registered
@@ -5354,6 +5464,7 @@ components:
           readOnly: true
           description: Statistics on elements that have been scanned with this tenant
         managedType:
+          # modified by Tag; formerly oneOf
           enum:
             - self_managed
             - co_managed
@@ -5552,6 +5663,7 @@ components:
           type: string
           readOnly: true
         state:
+          # modified by Tag; formerly oneOf
           enum:
             - undefined
             - registered
@@ -5856,6 +5968,7 @@ components:
         - serverUrl
         - token
     Session:
+      # modified by Tag; formerly oneOf
       $ref: '#/components/schemas/SessionLoggedInOrOut'
     SessionLoggedInOrOut:
       type: object
@@ -5981,6 +6094,7 @@ components:
         - usageReportEmails
         - username
         - weeklyCvrEnabled
+    # SessionLoggedOut removed by Tag
     SessionLogin:
       type: object
       description: Username and password login for user
@@ -6095,6 +6209,7 @@ components:
         lastDurationSec:
           type: integer
           readOnly: true
+        # modified by Tag; formerly oneOf
         #        scanScope:
         #          oneOf:
         #          - type: string
