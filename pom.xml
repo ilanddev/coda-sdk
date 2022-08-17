@@ -3,38 +3,96 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.codacloud</groupId>
     <artifactId>footprint</artifactId>
-    <packaging>jar</packaging>
-    <name>footprint</name>
     <version>1.0-SNAPSHOT</version>
-    <url>https://github.com/ilanddev/coda-sdk</url>
+    <packaging>jar</packaging>
+
+    <name>CODA Footprint</name>
     <description>Unofficial Java SDK for CODA Footprint</description>
+    <url>https://github.com/ilanddev/coda-sdk</url>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <!-- OpenAPI Generator -->
         <gson-fire.version>1.8.5</gson-fire.version>
-        <swagger-core.version>1.6.3</swagger-core.version>
-        <okhttp.version>4.9.2</okhttp.version>
-        <gson.version>2.8.8</gson.version>
+        <swagger-core.version>1.6.6</swagger-core.version>
+        <okhttp.version>4.10.0</okhttp.version>
+        <gson.version>2.9.0</gson.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
-        <jackson-databind-nullable.version>0.2.2</jackson-databind-nullable.version>
-        <threetenbp.version>1.5.0</threetenbp.version>
-        <jakarta-annotation.version>1.3.5</jakarta-annotation.version>
-        <junit.version>4.13.2</junit.version>
+        <jackson-databind-nullable.version>0.2.3</jackson-databind-nullable.version>
+        <threetenbp.version>1.6.0</threetenbp.version>
+        <jakarta-annotation.version>2.1.0</jakarta-annotation.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spotless.version>2.17.3</spotless.version>
+        <javax.annotation.version>1.3.2</javax.annotation.version>
         <jsr305.version>3.0.2</jsr305.version>
-        <mockito-core.version>3.12.4</mockito-core.version>
         <!-- CODA -->
-        <junit-jupiter.version>5.8.1</junit-jupiter.version>
+        <junit-jupiter.version>5.9.0</junit-jupiter.version>
         <ch.qos.logback.logback-classic>1.3.0-alpha10
         </ch.qos.logback.logback-classic>
         <org.slf4j.slf4j-api>2.0.0-alpha5</org.slf4j.slf4j-api>
-        <com.google.guava.version>31.0.1-jre</com.google.guava.version>
+        <com.google.guava.version>31.1-jre</com.google.guava.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
     </properties>
+
+    <licenses>
+        <license>
+            <name>BSD 3-Clause License</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <developerConnection>
+            scm:git:https://github.com/ilanddev/coda-sdk.git
+        </developerConnection>
+        <url>https://github.com/ilanddev/coda-sdk.git</url>
+      <tag>HEAD</tag>
+  </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>iland-maven-foss-snapshot</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
+            </url>
+        </snapshotRepository>
+        <repository>
+            <id>iland-maven-foss</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
+            </url>
+        </repository>
+    </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>iland-maven-foss-snapshot</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
+            </url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>iland-maven-foss</id>
+            <url>
+                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
+            </url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>
@@ -60,6 +118,8 @@
                             <artifactVersion>{$project.version}</artifactVersion>
                             <apiPackage>net.codacloud.api</apiPackage>
                             <modelPackage>net.codacloud.model</modelPackage>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
                         </configuration>
                     </execution>
                 </executions>
@@ -286,6 +346,12 @@
             <artifactId>swagger-annotations</artifactId>
             <version>${swagger-core.version}</version>
         </dependency>
+        <!-- @Generated annotation -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>${javax.annotation.version}</version>
+        </dependency>
         <!-- @Nullable annotation -->
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -332,19 +398,6 @@
             <groupId>org.openapitools</groupId>
             <artifactId>jackson-databind-nullable</artifactId>
             <version>${jackson-databind-nullable.version}</version>
-        </dependency>
-        <!-- test dependencies -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>${mockito-core.version}</version>
-            <scope>test</scope>
         </dependency>
         <!-- CODA -->
         <dependency>

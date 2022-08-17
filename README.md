@@ -6,7 +6,7 @@ An Unofficial SDK for CODA Footprint written in Java
 ## Developers
 Required:
 
-* [x] Java >= 11
+* [x] Java >= 8
 * [x] Maven
 
 Clone repo then execute:
@@ -19,11 +19,30 @@ make install
 ### Installation
 Add the following to your pom.xml:
 ```xml
-<dependency>
-    <groupId>net.codacloud</groupId>
-    <artifactId>footprint</artifactId>
-    <version>1.0</version>
-</dependency>
+<repositories>
+    <repository>
+        <id>iland-maven-foss</id>
+        <url>
+            https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
+        </url>
+        <releases>
+            <enabled>true</enabled>
+        </releases>
+        <snapshots>
+            <enabled>false</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>net.codacloud</groupId>
+            <artifactId>footprint</artifactId>
+            <version>${footprint.version}</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
 ```
 
 ### Example Usage

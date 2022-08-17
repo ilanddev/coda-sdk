@@ -15,12 +15,31 @@
 
 package com.iland.coda.footprint;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import com.google.common.base.Predicates;
+
 final class Clients {
 
-	private static final String apiBasePath =
-		createApiBasePath(System.getenv("FOOTPRINT_SUBDOMAIN"));
-	private static final String username = System.getenv("FOOTPRINT_USERNAME");
-	private static final String password = System.getenv("FOOTPRINT_PASSWORD");
+	private static final String apiBasePath, username, password;
+
+	static {
+		final String missingEnv =
+			Arrays.asList("FOOTPRINT_SUBDOMAIN", "FOOTPRINT_USERNAME",
+					"FOOTPRINT_PASSWORD").stream()
+				.filter(Predicates.not(System.getenv()::containsKey))
+				.collect(Collectors.joining(","));
+		if (!missingEnv.isEmpty()) {
+			throw new RuntimeException(
+				"The following environment variables must be set: "
+					+ missingEnv);
+		}
+
+		apiBasePath = createApiBasePath(System.getenv("FOOTPRINT_SUBDOMAIN"));
+		username = System.getenv("FOOTPRINT_USERNAME");
+		password = System.getenv("FOOTPRINT_PASSWORD");
+	}
 
 	// share clients between tests to improve performance
 	static final SimpleCodaClient simpleCodaClient =
