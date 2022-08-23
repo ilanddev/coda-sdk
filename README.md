@@ -3,17 +3,19 @@ An Unofficial SDK for CODA Footprint written in Java
 
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-## Developers
+## Developers / Testing
 Required:
 
 * [x] Java >= 8
 * [x] Maven
 
-Clone repo then execute:
 ```shell
+git clone git@github.com:ilanddev/coda-sdk.git
+cd coda-sdk
 cp footprint.env.example footprint.env
 # add your credentials to footprint.env
-make install
+make test # mvn clean, validate, compile, and test
+make install # mvn clean, validate, compile, test, package, verify, and install
 ```
 
 ### Installation

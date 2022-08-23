@@ -23,7 +23,7 @@ import net.codacloud.model.RegistrationLight;
  *
  * @author <a href="mailto:tagspilman@1111systems.com">Tag Spilman</a>
  */
-public class Registrations {
+public final class Registrations {
 
 	private Registrations() {
 	}
@@ -37,7 +37,8 @@ public class Registrations {
 	public static RegistrationLight toLight(final Registration registration) {
 		return new RegistrationLight(registration.getId(),
 			registration.getLabel(), RegistrationLight.StateEnum.fromValue(
-			registration.getState().getValue()));
+			registration.getState().getValue())).description(
+			registration.getDescription());
 	}
 
 }

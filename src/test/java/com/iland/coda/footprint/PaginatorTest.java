@@ -38,7 +38,8 @@ class PaginatorTest {
 			client.listRegistrations().stream().map(RegistrationLight::getId)
 				.collect(Collectors.toSet());
 
-		assertEquals(firstPage.getTotalCount(), ids.size());
+		assertEquals(firstPage.getTotalCount(), ids.size(),
+			"size of retrieved data set does not match total from first page");
 	}
 
 }

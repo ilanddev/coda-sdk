@@ -8,5 +8,8 @@ update:
 clean:
 	mvn clean
 
+test: clean
+	source footprint.env && mvn test
+
 install: clean
 	source footprint.env && mvn install

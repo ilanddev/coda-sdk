@@ -112,7 +112,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public void triggerScan(final List<String> targets,
+	public void updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
 		final ExtendMessage scanSurface =
