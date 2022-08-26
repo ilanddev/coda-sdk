@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.12.28
+  version: 7.12.29
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -2410,7 +2410,7 @@ paths:
             back on `original_tenant_id` from the auth endpoint
     post:
       operationId: consoleScanSurfaceScannersCreate
-      description: Sends commands to scanners. Currently this is a stub.
+      description: Sends commands to scanners.
       tags:
         - console
       security:
@@ -3106,6 +3106,11 @@ components:
           type: string
           nullable: true
           maxLength: 1000
+        uptime:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
         advancedScannerStatus:
           type: string
           nullable: true
@@ -3132,6 +3137,13 @@ components:
           type: string
           nullable: true
           maxLength: 12
+        toolkitVersion:
+          type: string
+          nullable: true
+          maxLength: 12
+        remoteCommand:
+          type: string
+          nullable: true
         installType:
           enum:
             - agent_based
@@ -3155,6 +3167,18 @@ components:
           type: string
           nullable: true
           maxLength: 512
+        sshPublicKey:
+          type: string
+          nullable: true
+        isAutoSshRunning:
+          type: boolean
+        tunnelStatus:
+          enum:
+            - started
+            - starting
+            - stopped
+            - stopping
+          type: string
         type:
           enum:
             - internal
