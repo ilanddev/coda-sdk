@@ -2,8 +2,7 @@ SHELL := /bin/bash
 
 all: update install
 
-# check for updates
-check:
+version:
 	@echo -n "Current "
 	@grep version src/main/resources/swagger.yml | head -n 1 | awk '{ print $2 }'
 	@echo -n "Latest "
