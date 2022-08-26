@@ -66,8 +66,9 @@ final class CachingCodaClient implements CodaClient {
 	private final LoadingCache<String, Set<RegistrationLight>>
 		registrationsCache =
 		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.DAYS)
-			.removalListener(createRemovalListener("Registration cache"))
+			.expireAfterWrite(1, TimeUnit.DAYS).removalListener(
+				CachingCodaClient.<String, Set<RegistrationLight>>createRemovalListener(
+					"Registration cache"))
 			.build(new CacheLoader<String, Set<RegistrationLight>>() {
 				@Override
 				public Set<RegistrationLight> load(final String category)
@@ -81,8 +82,9 @@ final class CachingCodaClient implements CodaClient {
 
 	private final LoadingCache<Integer, Set<Account>> accountCache =
 		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.DAYS)
-			.removalListener(createRemovalListener("Account cache"))
+			.expireAfterWrite(1, TimeUnit.DAYS).removalListener(
+				CachingCodaClient.<Integer, Set<Account>>createRemovalListener(
+					"Account cache"))
 			.build(new CacheLoader<Integer, Set<Account>>() {
 				@Override
 				public Set<Account> load(final Integer accountId)
@@ -95,8 +97,9 @@ final class CachingCodaClient implements CodaClient {
 	private final LoadingCache<Integer, List<AgentlessScannerSrz>>
 		scannerCache =
 		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.HOURS)
-			.removalListener(createRemovalListener("Scanner cache"))
+			.expireAfterWrite(1, TimeUnit.HOURS).removalListener(
+				CachingCodaClient.<Integer, List<AgentlessScannerSrz>>createRemovalListener(
+					"Scanner cache"))
 			.build(new CacheLoader<Integer, List<AgentlessScannerSrz>>() {
 				@Override
 				public List<AgentlessScannerSrz> load(final Integer accountId)
@@ -107,9 +110,9 @@ final class CachingCodaClient implements CodaClient {
 			});
 	private final LoadingCache<String, List<User>> userCache =
 		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.HOURS)
-			.removalListener(createRemovalListener("User cache"))
-			.build(new CacheLoader<String, List<User>>() {
+			.expireAfterWrite(1, TimeUnit.HOURS).removalListener(
+				CachingCodaClient.<String, List<User>>createRemovalListener(
+					"User cache")).build(new CacheLoader<String, List<User>>() {
 				@Override
 				public List<User> load(final String value) throws Exception {
 					return delegatee.listUsers();
@@ -190,12 +193,15 @@ final class CachingCodaClient implements CodaClient {
 		final Registration updatedRegistration =
 			delegatee.updateRegistration(registrationId, edit);
 
-		final Set<RegistrationLight> registrations = getRegistrations("");
-		registrations.stream().filter(r -> registrationId == r.getId())
+		final Set<RegistrationLight> registrations =
+			getRegistrations(DEFAULT_CATEGORY);
+		registrations.stream().filter(r -> registrationId.equals(r.getId()))
 			.findFirst().ifPresent(r -> {
 				registrations.remove(r);
 				registrations.add(toLight(updatedRegistration));
 			});
+
+		accountCache.invalidateAll();
 
 		return updatedRegistration;
 	}
@@ -230,11 +236,11 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public void triggerScan(final List<String> targets,
+	public void updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
 		// TODO: invalidate scan surface cache
-		delegatee.triggerScan(targets, scanners, accountId);
+		delegatee.updateScanSurface(targets, scanners, accountId);
 	}
 
 	@Override
@@ -305,7 +311,8 @@ final class CachingCodaClient implements CodaClient {
 		return Collections.unmodifiableMap(accountCache.asMap());
 	}
 
-	private static RemovalListener createRemovalListener(final String name) {
+	private static <K, V> RemovalListener<K, V> createRemovalListener(
+		final String name) {
 		return notification -> logger.debug("{}: '{}' was {} because it was {}",
 			name, notification.getKey(),
 			notification.wasEvicted() ? "evicted" : "removed",

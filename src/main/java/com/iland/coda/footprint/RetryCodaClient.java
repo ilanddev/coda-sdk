@@ -137,11 +137,11 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public void triggerScan(final List<String> targets,
+	public void updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
 		retryIfNecessary(() -> {
-			delegatee.triggerScan(targets, scanners, accountId);
+			delegatee.updateScanSurface(targets, scanners, accountId);
 
 			return null;
 		});
@@ -238,6 +238,7 @@ final class RetryCodaClient implements CodaClient {
 		return retryIfNecessary(() -> delegatee.listUsers());
 	}
 
+	@SuppressWarnings({"unchecked"})
 	private <V> V retryIfNecessary(final Callable<V> retryable)
 		throws ApiException {
 		try {

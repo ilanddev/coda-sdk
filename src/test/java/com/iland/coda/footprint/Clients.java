@@ -15,12 +15,23 @@
 
 package com.iland.coda.footprint;
 
+import static com.iland.coda.footprint.TestValues.TEST_LABEL;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Predicates;
+import net.codacloud.ApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+/**
+ * {@link Clients} centralizes authentication for clients to be uses across
+ * integration tests.
+ */
 final class Clients {
+
+	private static final Logger logger = LoggerFactory.getLogger(Clients.class);
 
 	private static final String apiBasePath, username, password;
 
@@ -31,9 +42,10 @@ final class Clients {
 				.filter(Predicates.not(System.getenv()::containsKey))
 				.collect(Collectors.joining(","));
 		if (!missingEnv.isEmpty()) {
+			logger.error("The following environment variables must be set: {}",
+				missingEnv);
 			throw new RuntimeException(
-				"The following environment variables must be set: "
-					+ missingEnv);
+				"Missing environment variables: " + missingEnv);
 		}
 
 		apiBasePath = createApiBasePath(System.getenv("FOOTPRINT_SUBDOMAIN"));
@@ -54,6 +66,25 @@ final class Clients {
 
 	private static String createApiBasePath(final String subdomain) {
 		return String.format("https://%s.codacloud.net/api", subdomain);
+	}
+
+	/**
+	 * Deletes test registrations. Should be run before and after all tests that create a test registration.
+	 *
+	 * @param client a {@link CodaClient coda client}
+	 * @throws ApiException
+	 */
+	static void deleteTestRegistrations(final CodaClient client)
+		throws ApiException {
+		client.listRegistrations().stream()
+			.filter(r -> TEST_LABEL.equals(r.getLabel()))
+			.forEach(registration -> {
+				try {
+					client.deleteRegistration(registration);
+				} catch (ApiException e) {
+					logger.error(e.getMessage(), e);
+				}
+			});
 	}
 
 }

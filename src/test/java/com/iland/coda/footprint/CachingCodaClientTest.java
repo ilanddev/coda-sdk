@@ -23,10 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
+import net.codacloud.model.RegistrationEdit;
 import net.codacloud.model.RegistrationLight;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +47,8 @@ class CachingCodaClientTest {
 		final CachingCodaClient client =
 			(CachingCodaClient) Clients.cachingCodaClient.login();
 		final Runnable assertAccountCacheWasInvalidated =
-			() -> assertTrue(client.getAccountCache().isEmpty());
+			() -> assertTrue(client.getAccountCache().isEmpty(),
+				"cached collection must be empty after being invalidated");
 
 		final RegistrationLight registration =
 			client.createRegistration(TEST_LABEL, TEST_DESCRIPTION);
@@ -54,7 +57,8 @@ class CachingCodaClientTest {
 		boolean containsRegistration = client.listRegistrations().stream()
 			.anyMatch(r -> Objects.equals(r.getId(), registration.getId()));
 		try {
-			assertTrue(containsRegistration);
+			assertTrue(containsRegistration,
+				"new registration must be present in cached collection");
 		} finally {
 			client.deleteRegistration(registration);
 			assertAccountCacheWasInvalidated.run();
@@ -63,7 +67,8 @@ class CachingCodaClientTest {
 		containsRegistration =
 			client.listRegistrations().stream().map(RegistrationLight::getId)
 				.anyMatch(id -> Objects.equals(id, registration.getId()));
-		assertFalse(containsRegistration);
+		assertFalse(containsRegistration,
+			"deleted registration must not be present in cached collection");
 	}
 
 	@Test
@@ -83,12 +88,34 @@ class CachingCodaClientTest {
 	private static <R> void testThatResultWasCached(
 		final Callable<Collection<R>> callable) throws Exception {
 		final Collection<R> collection = callable.call();
-		assertFalse(collection.isEmpty());
+		assertFalse(collection.isEmpty(),
+			"cached collection must not be empty");
 
 		final Stopwatch stopwatch = Stopwatch.createStarted();
 		callable.call();
 		final long elapsedMillis = stopwatch.elapsed(TimeUnit.MILLISECONDS);
-		assertEquals(0, elapsedMillis);
+		assertEquals(0, elapsedMillis,
+			"cached collection must return instantly");
+	}
+
+	@Test
+	void testRegistrationEditReplacesCachedRegistration() throws Throwable {
+		final CodaClient client = Clients.cachingCodaClient.login();
+
+		final RegistrationLight registration =
+			client.findOrCreateRegistration(TEST_LABEL, TEST_DESCRIPTION);
+
+		final String description = "foo";
+		client.updateRegistration(registration.getId(),
+			new RegistrationEdit().description(description)
+				.manageType(RegistrationEdit.ManageTypeEnum.FULLY_MANAGED));
+
+		final Optional<RegistrationLight> optionalRegistration =
+			client.getRegistrationForLabel(TEST_LABEL);
+		assertTrue(optionalRegistration.isPresent(),
+			"test registration must be present");
+		assertEquals(description, optionalRegistration.get().getDescription(),
+			"cached registration description must match new description");
 	}
 
 }

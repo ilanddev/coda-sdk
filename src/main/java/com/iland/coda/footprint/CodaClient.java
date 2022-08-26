@@ -15,6 +15,9 @@
 
 package com.iland.coda.footprint;
 
+import static java.util.stream.Collectors.toMap;
+
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Throwables;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AgentlessScannerSrz;
@@ -147,6 +151,35 @@ public interface CodaClient {
 		throws ApiException;
 
 	/**
+	 * Returns the {@link Integer accountId} for the supplied {@link RegistrationLight registration}.
+	 *
+	 * @param registration a {@link RegistrationLight registration}
+	 * @return the {@link Integer accountId} for the supplied {@link RegistrationLight registration}
+	 * @throws ApiException
+	 */
+	default Integer registrationToAccountId(
+		final RegistrationLight registration) throws ApiException {
+		final String label = registration.getLabel();
+		return findAccountWithName(label).map(Account::getId).orElseThrow(
+			() -> new ApiException(
+				String.format("no account exists for name '%s'", label)));
+	}
+
+	/**
+	 * Returns an {@link Optional} {@link Account} with the supplied name.
+	 *
+	 * @param name the name of the {@link Account}
+	 * @return an {@link Optional} {@link Account} with the supplied name
+	 * @throws ApiException
+	 */
+	default Optional<Account> findAccountWithName(final String name)
+		throws ApiException {
+		return listAccounts(null).stream()
+			.filter(account -> Objects.equals(account.getName(), name))
+			.findFirst();
+	}
+
+	/**
 	 * Lists accounts into which the current user can sign in to.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint
@@ -208,6 +241,21 @@ public interface CodaClient {
 	void deleteRegistration(RegistrationLight registration) throws ApiException;
 
 	/**
+	 * Returns a {@link Map} of scanner IDs keyed by scanner label.
+	 *
+	 * @param accountId Account ID you want to receive request for.
+	 * @return a {@link Map} of scanner IDs keyed by scanner label
+	 * @throws ApiException
+	 */
+	default Map<String, Integer> getScannerIdByLabel(final Integer accountId)
+		throws ApiException {
+		return getScanners(accountId).stream().collect(
+			toMap(AgentlessScannerSrz::getLabel, AgentlessScannerSrz::getId,
+				/* in the event of a duplicate key use the newer scanner */
+				Math::max));
+	}
+
+	/**
 	 * Get list of available scanners. This includes the default Cloud Scanner, as well as internal scanners.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
@@ -218,6 +266,14 @@ public interface CodaClient {
 		throws ApiException;
 
 	/**
+	 * An alias of {@link CodaClient#updateScanSurface(List, List, Integer)}.
+	 */
+	default void triggerScan(List<String> targets, List<Integer> scanners,
+		Integer accountId) throws ApiException {
+		updateScanSurface(targets, scanners, accountId);
+	}
+
+	/**
 	 * Updates the scan surface with new data (extend scan surface modal). <strong>This is an idempotent operation!</strong>
 	 *
 	 * @param targets   a {@link List} of targets, e.g. hostname, IP address, or CIDR notation
@@ -225,7 +281,7 @@ public interface CodaClient {
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @throws ApiException
 	 */
-	void triggerScan(List<String> targets, List<Integer> scanners,
+	void updateScanSurface(List<String> targets, List<Integer> scanners,
 		Integer accountId) throws ApiException;
 
 	/**
@@ -255,6 +311,54 @@ public interface CodaClient {
 	ScanStatus getScanStatus(Integer accountId) throws ApiException;
 
 	/**
+	 * Retrieve the collated {@link ScanSurfaceEntry scan surface entries} for all scanners for the given {@link Integer accountId}.
+	 *
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a collated {@link ScanSurfaceEntry scan surface entries} for all scanners for the given {@link Integer accountId}
+	 * @throws ApiException
+	 */
+	default Set<ScanSurfaceEntry> getScanSurface(final Integer accountId)
+		throws ApiException {
+		try {
+			return getScannerIdByLabel(accountId).values().stream()
+				.map(scannerId -> {
+					try {
+						return getScanSurface(scannerId, accountId);
+					} catch (ApiException e) {
+						throw new RuntimeException(e);
+					}
+				}).flatMap(Collection::stream).collect(Collectors.toSet());
+		} catch (RuntimeException e) {
+			Throwables.throwIfInstanceOf(e.getCause(), ApiException.class);
+			throw e;
+		}
+	}
+
+	/**
+	 * Retrieve the collated {@link ScanSurfaceEntry scan surface entries} for the given scanners and {@link Integer accountId}.
+	 *
+	 * @param scannerIds a {@link List} of scanner IDs
+	 * @param accountId  Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a collated {@link ScanSurfaceEntry scan surface entries} for all scanners for the given {@link Integer accountId}
+	 * @throws ApiException
+	 */
+	default Set<ScanSurfaceEntry> getScanSurface(final List<Integer> scannerIds,
+		final Integer accountId) throws ApiException {
+		try {
+			return scannerIds.stream().map(scannerId -> {
+				try {
+					return getScanSurface(scannerId, accountId);
+				} catch (ApiException e) {
+					throw new RuntimeException(e);
+				}
+			}).flatMap(Collection::stream).collect(Collectors.toSet());
+		} catch (RuntimeException e) {
+			Throwables.throwIfInstanceOf(e.getCause(), ApiException.class);
+			throw e;
+		}
+	}
+
+	/**
 	 * Retrieve list of user inputs and the resulting assets.
 	 *
 	 * @param scannerId Optional scanner ID filter. If not set or invalid, falls back on all scanners
@@ -264,6 +368,29 @@ public interface CodaClient {
 	 */
 	List<ScanSurfaceEntry> getScanSurface(Integer scannerId, Integer accountId)
 		throws ApiException;
+
+	/**
+	 * Retrieve an {@link Optional} containing the latest (i.e. newest) {@link CVR report}.
+	 *
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return an {@link Optional} containing the latest (i.e. newest) {@link CVR report}
+	 * @throws ApiException
+	 * @throws CodaException
+	 */
+	default Optional<CVR> getLatestReport(Integer accountId)
+		throws ApiException {
+		final Map<String, CodaClient.LazyCVR> reports =
+			getSnapshotReports(accountId);
+
+		return reports.keySet().stream().max(Comparator.naturalOrder())
+			.map(reports::get).map(lazyCvr -> {
+				try {
+					return lazyCvr.retrieve();
+				} catch (ApiException e) {
+					throw new CodaException(e);
+				}
+			});
+	}
 
 	/**
 	 * Return a {@link Map}, keyed by report day, of lazily loadable {@link CVR snapshot reports}.
