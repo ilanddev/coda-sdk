@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.12.29
+  version: 7.12.32
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -2061,7 +2061,7 @@ paths:
             3. Remediation Report is in progress -> add percentage and estimated time to completion
             4. An extend scan is currently running
             5. There are new changes in data, but the report isn't up to date and the job is not running yet.
-            6. Report not generated -> when all the prerequisites are fullfiled but the task did not run ever.
+            6. Report not generated -> when all the prerequisites are fulfilled but the task did not run ever.
             7. Are_assets_secure - No report should be load
       tags:
         - console
@@ -2757,34 +2757,6 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
-  /internalScanner/register/:
-    post:
-      operationId: internalScannerRegisterCreate
-      parameters:
-        - in: header
-          name: User-Agent
-          schema:
-            type: string
-            default: Footprint Internal Scanner
-          description: User agent. Must include `Footprint Internal Scanner` for all
-            endpoints on the `/internalscanner/` route
-          required: true
-      tags:
-        - internalScanner
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ISRegister'
-      security:
-        - jwtAuth: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalScannerRegisterResponseSrz'
-          description: ''
 components:
   schemas:
     Account:
@@ -3101,7 +3073,7 @@ components:
         hostname:
           type: string
           nullable: true
-          maxLength: 1000
+          maxLength: 255
         label:
           type: string
           nullable: true
@@ -3195,6 +3167,7 @@ components:
           nullable: true
       required:
         - administrativeState
+        - hostname
         - id
         - numberOfIpsScanned
         - numberOfUserInputs
@@ -4823,6 +4796,7 @@ components:
             maxLength: 255
           description: Targets to scan. Accepted values are IP addresses, IP ranges
             in CIDR format (e.g. 0.0.0.0/24) URLs and e-mail addresses.
+          maxItems: 1024
         scanners:
           type: array
           items:
@@ -4830,73 +4804,6 @@ components:
       required:
         - scanTargets
         - scanners
-    ISRegister:
-      type: object
-      properties:
-        token:
-          type: string
-          nullable: true
-          description: Tenant token
-        workerVersion:
-          type: string
-          nullable: true
-          description: Internal scanner worker version
-        controllerVersion:
-          type: string
-          nullable: true
-          description: Internal scanner controller version
-        hostname:
-          type: string
-          nullable: true
-          description: Internal scanner hostname
-        publicIp:
-          type: string
-          nullable: true
-          description: Internal scanner public_ip
-        privateIp:
-          type: string
-          nullable: true
-          description: Internal scanner private_ip
-        operatingSystem:
-          type: string
-          nullable: true
-          description: Internal scanner OS
-        agentGuid:
-          type: string
-          nullable: true
-          description: Internal scanner Agent GUID (if installed via agent)
-        scannerGuid:
-          type: string
-          nullable: true
-          description: Internal scanner GUID (if previously installed)
-    InternalScannerRegisterResponseSrz:
-      type: object
-      properties:
-        guid:
-          type: string
-        virtualHost:
-          type: string
-        messageBrokerUsername:
-          type: string
-        ecrAccessKey:
-          type: string
-        ecrSecretAccessKey:
-          type: string
-        password:
-          type: string
-        port:
-          type: string
-        fqdn:
-          type: string
-      required:
-        - ecrAccessKey
-        - ecrSecretAccessKey
-        - fqdn
-        - guid
-        - messageBrokerUsername
-        - password
-        - port
-        - virtualHost
     Notification:
       type: object
       description: Serializer for the Notification item
@@ -6863,7 +6770,7 @@ servers:
   - url: '{protocol}://{instance}/{basePath}'
     variables:
       instance:
-        default: dev.codacloud.net
+        default: preview.codacloud.net
         description: Your instance URL
       protocol:
         default: https

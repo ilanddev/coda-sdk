@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -136,14 +137,15 @@ class SimpleCodaClientTest {
 	@Test
 	void testReportsJson() throws ApiException {
 		final AtomicInteger atomicAccountId = new AtomicInteger();
-		final String generationDate =
+		final LocalDateTime generationDate =
 			client.listAccounts(null).stream().map(Account::getId)
 				.map(accountId -> {
 					atomicAccountId.set(accountId);
 					return getReportTimestamps(accountId);
-				}).flatMap(List::stream).findFirst().get();
+				}).flatMap(List::stream).findFirst()
+				.map(GenerationDate::parse).get();
 
-		final Map<String, CodaClient.LazyCvrJson> reportsJson =
+		final Map<LocalDateTime, CodaClient.LazyCvrJson> reportsJson =
 			client.getReportsJson(CodaClient.ReportType.SNAPSHOT,
 				atomicAccountId.get());
 		assertTrue(reportsJson.containsKey(generationDate),
@@ -193,7 +195,7 @@ class SimpleCodaClientTest {
 		assertNotEquals("", value, String.format("%s must not be empty", name));
 	}
 
-	private Map<String, CodaClient.LazyCVR> getReports(
+	private Map<LocalDateTime, CodaClient.LazyCVR> getReports(
 		final Integer accountId) {
 		try {
 			return client.getReports(CodaClient.ReportType.SNAPSHOT, accountId);

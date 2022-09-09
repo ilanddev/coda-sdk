@@ -17,6 +17,7 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.Registrations.toLight;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import com.google.common.cache.RemovalListener;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AgentlessScannerSrz;
+import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreate;
 import net.codacloud.model.RegistrationEdit;
@@ -244,6 +246,12 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
+	public void updateScanSurface(final ExtendMessage message,
+		final Integer accountId) throws ApiException {
+		delegatee.updateScanSurface(message, accountId);
+	}
+
+	@Override
 	public void rescan(final Integer accountId) throws ApiException {
 		delegatee.rescan(accountId);
 	}
@@ -269,14 +277,15 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public Map<String, LazyCVR> getReports(final ReportType reportType,
+	public Map<LocalDateTime, LazyCVR> getReports(final ReportType reportType,
 		final Integer accountId) throws ApiException {
 		return delegatee.getReports(reportType, accountId);
 	}
 
 	@Override
-	public Map<String, LazyCvrJson> getReportsJson(final ReportType reportType,
-		final Integer accountId) throws ApiException {
+	public Map<LocalDateTime, LazyCvrJson> getReportsJson(
+		final ReportType reportType, final Integer accountId)
+		throws ApiException {
 		return delegatee.getReportsJson(reportType, accountId);
 	}
 
