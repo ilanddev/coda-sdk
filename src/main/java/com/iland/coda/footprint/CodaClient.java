@@ -17,6 +17,8 @@ package com.iland.coda.footprint;
 
 import static java.util.stream.Collectors.toMap;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -31,6 +33,7 @@ import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
+import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreate;
 import net.codacloud.model.RegistrationEdit;
@@ -285,6 +288,16 @@ public interface CodaClient {
 		Integer accountId) throws ApiException;
 
 	/**
+	 * Updates the scan surface with new data (extend scan surface modal). <strong>This is an idempotent operation!</strong>
+	 *
+	 * @param message   a {@link ExtendMessage message} of targets and scanners
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @throws ApiException
+	 */
+	void updateScanSurface(final ExtendMessage message, final Integer accountId)
+		throws ApiException;
+
+	/**
 	 * Rescans all user inputs from Scan Surface.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
@@ -379,10 +392,11 @@ public interface CodaClient {
 	 */
 	default Optional<CVR> getLatestReport(Integer accountId)
 		throws ApiException {
-		final Map<String, CodaClient.LazyCVR> reports =
+		final Map<LocalDateTime, CodaClient.LazyCVR> reports =
 			getSnapshotReports(accountId);
 
-		return reports.keySet().stream().max(Comparator.naturalOrder())
+		return reports.keySet().stream()
+			.max(Comparator.comparing(ldt -> ldt.toEpochSecond(ZoneOffset.UTC)))
 			.map(reports::get).map(lazyCvr -> {
 				try {
 					return lazyCvr.retrieve();
@@ -399,21 +413,21 @@ public interface CodaClient {
 	 * @return a map of {@link LazyCVR lazily-loadable reports} keyed by date, e.g. "2022-05-16 21:33:29"
 	 * @throws ApiException
 	 */
-	default Map<String, LazyCVR> getSnapshotReports(Integer accountId)
+	default Map<LocalDateTime, LazyCVR> getSnapshotReports(Integer accountId)
 		throws ApiException {
 		return getReports(ReportType.SNAPSHOT, accountId);
 	}
 
 	/**
-	 * Return a {@link Map}, keyed by report day, of lazily loadable {@link CVR reports}.
+	 * Return a {@link Map}, keyed by report date, of lazily loadable {@link CVR reports}.
 	 *
 	 * @param reportType the {@link ReportType report type}
 	 * @param accountId  Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a map of {@link LazyCVR lazily-loadable reports} keyed by date, e.g. "2022-05-16 21:33:29"
 	 * @throws ApiException
 	 */
-	Map<String, LazyCVR> getReports(ReportType reportType, Integer accountId)
-		throws ApiException;
+	Map<LocalDateTime, LazyCVR> getReports(ReportType reportType,
+		Integer accountId) throws ApiException;
 
 	/**
 	 * Return a {@link Map}, keyed by report day, of {@link LazyCvrJson lazily-loadable reports}.
@@ -423,7 +437,7 @@ public interface CodaClient {
 	 * @return a map of {@link LazyCvrJson lazily-loadable reports} keyed by date, e.g. "2022-05-16 21:33:29"
 	 * @throws ApiException
 	 */
-	Map<String, LazyCvrJson> getReportsJson(ReportType reportType,
+	Map<LocalDateTime, LazyCvrJson> getReportsJson(ReportType reportType,
 		Integer accountId) throws ApiException;
 
 	/**

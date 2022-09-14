@@ -17,11 +17,13 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.Registrations.toLight;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Stopwatch;
@@ -115,9 +117,19 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	public void updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
-		final ExtendMessage scanSurface =
-			new ExtendMessage().scanTargets(targets).scanners(scanners);
-		consoleApi.consoleScanSurfaceCreate(scanSurface, accountId);
+		final List<ExtendMessage> batches =
+			new ScanSurfaceBatcher().createBatches(targets).stream()
+				.map(batch -> batch.scanners(scanners))
+				.collect(Collectors.toList());
+		for (final ExtendMessage batch : batches) {
+			updateScanSurface(batch, accountId);
+		}
+	}
+
+	@Override
+	public void updateScanSurface(final ExtendMessage message,
+		final Integer accountId) throws ApiException {
+		consoleApi.consoleScanSurfaceCreate(message, accountId);
 	}
 
 	@Override
@@ -153,19 +165,32 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public Map<String, LazyCVR> getReports(final ReportType reportType,
+	public Map<LocalDateTime, LazyCVR> getReports(final ReportType reportType,
 		final Integer accountId) throws ApiException {
-		return getReportTimestamps(reportType, accountId).stream().collect(
-			Collectors.toMap(Function.identity(),
-				timestamp -> () -> getReport(timestamp, reportType,
-					accountId)));
+		try {
+			return getReportTimestamps(reportType, accountId).stream().collect(
+				Collectors.toMap(GenerationDate::parse,
+					timestamp -> () -> getReport(timestamp, reportType,
+						accountId), throwDuplicateKeyException(),
+					LinkedHashMap::new));
+		} catch (RuntimeException e) {
+			throw new ApiException(e.getCause());
+		}
+	}
+
+	static <T> BinaryOperator<T> throwDuplicateKeyException() {
+		return (k, v) -> {
+			throw new IllegalStateException(
+				String.format("Duplicate key %s", k));
+		};
 	}
 
 	@Override
-	public Map<String, LazyCvrJson> getReportsJson(final ReportType reportType,
-		final Integer accountId) throws ApiException {
+	public Map<LocalDateTime, LazyCvrJson> getReportsJson(
+		final ReportType reportType, final Integer accountId)
+		throws ApiException {
 		return getReportTimestamps(reportType, accountId).stream().collect(
-			Collectors.toMap(Function.identity(),
+			Collectors.toMap(GenerationDate::parse,
 				timestamp -> () -> getCvrJson(timestamp, reportType,
 					accountId)));
 	}

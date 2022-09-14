@@ -16,15 +16,17 @@
 package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.AbstractCodaClient.MAX_PAGE_SIZE;
+import static com.iland.coda.footprint.SimpleCodaClient.throwDuplicateKeyException;
 
 import java.net.SocketTimeoutException;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.github.rholder.retry.RetryException;
@@ -37,6 +39,7 @@ import com.google.common.base.Throwables;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AgentlessScannerSrz;
+import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.PaginatedRegistrationLightList;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreate;
@@ -140,8 +143,20 @@ final class RetryCodaClient implements CodaClient {
 	public void updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
+		final List<ExtendMessage> batches =
+			new ScanSurfaceBatcher().createBatches(targets).stream()
+				.map(batch -> batch.scanners(scanners))
+				.collect(Collectors.toList());
+		for (final ExtendMessage batch : batches) {
+			updateScanSurface(batch, accountId);
+		}
+	}
+
+	@Override
+	public void updateScanSurface(final ExtendMessage message,
+		final Integer accountId) throws ApiException {
 		retryIfNecessary(() -> {
-			delegatee.updateScanSurface(targets, scanners, accountId);
+			delegatee.updateScanSurface(message, accountId);
 
 			return null;
 		});
@@ -181,17 +196,18 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public Map<String, LazyCVR> getReports(final ReportType reportType,
+	public Map<LocalDateTime, LazyCVR> getReports(final ReportType reportType,
 		final Integer accountId) throws ApiException {
 		if (delegatee instanceof SimpleCodaClient) {
 			final SimpleCodaClient simpleCodaClient =
 				(SimpleCodaClient) delegatee;
 
 			return getReportTimestamps(reportType, accountId).stream().collect(
-				Collectors.toMap(Function.identity(),
+				Collectors.toMap(GenerationDate::parse,
 					timestamp -> () -> retryIfNecessary(
 						() -> simpleCodaClient.getReport(timestamp, reportType,
-							accountId))));
+							accountId)), throwDuplicateKeyException(),
+					LinkedHashMap::new));
 		}
 
 		return retryIfNecessary(
@@ -199,14 +215,15 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public Map<String, LazyCvrJson> getReportsJson(final ReportType reportType,
-		final Integer accountId) throws ApiException {
+	public Map<LocalDateTime, LazyCvrJson> getReportsJson(
+		final ReportType reportType, final Integer accountId)
+		throws ApiException {
 		if (delegatee instanceof SimpleCodaClient) {
 			final SimpleCodaClient simpleCodaClient =
 				(SimpleCodaClient) delegatee;
 
 			return getReportTimestamps(reportType, accountId).stream().collect(
-				Collectors.toMap(Function.identity(),
+				Collectors.toMap(GenerationDate::parse,
 					timestamp -> () -> retryIfNecessary(
 						() -> simpleCodaClient.getCvrJson(timestamp, reportType,
 							accountId))));

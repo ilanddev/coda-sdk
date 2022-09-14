@@ -34,6 +34,7 @@
         <org.slf4j.slf4j-api>2.0.0-alpha5</org.slf4j.slf4j-api>
         <com.google.guava.version>31.1-jre</com.google.guava.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
+        <commons-net.version>3.8.0</commons-net.version>
     </properties>
 
     <licenses>
@@ -420,6 +421,11 @@
             <groupId>com.github.rholder</groupId>
             <artifactId>guava-retrying</artifactId>
             <version>${guava-retrying.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>${commons-net.version}</version>
         </dependency>
     </dependencies>
 
