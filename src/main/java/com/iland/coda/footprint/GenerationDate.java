@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * {@link GenerationDate}.
@@ -66,7 +67,11 @@ public final class GenerationDate {
 	}
 
 	public static DateFormat createDateFormat() {
-		return new SimpleDateFormat(REPORT_TIMESTAMP_FORMAT);
+		final DateFormat dateFormat =
+			new SimpleDateFormat(REPORT_TIMESTAMP_FORMAT);
+		dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+		return dateFormat;
 	}
 
 }
