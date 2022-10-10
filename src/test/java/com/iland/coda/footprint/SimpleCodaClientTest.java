@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
+import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
 import net.codacloud.model.CVRMostVulnServer;
 import net.codacloud.model.CVRVulnerability;
@@ -74,6 +75,24 @@ class SimpleCodaClientTest {
 
 		assertEquals(registrationA.getId(), registrationB.getId(),
 			"registration was duplicated");
+	}
+
+	@Test
+	void testLabelToAccountId() throws ApiException {
+		final Integer accountId = client.labelToAccountId(TEST_LABEL);
+
+		assertNotNull(accountId, "accountId must not be null");
+	}
+
+	@Test
+	void testGetDefaultCloudScanner() throws ApiException {
+		final Integer accountId = client.labelToAccountId(TEST_LABEL);
+
+		final AgentlessScannerSrz defaultCloudScanner =
+			client.getDefaultCloudScanner(accountId);
+
+		assertNotNull(defaultCloudScanner,
+			"defaultCloudScanner must not be null");
 	}
 
 	@Test
