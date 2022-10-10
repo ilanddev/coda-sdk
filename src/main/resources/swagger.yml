@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.12.35
+  version: 7.12.38
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -44,6 +44,11 @@ paths:
               - sales_pipeline
           description: Category of registrations you want. Defaults to all.
         - in: query
+          name: label
+          schema:
+            type: string
+          description: Field used to filter entries by label
+        - in: query
           name: page
           schema:
             type: integer
@@ -53,6 +58,27 @@ paths:
           schema:
             type: integer
           description: Number of elements on page
+        - in: query
+          name: sortColumn
+          schema:
+            type: string
+            enum:
+              - label
+              - state
+          description: Sorting column
+        - in: query
+          name: sortDirection
+          schema:
+            type: string
+            enum:
+              - ascending
+              - descending
+          description: Sorting direction
+        - in: query
+          name: textFilter
+          schema:
+            type: string
+          description: Field used filter entries by all columns
       tags:
         - admin
       security:

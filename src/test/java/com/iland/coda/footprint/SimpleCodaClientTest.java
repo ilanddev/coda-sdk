@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
+import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
 import net.codacloud.model.CVRMostVulnServer;
 import net.codacloud.model.CVRVulnerability;
@@ -77,26 +78,64 @@ class SimpleCodaClientTest {
 	}
 
 	@Test
+	void testGetDefaultCloudScanner() throws ApiException {
+		final RegistrationLight registration =
+			client.createRegistration(TEST_LABEL, TEST_DESCRIPTION);
+		final Integer accountId = client.registrationToAccountId(registration);
+
+		final AgentlessScannerSrz defaultCloudScanner =
+			client.getDefaultCloudScanner(accountId);
+
+		assertNotNull(defaultCloudScanner,
+			"defaultCloudScanner must not be null");
+	}
+
+	@Test
+	void testGetScannerIdByLabel() throws ApiException {
+		final RegistrationLight registration =
+			client.createRegistration(TEST_LABEL, TEST_DESCRIPTION);
+		final Integer accountId = client.registrationToAccountId(registration);
+
+		final Map<String, Integer> scannerIdByLabel =
+			client.getScannerIdByLabel(accountId);
+
+		assertTrue(!scannerIdByLabel.isEmpty(), "scannerIdByLabel is empty");
+	}
+
+	@Test
+	void testLabelToAccountId() throws ApiException {
+		final RegistrationLight registration =
+			client.createRegistration(TEST_LABEL, TEST_DESCRIPTION);
+		final Integer expectedAccountId =
+			client.registrationToAccountId(registration);
+
+		final Integer actualAccountId = client.labelToAccountId(TEST_LABEL);
+
+		assertEquals(expectedAccountId, actualAccountId,
+			"accountId must not be null");
+	}
+
+	@Test
 	void testScanSurfaceAndRescan() throws ApiException, UnknownHostException {
 		final RegistrationLight registration =
 			client.createRegistration(TEST_LABEL, TEST_DESCRIPTION);
 		final Integer accountId = client.registrationToAccountId(registration);
 
 		final InetAddress[] addresses = InetAddress.getAllByName("iland.com");
-		List<String> targets = Arrays.asList(addresses).stream()
+		final List<String> targets = Arrays.asList(addresses).stream()
 			.filter(address -> address instanceof Inet4Address)
 			.map(InetAddress::getHostAddress).collect(Collectors.toList());
 
-		List<Integer> scannerIds =
-			client.getScannerIdByLabel(accountId).values().stream()
-				.collect(Collectors.toList());
+		final Integer scannerId =
+			client.getDefaultCloudScanner(accountId).getId();
+		final List<Integer> scannerIds = Arrays.asList(scannerId);
 
 		client.updateScanSurface(targets, scannerIds, accountId);
 
 		final int expectedSize = targets.size() * scannerIds.size();
 		final Set<ScanSurfaceEntry> scanSurface =
 			client.getScanSurface(accountId);
-		assertEquals(expectedSize, scanSurface.size());
+		assertEquals(expectedSize, scanSurface.size(), "invalid scan surface");
 
 		client.rescan(accountId);
 	}
@@ -142,8 +181,8 @@ class SimpleCodaClientTest {
 				.map(accountId -> {
 					atomicAccountId.set(accountId);
 					return getReportTimestamps(accountId);
-				}).flatMap(List::stream).findFirst()
-				.map(GenerationDate::parse).get();
+				}).flatMap(List::stream).findFirst().map(GenerationDate::parse)
+				.get();
 
 		final Map<LocalDateTime, CodaClient.LazyCvrJson> reportsJson =
 			client.getReportsJson(CodaClient.ReportType.SNAPSHOT,
