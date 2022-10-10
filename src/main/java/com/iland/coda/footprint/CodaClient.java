@@ -154,6 +154,19 @@ public interface CodaClient {
 		throws ApiException;
 
 	/**
+	 * Returns the {@link Integer accountId} for the supplied {@link String label}.
+	 *
+	 * @param label a {@link String label}
+	 * @return the {@link Integer accountId} for the supplied {@link String label}
+	 * @throws ApiException
+	 */
+	default Integer labelToAccountId(final String label) throws ApiException {
+		return findAccountWithName(label).map(Account::getId).orElseThrow(
+			() -> new ApiException(
+				String.format("no account exists for name '%s'", label)));
+	}
+
+	/**
 	 * Returns the {@link Integer accountId} for the supplied {@link RegistrationLight registration}.
 	 *
 	 * @param registration a {@link RegistrationLight registration}
@@ -242,6 +255,21 @@ public interface CodaClient {
 	 * @throws ApiException
 	 */
 	void deleteRegistration(RegistrationLight registration) throws ApiException;
+
+	/**
+	 * Returns the {@link AgentlessScannerSrz default cloud scanner}.
+	 *
+	 * @param accountId Account ID you want to receive request for.
+	 * @return the {@link AgentlessScannerSrz default cloud scanner}
+	 * @throws ApiException if the default cloud scanner is missing
+	 */
+	default AgentlessScannerSrz getDefaultCloudScanner(final Integer accountId)
+		throws ApiException {
+		return getScanners(accountId).stream()
+			.filter(AgentlessScannerSrz::getIsDefaultCloudScanner).findFirst()
+			.orElseThrow(
+				() -> new ApiException("default cloud scanner is missing"));
+	}
 
 	/**
 	 * Returns a {@link Map} of scanner IDs keyed by scanner label.
