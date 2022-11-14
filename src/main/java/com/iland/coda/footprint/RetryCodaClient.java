@@ -38,6 +38,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
+import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.PaginatedRegistrationLightList;
@@ -48,7 +49,6 @@ import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -251,7 +251,7 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public List<User> listUsers() throws ApiException {
+	public List<AdminUser> listUsers() throws ApiException {
 		return retryIfNecessary(() -> delegatee.listUsers());
 	}
 

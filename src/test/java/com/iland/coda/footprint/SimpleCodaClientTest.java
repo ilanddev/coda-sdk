@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
+import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
 import net.codacloud.model.CVRMostVulnServer;
@@ -45,7 +46,6 @@ import net.codacloud.model.CVRVulnerability;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.User;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -245,7 +245,7 @@ class SimpleCodaClientTest {
 
 	@Test
 	void testListUsers() throws Throwable {
-		final List<User> users = client.listUsers();
+		final List<AdminUser> users = client.listUsers();
 
 		assertNotNull(users, "users list must not be null");
 		assertFalse(users.isEmpty(), "users list must not be empty");

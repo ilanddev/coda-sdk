@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Stopwatch;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
+import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
 import net.codacloud.model.ExtendMessage;
@@ -42,7 +43,6 @@ import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -243,7 +243,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public List<User> listUsers() throws ApiException {
+	public List<AdminUser> listUsers() throws ApiException {
 		return adminApi.adminUsersRetrieve();
 	}
 
