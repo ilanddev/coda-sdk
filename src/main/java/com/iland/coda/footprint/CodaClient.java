@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Throwables;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
+import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
 import net.codacloud.model.ExtendMessage;
@@ -41,7 +42,6 @@ import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -485,7 +485,7 @@ public interface CodaClient {
 	 * @param label                  the label of the registration
 	 * @param description            a description
 	 * @param registrationSignupData the signup data
-	 * @param associatedMspUserIds   the {@link User user IDs}
+	 * @param associatedMspUserIds   the {@link AdminUser user IDs}
 	 * @return the {@link RegistrationCreate created registration}
 	 * @throws ApiException
 	 */
@@ -503,15 +503,15 @@ public interface CodaClient {
 	default List<Integer> getActiveGlobalAdminIds() throws ApiException {
 		return listUsers().stream().filter(
 				u -> u.getIsActive() && Objects.equals("Global Admin", u.getRole()))
-			.map(User::getId).collect(Collectors.toList());
+			.map(AdminUser::getId).collect(Collectors.toList());
 	}
 
 	/**
 	 * Lists all users.
 	 *
-	 * @return a {@link List} of {@link User users}
+	 * @return a {@link List} of {@link AdminUser users}
 	 * @throws ApiException
 	 */
-	List<User> listUsers() throws ApiException;
+	List<AdminUser> listUsers() throws ApiException;
 
 }

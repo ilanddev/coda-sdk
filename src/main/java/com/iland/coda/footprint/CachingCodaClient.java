@@ -35,6 +35,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.cache.RemovalListener;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
+import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.Registration;
@@ -44,7 +45,6 @@ import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,13 +110,13 @@ final class CachingCodaClient implements CodaClient {
 						accountId == DEFAULT_ACCOUNT_ID ? null : accountId);
 				}
 			});
-	private final LoadingCache<String, List<User>> userCache =
+	private final LoadingCache<String, List<AdminUser>> userCache =
 		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
 			.expireAfterWrite(1, TimeUnit.HOURS).removalListener(
-				CachingCodaClient.<String, List<User>>createRemovalListener(
-					"User cache")).build(new CacheLoader<String, List<User>>() {
+				CachingCodaClient.<String, List<AdminUser>>createRemovalListener(
+					"User cache")).build(new CacheLoader<String, List<AdminUser>>() {
 				@Override
-				public List<User> load(final String value) throws Exception {
+				public List<AdminUser> load(final String value) throws Exception {
 					return delegatee.listUsers();
 				}
 			});
@@ -305,9 +305,9 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public List<User> listUsers() throws ApiException {
+	public List<AdminUser> listUsers() throws ApiException {
 		try {
-			final List<User> users = userCache.get(DEFAULT_USER_KEY);
+			final List<AdminUser> users = userCache.get(DEFAULT_USER_KEY);
 
 			return Collections.unmodifiableList(users);
 		} catch (ExecutionException e) {

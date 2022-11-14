@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.12.38
+  version: 7.14.3
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -23,7 +23,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/User'
+                  $ref: '#/components/schemas/AdminUser'
           description: ''
         '401':
           description: Returned if the logged in user is not a MSP user
@@ -83,6 +83,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -108,6 +109,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -135,6 +137,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -162,6 +165,7 @@ paths:
               $ref: '#/components/schemas/RegistrationEdit'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -187,6 +191,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Returned on successful delete
@@ -223,6 +228,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -270,6 +276,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -285,6 +292,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -316,6 +324,7 @@ paths:
               $ref: '#/components/schemas/PatchedAgentlessScannerEdit'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Scanner was removed.
@@ -337,6 +346,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Scanner was removed.
@@ -352,6 +362,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -369,6 +380,7 @@ paths:
         - admin
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -396,6 +408,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenObtainPair'
         required: true
+      security:
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -430,6 +444,8 @@ paths:
             schema:
               $ref: '#/components/schemas/TokenRefresh'
         required: true
+      security:
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -462,6 +478,8 @@ paths:
             back on `original_tenant_id` from the auth endpoint
       tags:
         - branding
+      security:
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -477,6 +495,7 @@ paths:
         - common
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
         - { }
       responses:
         '200':
@@ -511,6 +530,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
         - { }
       responses:
         '200':
@@ -535,6 +555,7 @@ paths:
         - common
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
         - { }
       responses:
         '204':
@@ -554,6 +575,7 @@ paths:
         - common
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -592,6 +614,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -614,6 +637,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -649,6 +673,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -678,6 +703,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '204':
           description: No response body
@@ -702,6 +728,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -743,6 +770,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -771,6 +799,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -810,6 +839,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -894,6 +924,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -931,6 +962,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -959,6 +991,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -990,6 +1023,7 @@ paths:
               $ref: '#/components/schemas/PatchedBCOwnerGroup'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1023,6 +1057,7 @@ paths:
               $ref: '#/components/schemas/PatchedBCOwnerUser'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1062,6 +1097,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1090,6 +1126,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1122,6 +1159,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1154,6 +1192,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1185,6 +1224,7 @@ paths:
               $ref: '#/components/schemas/PatchedTCOwnerGroup'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1218,6 +1258,7 @@ paths:
               $ref: '#/components/schemas/PatchedTCOwnerUser'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1248,6 +1289,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1276,6 +1318,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1307,6 +1350,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1340,6 +1384,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1370,6 +1415,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1398,6 +1444,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1428,6 +1475,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1452,6 +1500,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1475,6 +1524,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1503,6 +1553,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1530,6 +1581,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1560,6 +1612,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1588,6 +1641,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1616,6 +1670,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1640,6 +1695,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: No response body
@@ -1664,6 +1720,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1694,6 +1751,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1798,6 +1856,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1856,6 +1915,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1887,6 +1947,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1927,6 +1988,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1954,6 +2016,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -1981,6 +2044,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2023,6 +2087,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2038,6 +2103,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2079,6 +2145,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2118,6 +2185,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2182,6 +2250,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2209,6 +2278,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2226,6 +2296,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2268,6 +2339,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2289,6 +2361,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Scan processed and queued for starting
@@ -2332,6 +2405,7 @@ paths:
               $ref: '#/components/schemas/PatchedScopeChange'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Scope successfully changed for a current target
@@ -2360,6 +2434,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2381,6 +2456,7 @@ paths:
               $ref: '#/components/schemas/PatchedScanSurfaceRescan'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Rescan accepted and will start in a few moments
@@ -2416,6 +2492,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Rescan accepted and will start in a few moments
@@ -2443,6 +2520,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2466,6 +2544,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '501':
           description: Not implemented
@@ -2488,6 +2567,7 @@ paths:
               $ref: '#/components/schemas/PatchedAgentlessScannerEdit'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Scanner updated successfully
@@ -2526,6 +2606,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Scanner removed successfully
@@ -2561,6 +2642,7 @@ paths:
               $ref: '#/components/schemas/PatchedScanSurfaceUserInputRequest'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Rescan was started successfully
@@ -2584,6 +2666,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: File was processed successfully
@@ -2623,6 +2706,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2667,6 +2751,7 @@ paths:
         required: true
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2712,6 +2797,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2727,6 +2813,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Auto contexts generation enabled or disabled
@@ -2752,6 +2839,7 @@ paths:
               $ref: '#/components/schemas/PatchedTenantInfoEdit'
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           description: Auto contexts generation enabled or disabled
@@ -2772,6 +2860,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2794,6 +2883,7 @@ paths:
         - console
       security:
         - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
       responses:
         '200':
           content:
@@ -2885,6 +2975,120 @@ components:
         - progress
         - scanner
         - startDate
+    AdminUser:
+      type: object
+      description: 'TODO: This is only used in admin endpoints. It should be generalized
+        and made available for all'
+      properties:
+        isLoggedIn:
+          type: boolean
+          readOnly: true
+          default: true
+        id:
+          type: integer
+          readOnly: true
+        firstName:
+          type: string
+        lastName:
+          type: string
+        isActive:
+          type: boolean
+        email:
+          type: string
+          readOnly: true
+        groups:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        photo:
+          type: string
+        isSsoOnly:
+          type: boolean
+        isServiceAccount:
+          type: boolean
+        password:
+          type: string
+          writeOnly: true
+        newPassword:
+          type: string
+          writeOnly: true
+        accountId:
+          type: integer
+          readOnly: true
+        trialDaysRemaining:
+          type: integer
+          readOnly: true
+        domainsRemaining:
+          type: integer
+          readOnly: true
+        clearDatabaseRemaining:
+          type: integer
+          readOnly: true
+        asyncEmails:
+          type: boolean
+        syncEmails:
+          type: boolean
+        syncPeriod:
+          type: string
+        usageReportEmails:
+          type: boolean
+        weeklyCvrEnabled:
+          type: boolean
+        apiKeyName:
+          type: string
+        apiKeyGenerationDate:
+          type: string
+          format: date-time
+        isInstallationAdmin:
+          type: boolean
+          readOnly: true
+        role:
+          type: string
+        mspRole:
+          type: string
+        rolePermissions:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        roleLimitations:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        position:
+          type: string
+          nullable: true
+        manager:
+          type: integer
+      required:
+        - accountId
+        - apiKeyGenerationDate
+        - apiKeyName
+        - asyncEmails
+        - clearDatabaseRemaining
+        - domainsRemaining
+        - email
+        - firstName
+        - groups
+        - id
+        - isActive
+        - isInstallationAdmin
+        - isLoggedIn
+        - isServiceAccount
+        - isSsoOnly
+        - lastName
+        - manager
+        - photo
+        - position
+        - roleLimitations
+        - rolePermissions
+        - syncEmails
+        - syncPeriod
+        - trialDaysRemaining
+        - usageReportEmails
+        - weeklyCvrEnabled
     AgentApplicationInformationOrigin:
       type: object
       properties:
@@ -3190,6 +3394,31 @@ components:
           type: string
           nullable: true
           maxLength: 512
+        cpuCount:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        ramCapacity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        hddCapacity:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        isMeetingCpuRequirements:
+          type: boolean
+        isMeetingRamRequirements:
+          type: boolean
+        isMeetingHddRequirements:
+          type: boolean
+        incompatibilityReason:
+          type: string
+          nullable: true
+          maxLength: 512
         sshPublicKey:
           type: string
           nullable: true
@@ -3201,6 +3430,7 @@ components:
             - starting
             - stopped
             - stopping
+            - certMismatch
           type: string
         type:
           enum:
@@ -4518,7 +4748,7 @@ components:
         port:
           type: integer
           maximum: 65535
-          minimum: 1
+          minimum: 0
         transportProtocol:
           enum:
             - udp
@@ -4630,6 +4860,14 @@ components:
         avoidBruteForce:
           type: boolean
           description: Whether to avoid brute force scans on this device
+        isAdvancedScanPossible:
+          type: boolean
+          description: 'Whether an Advanced scan is possible on this device: the task
+            should be enabled and the device should have open ports'
+        isZapScanPossible:
+          type: boolean
+          description: 'Whether a ZAP scan is possible on this device: the task should
+            be enabled and at least one web application up and running'
       required:
         - agentId
         - agentStatus
@@ -4642,9 +4880,11 @@ components:
         - hostnames
         - id
         - ip
+        - isAdvancedScanPossible
         - isAttackAvenuesAvailable
         - isNetworkEdgeScanDisabled
         - isOnline
+        - isZapScanPossible
         - lastSeen
         - name
         - numberOfAttackAvenues
@@ -5442,7 +5682,7 @@ components:
         users:
           type: array
           items:
-            $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/AdminUser'
           description: If an active tenant is associated to this registration, lists
             the users on that tenant
         statistics:
@@ -6390,103 +6630,6 @@ components:
       required:
         - assetCount
         - timestamp
-    User:
-      type: object
-      properties:
-        isLoggedIn:
-          type: boolean
-          readOnly: true
-          default: true
-        id:
-          type: integer
-          readOnly: true
-        firstName:
-          type: string
-        lastName:
-          type: string
-        isActive:
-          type: boolean
-        email:
-          type: string
-          readOnly: true
-        groups:
-          type: array
-          items:
-            type: string
-          readOnly: true
-        photo:
-          type: string
-        isSsoOnly:
-          type: boolean
-        password:
-          type: string
-          writeOnly: true
-        newPassword:
-          type: string
-          writeOnly: true
-        accountId:
-          type: integer
-          readOnly: true
-        trialDaysRemaining:
-          type: integer
-          readOnly: true
-        domainsRemaining:
-          type: integer
-          readOnly: true
-        clearDatabaseRemaining:
-          type: integer
-          readOnly: true
-        asyncEmails:
-          type: boolean
-        syncEmails:
-          type: boolean
-        syncPeriod:
-          type: string
-        usageReportEmails:
-          type: boolean
-        isInstallationAdmin:
-          type: boolean
-          readOnly: true
-        role:
-          type: string
-        rolePermissions:
-          type: array
-          items:
-            type: string
-          readOnly: true
-        roleLimitations:
-          type: array
-          items:
-            type: string
-          readOnly: true
-        position:
-          type: string
-          nullable: true
-        manager:
-          type: string
-      required:
-        - accountId
-        - asyncEmails
-        - clearDatabaseRemaining
-        - domainsRemaining
-        - email
-        - firstName
-        - groups
-        - id
-        - isActive
-        - isInstallationAdmin
-        - isLoggedIn
-        - isSsoOnly
-        - lastName
-        - manager
-        - photo
-        - position
-        - roleLimitations
-        - rolePermissions
-        - syncEmails
-        - syncPeriod
-        - trialDaysRemaining
-        - usageReportEmails
     VirtualVulnerability:
       type: object
       properties:
@@ -6813,6 +6956,10 @@ components:
         - supportEmail
         - supportName
   securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: FootprintApiKey
     jwtAuth:
       type: http
       scheme: bearer
