@@ -263,8 +263,11 @@ final class RetryCodaClient implements CodaClient {
 				try {
 					return retryable.call();
 				} catch (ApiException e) {
-					if (e.getMessage().equals("Unauthorized")) {
-						login();
+					switch (e.getCode()) {
+						case 401:
+						case 403:
+							login();
+							break;
 					}
 
 					if (e.getCause() instanceof SocketTimeoutException) {
