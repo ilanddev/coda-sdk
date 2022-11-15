@@ -20,6 +20,8 @@ import static com.iland.coda.footprint.SimpleCodaClient.throwDuplicateKeyExcepti
 
 import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,10 +66,19 @@ final class RetryCodaClient implements CodaClient {
 	private static final Logger logger =
 		LoggerFactory.getLogger(RetryCodaClient.class);
 
+	private static final Set<Integer> retryCodes;
+	static {
+		final Set<Integer> set = new HashSet<>();
+		set.add(401);
+		set.add(403);
+
+		retryCodes = Collections.unmodifiableSet(set);
+	}
+
 	private final CodaClient delegatee;
 	private final Retryer retryer = RetryerBuilder.newBuilder()
-		.retryIfException(t -> t instanceof ApiException && t.getMessage()
-			.equals("Unauthorized"))
+		.retryIfException(t -> t instanceof ApiException && retryCodes.contains(
+			((ApiException) t).getCode()))
 		.retryIfException(t -> t.getCause() instanceof SocketTimeoutException)
 		.withWaitStrategy(WaitStrategies.fibonacciWait(1L, TimeUnit.MINUTES))
 		.withStopStrategy(StopStrategies.stopAfterDelay(3L, TimeUnit.MINUTES))
