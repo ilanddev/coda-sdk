@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.14.3
+  version: 7.14.4
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -93,6 +93,7 @@ paths:
           description: ''
         '401':
           description: Returned if the logged in user is not a MSP user
+      summary: Provides paginated listing of active registrations.
     put:
       operationId: adminRegistrationsUpdate
       description: |-
@@ -123,6 +124,7 @@ paths:
           description: Returned if the logged in user is not a MSP user
         '406':
           description: Returned if a registration with the same e-mail address exists
+      summary: Registrations view endpoint for admin
   /admin/registrations/{registrationId}/:
     get:
       operationId: adminRegistrationsRetrieve2
@@ -147,6 +149,7 @@ paths:
           description: ''
         '401':
           description: Returned if the logged in user is not a MSP user
+      summary: Lists a single registration
     post:
       operationId: adminRegistrationsCreate
       description: Edits a single registration
@@ -178,6 +181,7 @@ paths:
         '401':
           description: Logged in user is not a MSP user, or does not have permission
             to edit registration
+      summary: Edits a single registration
     delete:
       operationId: adminRegistrationsDestroy
       description: Deletes a registration
@@ -198,6 +202,7 @@ paths:
         '401':
           description: Logged in user is not a MSP user, or does not have permission
             to delete registration
+      summary: Deletes a registration
   /admin/registrations/light/:
     get:
       operationId: adminRegistrationsLightRetrieve
@@ -238,6 +243,7 @@ paths:
           description: ''
         '401':
           description: Returned if the logged in user is not a MSP user
+      summary: Provides a lighter, summary listing of registrations
   /admin/reports/usageReport/{year}/{month}/:
     get:
       operationId: adminReportsUsageReportRetrieve
@@ -284,6 +290,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedUsageReportList'
           description: ''
+      summary: Returns an usage report for a certain period, if it exists.
   /admin/scanners/:
     get:
       operationId: adminScannersList
@@ -304,6 +311,7 @@ paths:
           description: ''
         '500':
           description: Returned if an unexpected error occurs.
+      summary: Returns the list of all scanners that can be used by all tenants.
   /admin/scanners/{scannerId}/:
     patch:
       operationId: adminScannersPartialUpdate
@@ -321,7 +329,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedAgentlessScannerEdit'
+              $ref: '#/components/schemas/PatchedScannerEdit'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -332,6 +340,7 @@ paths:
           description: Returned if an unexpected error occurs.
         '404':
           description: Returned if the scanner was not found.
+      summary: Edits values and parameters of a scanner
     delete:
       operationId: adminScannersDestroy
       description: Delete a configured internal scanner
@@ -354,6 +363,7 @@ paths:
           description: Returned if an unexpected error occurs.
         '404':
           description: Returned if the scanner was not found.
+      summary: Delete a configured internal scanner
   /admin/scanners/setup/:
     get:
       operationId: adminScannersSetupRetrieve
@@ -372,6 +382,7 @@ paths:
           description: ''
         '500':
           description: Returned if an unexpected error occurs.
+      summary: Returns the credentials needed by a scanner.
   /admin/serverStats/:
     get:
       operationId: adminServerStatsRetrieve
@@ -388,6 +399,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/StatsView'
           description: ''
+      summary: Endpoint that retrieves status info on the machine
   /auth/token/:
     post:
       operationId: authTokenCreate
@@ -424,6 +436,8 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Takes a set of user credentials and returns an access and refresh JSON
+        web
   /auth/token/refresh/:
     post:
       operationId: authTokenRefreshCreate
@@ -460,6 +474,8 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Takes a refresh type JSON web token and returns an access type JSON
+        web
   /branding/:
     get:
       operationId: brandingRetrieve
@@ -487,6 +503,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/BrandingResponse'
           description: ''
+      summary: Retrieves branding information
   /common/auth/session/:
     get:
       operationId: commonAuthSessionRetrieve
@@ -511,6 +528,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Returns the current session information
     post:
       operationId: commonAuthSessionCreate
       description: Authenticates a user
@@ -548,6 +566,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Authenticates a user
     delete:
       operationId: commonAuthSessionDestroy
       description: Logs out the current user
@@ -567,6 +586,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Logs out the current user
   /common/auth/session/accounts/:
     get:
       operationId: commonAuthSessionAccountsList
@@ -592,6 +612,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: 📃 Lists accounts into which the current user can login
     post:
       operationId: commonAuthSessionAccountsCreate
       description: |-
@@ -629,6 +650,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: 🔃 Switches the current profile_fk tenant ID with the one provided.
   /console/agent/:
     get:
       operationId: consoleAgentRetrieve
@@ -652,6 +674,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Lists installed agents
   /console/elements/application/{applicationId}/:
     get:
       operationId: consoleElementsApplicationRetrieve
@@ -681,6 +704,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApplicationDetails'
           description: ''
+      summary: Return generic data about an application
     delete:
       operationId: consoleElementsApplicationDestroy
       description: |-
@@ -707,6 +731,7 @@ paths:
       responses:
         '204':
           description: No response body
+      summary: Delete an existing application from database and all daemons, webapps,
   /console/elements/application/{applicationId}/attackavenues/:
     get:
       operationId: consoleElementsApplicationAttackavenuesList
@@ -738,6 +763,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/VirtualVulnerability'
           description: ''
+      summary: Displays advanced scanner findings
     post:
       operationId: consoleElementsApplicationAttackavenuesCreate
       description: Updates the state of an advanced scanner finding
@@ -778,6 +804,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VirtualVulnerability'
           description: ''
+      summary: Updates the state of an advanced scanner finding
   /console/elements/application/{applicationId}/vulnerabilities/:
     get:
       operationId: consoleElementsApplicationVulnerabilitiesRetrieve
@@ -807,6 +834,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedVulnerabilityList'
           description: ''
+      summary: Return vulnerabilities on a application
     post:
       operationId: consoleElementsApplicationVulnerabilitiesCreate
       description: Updates the state of a vulnerability finding
@@ -847,6 +875,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Vulnerability'
           description: ''
+      summary: Updates the state of a vulnerability finding
   /console/elements/applications/:
     get:
       operationId: consoleElementsApplicationsRetrieve
@@ -932,6 +961,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedApplicationInListingList'
           description: ''
+      summary: Application listing endpoints
   /console/elements/contexts/business/:
     get:
       operationId: consoleElementsContextsBusinessRetrieve
@@ -970,6 +1000,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedContextList'
           description: ''
+      summary: Returns listing of available business contexts
   /console/elements/contexts/business/{contextId}/:
     get:
       operationId: consoleElementsContextsBusinessRetrieve2
@@ -999,6 +1030,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Context'
           description: ''
+      summary: Returns details of a certain context
   /console/elements/contexts/business/{contextId}/setOwnerGroup/:
     patch:
       operationId: consoleElementsContextsBusinessSetOwnerGroupPartialUpdate
@@ -1033,6 +1065,7 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
+      summary: ''
   /console/elements/contexts/business/{contextId}/setOwnerUser/:
     patch:
       operationId: consoleElementsContextsBusinessSetOwnerUserPartialUpdate
@@ -1067,6 +1100,7 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
+      summary: ''
   /console/elements/contexts/technical/:
     get:
       operationId: consoleElementsContextsTechnicalRetrieve
@@ -1105,6 +1139,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/TechnicalContext'
           description: ''
+      summary: Returns list of available technical contexts
   /console/elements/contexts/technical/{contextId}/:
     get:
       operationId: consoleElementsContextsTechnicalRetrieve2
@@ -1134,6 +1169,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Context'
           description: ''
+      summary: Returns details of a certain technical context
   /console/elements/contexts/technical/{contextId}/applications/:
     get:
       operationId: consoleElementsContextsTechnicalApplicationsRetrieve
@@ -1167,6 +1203,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedApplicationInListingList'
           description: ''
+      summary: Returns a certain page of applications for a technical context
   /console/elements/contexts/technical/{contextId}/devices/:
     get:
       operationId: consoleElementsContextsTechnicalDevicesRetrieve
@@ -1200,6 +1237,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedDeviceList'
           description: ''
+      summary: Returns a certain page of devices for a technical context
   /console/elements/contexts/technical/{contextId}/setOwnerGroup/:
     patch:
       operationId: consoleElementsContextsTechnicalSetOwnerGroupPartialUpdate
@@ -1234,6 +1272,7 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
+      summary: ''
   /console/elements/contexts/technical/{contextId}/setOwnerUser/:
     patch:
       operationId: consoleElementsContextsTechnicalSetOwnerUserPartialUpdate
@@ -1268,6 +1307,7 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
+      summary: ''
   /console/elements/device/{deviceId}/applications/:
     get:
       operationId: consoleElementsDeviceApplicationsRetrieve
@@ -1297,6 +1337,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedApplicationDetailsList'
           description: ''
+      summary: Return applications on a device
   /console/elements/device/{deviceId}/attackavenues/:
     get:
       operationId: consoleElementsDeviceAttackavenuesList
@@ -1328,6 +1369,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/VirtualVulnerability'
           description: ''
+      summary: Lists available attack avenues on a device
   /console/elements/device/{deviceId}/dnsEntries/:
     get:
       operationId: consoleElementsDeviceDnsEntriesList
@@ -1363,6 +1405,7 @@ paths:
         '501':
           description: Returned if trying to retrieve DNS entries on agent-based devices.
             This is not supported yet.
+      summary: Returns DNS entries of a device, if it is scanned by an agentless scanner.
   /console/elements/device/{deviceId}/drivers/:
     get:
       operationId: consoleElementsDeviceDriversList
@@ -1394,6 +1437,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceDrivers'
           description: ''
+      summary: Return drivers on a device
   /console/elements/device/{deviceId}/installedUpdates/:
     get:
       operationId: consoleElementsDeviceInstalledUpdatesRetrieve
@@ -1423,6 +1467,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceInstalledUpdates'
           description: ''
+      summary: Return patches on a device
   /console/elements/device/{deviceId}/jobs/:
     get:
       operationId: consoleElementsDeviceJobsList
@@ -1454,6 +1499,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceJobs'
           description: ''
+      summary: Return jobs on a device
   /console/elements/device/{deviceId}/networkConnections/:
     get:
       operationId: consoleElementsDeviceNetworkConnectionsRetrieve
@@ -1479,6 +1525,7 @@ paths:
       responses:
         '200':
           description: No response body
+      summary: Return network connections list on a device
   /console/elements/device/{deviceId}/networkDevices/:
     get:
       operationId: consoleElementsDeviceNetworkDevicesRetrieve
@@ -1504,6 +1551,7 @@ paths:
       responses:
         '200':
           description: No response body
+      summary: Return network devices on a device
   /console/elements/device/{deviceId}/networkEdge/:
     get:
       operationId: consoleElementsDeviceNetworkEdgeRetrieve
@@ -1528,6 +1576,7 @@ paths:
       responses:
         '200':
           description: No response body
+      summary: Return available network edge results for a device
   /console/elements/device/{deviceId}/networkEdge/{testId}/:
     get:
       operationId: consoleElementsDeviceNetworkEdgeRetrieve2
@@ -1557,6 +1606,7 @@ paths:
       responses:
         '200':
           description: No response body
+      summary: Return a certain network edge result for a device
   /console/elements/device/{deviceId}/os/:
     get:
       operationId: consoleElementsDeviceOsRetrieve
@@ -1589,6 +1639,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceOS'
           description: ''
+      summary: 💻 Device Operating System view
   /console/elements/device/{deviceId}/overview/:
     get:
       operationId: consoleElementsDeviceOverviewRetrieve
@@ -1620,6 +1671,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceOverview'
           description: ''
+      summary: Return general info of the device, if the device is
   /console/elements/device/{deviceId}/patches/:
     get:
       operationId: consoleElementsDevicePatchesRetrieve
@@ -1649,6 +1701,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceInstalledUpdates'
           description: ''
+      summary: Return patches on a device
   /console/elements/device/{deviceId}/processes/:
     get:
       operationId: consoleElementsDeviceProcessesRetrieve
@@ -1674,6 +1727,7 @@ paths:
       responses:
         '200':
           description: No response body
+      summary: Return process list on a device
   /console/elements/device/{deviceId}/system/:
     get:
       operationId: consoleElementsDeviceSystemRetrieve
@@ -1699,6 +1753,7 @@ paths:
       responses:
         '200':
           description: No response body
+      summary: Get computer system info if agent source
   /console/elements/device/{deviceId}/users/:
     get:
       operationId: consoleElementsDeviceUsersList
@@ -1730,6 +1785,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceUser'
           description: ''
+      summary: Return users on a device
   /console/elements/device/{deviceId}/vulnerabilities/:
     get:
       operationId: consoleElementsDeviceVulnerabilitiesList
@@ -1761,6 +1817,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Vulnerability'
           description: ''
+      summary: Return vulnerabilities on a device
   /console/elements/devices/:
     get:
       operationId: consoleElementsDevicesRetrieve
@@ -1864,6 +1921,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedDeviceList'
           description: ''
+      summary: Returns list of discovered devices
   /console/notifications/:
     get:
       operationId: consoleNotificationsRetrieve
@@ -1923,6 +1981,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedNotificationList'
           description: ''
+      summary: 🔔 Returns the list of available notifications (alerts) on the platform
   /console/report/{reportType}/:
     get:
       operationId: consoleReportRetrieve
@@ -1957,6 +2016,7 @@ paths:
                 items:
                   type: string
           description: List of datetime strings
+      summary: Returns available report dates
   /console/report/{reportType}/{reportDate}/:
     get:
       operationId: consoleReportRetrieve2
@@ -1996,6 +2056,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/CVR'
           description: The CVR in JSON format. This can be quite large.
+      summary: Returns the available CVR report, or the requested CVR report if type
+        and date are provided
   /console/reporting/acceptRiskReport/:
     get:
       operationId: consoleReportingAcceptRiskReportRetrieve
@@ -2024,6 +2086,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedVulnerabilityList'
           description: ''
+      summary: Provides a listing of vulnerabilities that have been marked as risk
+        accepted
   /console/reporting/actionPlanReport/:
     get:
       operationId: consoleReportingActionPlanReportRetrieve
@@ -2052,6 +2116,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedVulnerabilityList'
           description: ''
+      summary: Provides a listing of vulnerabilities that have been added to action
+        plan
   /console/reporting/contextualRiskReport/:
     get:
       operationId: consoleReportingContextualRiskReportRetrieve
@@ -2095,6 +2161,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedContextualRiskReportEntryList'
           description: ''
+      summary: Retrieves the contextual risk report
   /console/reporting/contextualRiskReport/businessContextsLabels/:
     get:
       operationId: consoleReportingContextualRiskReportBusinessContextsLabelsRetrieve
@@ -2125,6 +2192,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Get list of contexts for which a CRS report is available
   /console/reporting/contextualRiskReport/devicesLabels/:
     get:
       operationId: consoleReportingContextualRiskReportDevicesLabelsRetrieve
@@ -2161,6 +2229,7 @@ paths:
                     - b.com
                   summary: List of devices
           description: List of device labels
+      summary: Get device labels for which a CRSR is available
   /console/reporting/contextualRiskReport/status/:
     get:
       operationId: consoleReportingContextualRiskReportStatusRetrieve
@@ -2200,6 +2269,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Retrieves the contextual risk reports status for a certain tenant.
   /console/reporting/remediationReport/:
     get:
       operationId: consoleReportingRemediationReportRetrieve
@@ -2258,6 +2328,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedRemediationReportList'
           description: ''
+      summary: Retrieves the remediation report
   /console/reporting/remediationReport/businessContext/{contextId}/devices/:
     get:
       operationId: consoleReportingRemediationReportBusinessContextDevicesList
@@ -2288,6 +2359,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/RemediationReportDeviceLabel'
           description: ''
+      summary: Get devices for business context
   /console/reporting/remediationReport/businessContextsLabels/:
     get:
       operationId: consoleReportingRemediationReportBusinessContextsLabelsList
@@ -2313,6 +2385,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Get business contexts that have remediation reports
   /console/scanSurface/:
     get:
       operationId: consoleScanSurfaceRetrieve
@@ -2347,6 +2420,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedScanSurfaceEntryList'
           description: ''
+      summary: Retrieve list of user inputs and the resulting assets
     post:
       operationId: consoleScanSurfaceCreate
       description: 🎯 Endpoint that updates the scan surface with new data (extend
@@ -2380,6 +2454,8 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: 🎯 Endpoint that updates the scan surface with new data (extend scan
+        surface modal)
   /console/scanSurface/currentTargets/{targetId}/:
     patch:
       operationId: consoleScanSurfaceCurrentTargetsPartialUpdate
@@ -2414,6 +2490,7 @@ paths:
         '401':
           description: Returned if user does not have necessary permissions to change
             a current target scope
+      summary: 🎯 Endpoint that edits existing scan entries scope (in/out)
   /console/scanSurface/currentTargets/ports/:
     get:
       operationId: consoleScanSurfaceCurrentTargetsPortsRetrieve
@@ -2442,6 +2519,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedCurrentTargetsPortsList'
           description: ''
+      summary: Retrieve user input, current targets, port.
   /console/scanSurface/rescan/:
     patch:
       operationId: consoleScanSurfaceRescanPartialUpdate
@@ -2471,6 +2549,8 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for each
+        active Agentless Scanner.
   /console/scanSurface/rescan/{scannerId}/:
     patch:
       operationId: consoleScanSurfaceRescanPartialUpdate2
@@ -2511,6 +2591,8 @@ paths:
           description: The requested scanner is already running an extend scan
         '406':
           description: User attempts to rescan user inputs from an inactive scanner
+      summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for requested
+        Agentless Scanner.
   /console/scanSurface/scanners/:
     get:
       operationId: consoleScanSurfaceScannersList
@@ -2537,6 +2619,8 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Get list of available scanners. This includes the default Cloud Scanner,
+        as well as internal scanners
     post:
       operationId: consoleScanSurfaceScannersCreate
       description: Sends commands to scanners.
@@ -2555,6 +2639,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Sends commands to scanners.
     patch:
       operationId: consoleScanSurfaceScannersPartialUpdate
       description: Edits values and parameters of a scanner
@@ -2564,7 +2649,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedAgentlessScannerEdit'
+              $ref: '#/components/schemas/PatchedScannerEdit'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -2586,6 +2671,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Edits values and parameters of a scanner
     delete:
       operationId: consoleScanSurfaceScannersDestroy
       description: Delete a configured internal scanner
@@ -2616,6 +2702,7 @@ paths:
           description: Scanner ID not found
         '500':
           description: Returned if a server error occurs
+      summary: Delete a configured internal scanner
   /console/scanSurface/userInputs/{userInputId}/rescan/:
     patch:
       operationId: consoleScanSurfaceUserInputsRescanPartialUpdate
@@ -2651,6 +2738,8 @@ paths:
         '406':
           description: If an extend scan is already running on the scanner related
             to the user input
+      summary: Allows uploading a file that defines tags to be automatically added
+        on devices
   /console/scanSurface/userInputs/customTags/:
     put:
       operationId: consoleScanSurfaceUserInputsCustomTagsUpdate
@@ -2681,6 +2770,8 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Allows uploading a file that defines tags to be automatically added
+        on devices
   /console/scheduler/:
     get:
       operationId: consoleSchedulerList
@@ -2718,6 +2809,7 @@ paths:
           description: ''
         '404':
           description: Returned if no scanner ID is specified
+      summary: ⌚ Retrieves schedulers listing
   /console/scheduler/{taskId}/:
     post:
       operationId: consoleSchedulerCreate
@@ -2759,6 +2851,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Task'
           description: ''
+      summary: ⌚ Edits a task's parameters
   /console/scheduler/{taskId}/{action}/:
     post:
       operationId: consoleSchedulerCreate2
@@ -2805,6 +2898,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Task'
           description: ''
+      summary: ⌚ Allows multiple operations on a certain task.
   /console/settings/tenant/:
     get:
       operationId: consoleSettingsTenantRetrieve
@@ -2824,6 +2918,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Change tenant field from settings.
     patch:
       operationId: consoleSettingsTenantPartialUpdate
       description: Change tenant field from settings.
@@ -2852,6 +2947,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Change tenant field from settings.
   /console/status/:
     get:
       operationId: consoleStatusRetrieve
@@ -2875,6 +2971,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Retrieves current server status.
   /console/status/scan/:
     get:
       operationId: consoleStatusScanRetrieve
@@ -2898,6 +2995,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
+      summary: Provides information regarding currently active scans
 components:
   schemas:
     Account:
@@ -3420,6 +3518,9 @@ components:
           nullable: true
           maxLength: 512
         sshPublicKey:
+          type: string
+          nullable: true
+        authenticatedScanPublicKey:
           type: string
           nullable: true
         isAutoSshRunning:
@@ -5092,6 +5193,9 @@ components:
           type: array
           items:
             type: integer
+        credentialsId:
+          type: integer
+          nullable: true
       required:
         - scanTargets
         - scanners
@@ -5433,12 +5537,6 @@ components:
         - page
         - totalCount
         - totalPages
-    PatchedAgentlessScannerEdit:
-      type: object
-      properties:
-        label:
-          type: string
-          description: Label of the scanner
     PatchedBCOwnerGroup:
       type: object
       properties:
@@ -5464,6 +5562,12 @@ components:
           type: array
           items: { }
           description: List of dictionaries having the following keys
+    PatchedScannerEdit:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Label of the scanner
     PatchedScopeChange:
       type: object
       description: Serializer that validates a scope change value
@@ -6907,13 +7011,12 @@ components:
     WLBranding:
       type: object
       properties:
-        id:
-          type: integer
-          readOnly: true
         supportName:
           type: string
+          readOnly: true
         supportEmail:
           type: string
+          readOnly: true
         mainLogo:
           type: string
         badgeLogo:
@@ -6951,8 +7054,9 @@ components:
           type: boolean
         hideInstallPatchesButton:
           type: boolean
+        hideRemediateWithButton:
+          type: boolean
       required:
-        - id
         - supportEmail
         - supportName
   securitySchemes:
@@ -6979,3 +7083,22 @@ servers:
         default: api
         enum:
           - api
+tags:
+  - name: auth
+    description: 🔐 JWT authentication endpoints
+  - name: console
+    description: 💻 Operations made in the Footprint Console
+  - name: admin
+    description: 💼 Operations made in the MSP Console. These require `elevated` access.
+  - name: common
+    description: 📁 Operations common to both MSP and Footprint consoles
+  - name: internalScanner
+    description: 📡 Endpoints for communicating with the Internal Scanner
+  - name: agent
+    description: 🕶️ Endpoints for communicating with Agents
+  - name: branding
+    description: 🎨 Instance branding retrieval and editing
+  - name: signup
+    description: 📋 Endpoints for the signup flow
+  - name: tnl
+    description: 🔌 Sentry proxy tunnel

@@ -15,8 +15,7 @@
 
 package com.iland.coda.footprint;
 
-import static com.iland.coda.footprint.Clients.retryCodaClient;
-import static com.iland.coda.footprint.Clients.simpleCodaClient;
+import static com.iland.coda.footprint.Clients.simpleCodaClientPassword;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import net.codacloud.ApiException;
@@ -26,14 +25,21 @@ class RetryCodaClientTest {
 
 	@Test
 	void testReauthentication() throws ApiException {
+		final RetryCodaClient retryCodaClient =
+			new RetryCodaClient(simpleCodaClientPassword);
+
 		retryCodaClient.getScanners(null); // test for proper authentication
-		simpleCodaClient.accessToken.set("foo"); // invalidate access token
+		simpleCodaClientPassword.xsrfInterceptor.xsrfToken.set(
+			"foo"); // invalidate access token
 		retryCodaClient.getScanners(
 			null); // re-authentication happens silently in the background
 
-		assertNotNull(simpleCodaClient.accessToken.get(),
+
+		final PasswordAuthentication authentication =
+			(PasswordAuthentication) simpleCodaClientPassword.authentication;
+		assertNotNull(authentication.accessToken.get(),
 			"access token must not be null");
-		assertNotNull(simpleCodaClient.xsrfToken.get(),
+		assertNotNull(simpleCodaClientPassword.xsrfInterceptor.getXsrfToken(),
 			"XSRF token must not be null");
 	}
 

@@ -15,16 +15,15 @@
 
 package com.iland.coda.footprint;
 
+import static java.util.Objects.requireNonNull;
+
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Queue;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.google.common.collect.EvictingQueue;
 import net.codacloud.ApiClient;
@@ -34,15 +33,12 @@ import net.codacloud.api.AdminApi;
 import net.codacloud.api.BrandingApi;
 import net.codacloud.api.CommonApi;
 import net.codacloud.api.ConsoleApi;
-import net.codacloud.model.SessionLogin;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link AbstractCodaClient}.
@@ -51,36 +47,29 @@ import org.slf4j.LoggerFactory;
  */
 abstract class AbstractCodaClient implements CodaClient {
 
-	private static final Logger logger =
-		LoggerFactory.getLogger(AbstractCodaClient.class);
-
 	public static final int DEFAULT_PAGE_SIZE = 20;
 	public static final int MAX_PAGE_SIZE = 100;
 
-	private static final String CSRF_COOKIE_NAME = "XSRF-TOKEN";
-	private static final String CSRF_HEADER_NAME = "X-XSRF-Token";
+	final Authentication authentication;
+	final XsrfInterceptor xsrfInterceptor;
 
-	private final String username, password;
-
+	private final ApiClient apiClient;
 	protected final AdminApi adminApi;
 	protected final BrandingApi brandingApi;
 	protected final CommonApi commonApi;
 	protected final ConsoleApi consoleApi;
 
-	protected final AtomicReference<String> accessToken =
-		new AtomicReference<>();
-	protected final AtomicReference<String> xsrfToken = new AtomicReference<>();
-
 	private static final Queue<String> rawJsonQueue = EvictingQueue.create(1);
 	protected static final Lock jsonLock = new ReentrantLock();
 
-	AbstractCodaClient(final String apiBasePath, final String username,
-		final String password) {
-		this.username = username;
-		this.password = password;
+	AbstractCodaClient(final String apiBasePath,
+		final Authentication authentication) {
+		this.authentication =
+			requireNonNull(authentication, "authentication must not be null");
+		this.xsrfInterceptor = new XsrfInterceptor();
 
 		final OkHttpClient client =
-			createClient(createBearerInterceptor(), createCsrfInterceptor(),
+			createClient(authentication, xsrfInterceptor,
 				createEmptyStringInterceptor(),
 				createSchedulerConfigHackInterceptor(),
 				createDateTimeInterceptor());
@@ -89,10 +78,15 @@ abstract class AbstractCodaClient implements CodaClient {
 		apiClient.setBasePath(apiBasePath);
 		apiClient.setJSON(createJSON(apiClient));
 
-		adminApi = new AdminApi(apiClient);
-		brandingApi = new BrandingApi(apiClient);
-		commonApi = new CommonApi(apiClient);
-		consoleApi = new ConsoleApi(apiClient);
+		this.apiClient = apiClient;
+		this.adminApi = new AdminApi(apiClient);
+		this.brandingApi = new BrandingApi(apiClient);
+		this.commonApi = new CommonApi(apiClient);
+		this.consoleApi = new ConsoleApi(apiClient);
+	}
+
+	private void init() {
+
 	}
 
 	private static OkHttpClient createClient(Interceptor... interceptors) {
@@ -104,72 +98,6 @@ abstract class AbstractCodaClient implements CodaClient {
 			.readTimeout(Duration.ofSeconds(120));
 
 		return builder.build();
-	}
-
-	/**
-	 * Extracts bearer access token to be used in future requests.
-	 *
-	 * @return an {@link Interceptor interceptor}
-	 */
-	private Interceptor createBearerInterceptor() {
-		return chain -> {
-			final Request request = chain.request();
-			if (accessToken.get() != null) {
-				final Request.Builder builder = request.newBuilder();
-				builder.header("Authorization", "Bearer " + accessToken.get());
-
-				return chain.proceed(builder.build());
-			}
-
-			final Response response = chain.proceed(request);
-			final String body = response.peekBody(Long.MAX_VALUE).string();
-			final String regex = "\"access\":\"([^\"]+)\"";
-			final Pattern pattern = Pattern.compile(regex);
-			final Matcher matcher = pattern.matcher(body);
-			if (matcher.find()) {
-				accessToken.set(matcher.group(1));
-			}
-
-			return response;
-		};
-	}
-
-	/**
-	 * Extracts XSRF token to be used in future requests.
-	 *
-	 * @return an {@link Interceptor interceptor}
-	 */
-	private Interceptor createCsrfInterceptor() {
-		return chain -> {
-			final Request request = chain.request();
-			if (xsrfToken.get() != null) {
-				final Request.Builder builder = request.newBuilder();
-				builder.addHeader(CSRF_HEADER_NAME, xsrfToken.get());
-
-				return chain.proceed(builder.build());
-			}
-
-			final Response response = chain.proceed(request);
-			response.headers("Set-Cookie").stream()
-				.filter(cookie -> cookie.startsWith(CSRF_COOKIE_NAME))
-				.findFirst().map(AbstractCodaClient::extractXsrfToken)
-				.ifPresent(xsrfToken::set);
-
-			return response;
-		};
-	}
-
-	/**
-	 * Extracts XSRF token.
-	 *
-	 * @param cookie The cookie header value
-	 * @return an {@link String XSRF token}
-	 */
-	private static String extractXsrfToken(final String cookie) {
-		final String regex = "XSRF-TOKEN=([^;]+)";
-		final Pattern pattern = Pattern.compile(regex);
-		final Matcher matcher = pattern.matcher(cookie);
-		return matcher.find() ? matcher.group(1) : null;
 	}
 
 	/**
@@ -270,12 +198,9 @@ abstract class AbstractCodaClient implements CodaClient {
 
 	@Override
 	public final CodaClient login() throws ApiException {
-		accessToken.set(null);
-		xsrfToken.set(null);
+		xsrfInterceptor.clearXsrfToken();
 
-		final SessionLogin credentials =
-			new SessionLogin().username(username).password(password);
-		commonApi.commonAuthSessionCreate(credentials, null);
+		authentication.authenticate(apiClient);
 
 		return this;
 	}

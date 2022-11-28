@@ -58,9 +58,9 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	private static final Logger logger =
 		LoggerFactory.getLogger(SimpleCodaClient.class);
 
-	SimpleCodaClient(final String apiBasePath, final String username,
-		final String password) {
-		super(apiBasePath, username, password);
+	SimpleCodaClient(final String apiBasePath,
+		final Authentication authentication) {
+		super(apiBasePath, authentication);
 	}
 
 	@Override

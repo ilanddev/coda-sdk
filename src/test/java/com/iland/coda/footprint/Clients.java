@@ -33,12 +33,12 @@ final class Clients {
 
 	private static final Logger logger = LoggerFactory.getLogger(Clients.class);
 
-	private static final String apiBasePath, username, password;
+	static final String apiBasePath, apiKey, username, password;
 
 	static {
 		final String missingEnv =
-			Arrays.asList("FOOTPRINT_SUBDOMAIN", "FOOTPRINT_USERNAME",
-					"FOOTPRINT_PASSWORD").stream()
+			Arrays.asList("FOOTPRINT_SUBDOMAIN", "FOOTPRINT_API_KEY",
+					"FOOTPRINT_USERNAME", "FOOTPRINT_PASSWORD").stream()
 				.filter(Predicates.not(System.getenv()::containsKey))
 				.collect(Collectors.joining(","));
 		if (!missingEnv.isEmpty()) {
@@ -49,13 +49,18 @@ final class Clients {
 		}
 
 		apiBasePath = createApiBasePath(System.getenv("FOOTPRINT_SUBDOMAIN"));
+		apiKey = System.getenv("FOOTPRINT_API_KEY");
 		username = System.getenv("FOOTPRINT_USERNAME");
 		password = System.getenv("FOOTPRINT_PASSWORD");
 	}
 
 	// share clients between tests to improve performance
+	static final SimpleCodaClient simpleCodaClientPassword =
+		new SimpleCodaClient(apiBasePath,
+			new PasswordAuthentication(username, password));
 	static final SimpleCodaClient simpleCodaClient =
-		new SimpleCodaClient(apiBasePath, username, password);
+		new SimpleCodaClient(apiBasePath, new KeyAuthentication(apiKey));
+
 	static final RetryCodaClient retryCodaClient =
 		new RetryCodaClient(simpleCodaClient);
 	static final CachingCodaClient cachingCodaClient =
