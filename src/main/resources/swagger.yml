@@ -2115,6 +2115,32 @@ paths:
           description: The CVR in JSON format. This can be quite large.
       summary: Returns the available CVR report, or the requested CVR report if type
         and date are provided
+  # added by Tag
+  /console/reporting/cyberRiskReport/:
+    get:
+      operationId: consoleReportingCyberRiskReportRetrieve
+      description: ...
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
+      summary: ...
   /console/reporting/acceptRiskReport/:
     get:
       operationId: consoleReportingAcceptRiskReportRetrieve

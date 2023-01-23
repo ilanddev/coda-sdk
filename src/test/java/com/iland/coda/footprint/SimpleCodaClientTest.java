@@ -22,13 +22,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.File;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -43,10 +46,12 @@ import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
 import net.codacloud.model.CVRMostVulnServer;
 import net.codacloud.model.CVRVulnerability;
+import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -241,6 +246,16 @@ class SimpleCodaClientTest {
 		} catch (ApiException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Test
+	void testCyberRiskReport() throws ApiException {
+		final File cyberRiskReport = client.getCyberRiskReport(1);
+
+		assertTrue(cyberRiskReport.canRead());
+		assertTrue(cyberRiskReport.length() > 0, "PDF is empty");
+		assertTrue(cyberRiskReport.length() < 5000000,
+			"PDF is too large; it should be ~4MiB");
 	}
 
 	@Test

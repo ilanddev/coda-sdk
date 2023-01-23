@@ -17,17 +17,32 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.Registrations.toLight;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.io.ByteStreams;
 import net.codacloud.ApiException;
+import net.codacloud.api.ConsoleApi;
 import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
@@ -222,6 +237,70 @@ final class SimpleCodaClient extends AbstractCodaClient {
 				reportType.value(), accountId);
 		} finally {
 			logger.debug("Retrieved report after {}", stopwatch);
+		}
+	}
+
+	@Override
+	public File getCyberRiskReport(final Integer accountId)
+		throws ApiException {
+		return getCyberRiskReportViaUrlConnection(accountId);
+	}
+
+	/**
+	 * For reasons beyond my comprehension the generated SDK returns a mangled
+	 * PDF that is much larger than it should be. After hours wasted trying to
+	 * track down the problem I opted to use {@link URLConnection} instead.
+	 *
+	 * @see {@link ConsoleApi#consoleReportingCyberRiskReportRetrieve(Integer)}
+	 */
+	private File getCyberRiskReportViaUrlConnection(final Integer accountId)
+		throws ApiException {
+		final String basePath = apiClient.getBasePath();
+		try {
+			URL url = new URL(basePath + "/console/reporting/cyberRiskReport/");
+			final HttpURLConnection urlConnection =
+				(HttpURLConnection) url.openConnection();
+			urlConnection.setReadTimeout((int) TimeUnit.SECONDS.toMillis(60));
+			urlConnection.setRequestProperty("Accept", "application/pdf");
+			urlConnection.setRequestProperty("FootprintTenantId",
+				accountId.toString());
+			if (authentication instanceof KeyAuthentication) {
+				final KeyAuthentication keyAuthentication =
+					(KeyAuthentication) authentication;
+				urlConnection.setRequestProperty("FootprintApiKey",
+					keyAuthentication.getApiKey());
+			}
+			urlConnection.connect();
+
+			int code = urlConnection.getResponseCode();
+			final String contentType = urlConnection.getContentType();
+			if (code != 200 || !"application/pdf".equals(contentType)) {
+				throw new ApiException(String.format(
+					"Failed to retrieve cyber risk report with code=%d", code));
+			}
+
+			final String contentDispositionUnchecked =
+				urlConnection.getHeaderField("Content-Disposition");
+			final Optional<String> contentDisposition =
+				Optional.ofNullable(contentDispositionUnchecked);
+			final String attachment = "attachment;filename=";
+			final String defaultName = "Cyber Risk Report.pdf";
+			final String filename =
+				contentDisposition.filter(cd -> cd.startsWith(attachment))
+					.map(cd -> cd.substring(attachment.length()))
+					.map(cd -> cd.replaceAll("\\W+", "_")) // sanitize filename
+					.orElse(defaultName);
+			final File file = new File("/tmp/" + filename);
+			file.deleteOnExit();
+
+			try (final InputStream in = urlConnection.getInputStream();
+				final OutputStream out = new FileOutputStream(file)) {
+				ByteStreams.copy(in, out);
+			}
+
+			return file;
+		} catch (IOException e) {
+			throw new ApiException(e);
 		}
 	}
 

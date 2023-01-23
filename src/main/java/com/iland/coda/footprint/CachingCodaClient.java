@@ -17,6 +17,7 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.Registrations.toLight;
 
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -293,6 +294,12 @@ final class CachingCodaClient implements CodaClient {
 	public List<String> getReportTimestamps(final ReportType reportType,
 		final Integer accountId) throws ApiException {
 		return delegatee.getReportTimestamps(reportType, accountId);
+	}
+
+	@Override
+	public File getCyberRiskReport(final Integer accountId)
+		throws ApiException {
+		return delegatee.getCyberRiskReport(accountId);
 	}
 
 	@Override

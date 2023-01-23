@@ -53,7 +53,7 @@ abstract class AbstractCodaClient implements CodaClient {
 	final Authentication authentication;
 	final XsrfInterceptor xsrfInterceptor;
 
-	private final ApiClient apiClient;
+	protected final ApiClient apiClient;
 	protected final AdminApi adminApi;
 	protected final BrandingApi brandingApi;
 	protected final CommonApi commonApi;
