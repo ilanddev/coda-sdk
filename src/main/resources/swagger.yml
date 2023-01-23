@@ -165,7 +165,8 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Registration'
+              # Preserved by Tag
+              $ref: '#/components/schemas/RegistrationEdit'
         required: true
       security:
         - jwtAuth: [ ]
@@ -6170,6 +6171,64 @@ components:
         - description
         - label
         - manageType
+    # Preserved by Tag as a temporary work around for the new edit Internal Server Error
+    RegistrationEdit:
+      type: object
+      description: Serializer containing the edit fields for a registration
+      properties:
+        label:
+          type: string
+          description: The name of the registration, as it appears in listings
+        description:
+          type: string
+          description: The registration description
+        photo:
+          type: string
+          description: Base64 representation of a photo that is associated with this
+            registration
+        associatedMspUserIds:
+          type: array
+          items:
+            type: integer
+          nullable: true
+          description: |-
+            List of MSP user ids that should be associated with this registration.
+                        If None, it will be ignored
+        managerId:
+          type: integer
+          nullable: true
+          description: |-
+            Optional manager user ID.
+                    Only taken into account if the user requesting the edit has the Global Admin role
+        manageType:
+          enum:
+            - self_managed
+            - co_managed
+            - fully_managed
+            - no_tenant
+          type: string
+          description: Type of management for the registration
+        associatedMspGroupIds:
+          type: array
+          items:
+            type: integer
+          nullable: true
+          description: |2-
+
+                    Groups of MSP users that should be associated with this registration
+                    If None, it will be ignored
+        signupData:
+          allOf:
+            - $ref: '#/components/schemas/RegistrationSignupData'
+          description: "\n        Optional overrides for the signup data.\n      \
+            \  If a tenant is not created yet, this can be used to change the default\
+            \ username\n        account that will be created\n        "
+        isPayingCustomer:
+          type: boolean
+          description: Change a tenant from trial to paying or vice versa
+        isAllMspAccessible:
+          type: boolean
+          description: Whether the tenant should be accessible by all MSP users
     RegistrationHistory:
       type: object
       description: Serializer for registration state change history entries

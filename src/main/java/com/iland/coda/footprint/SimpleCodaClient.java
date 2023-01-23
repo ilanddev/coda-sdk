@@ -38,6 +38,7 @@ import net.codacloud.model.PaginatedScanSurfaceEntryList;
 import net.codacloud.model.PatchedScanSurfaceRescan;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreate;
+import net.codacloud.model.RegistrationEdit;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
@@ -96,7 +97,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 	@Override
 	public Registration updateRegistration(final Integer registrationId,
-		final Registration edit) throws ApiException {
+		final RegistrationEdit edit) throws ApiException {
 		return adminApi.adminRegistrationsCreate(registrationId, edit);
 	}
 
