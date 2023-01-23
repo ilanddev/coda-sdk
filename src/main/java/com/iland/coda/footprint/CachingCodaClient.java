@@ -40,6 +40,7 @@ import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreate;
+import net.codacloud.model.RegistrationEdit;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
@@ -190,9 +191,9 @@ final class CachingCodaClient implements CodaClient {
 
 	@Override
 	public Registration updateRegistration(final Integer registrationId,
-		final Registration registration) throws ApiException {
+		final RegistrationEdit edit) throws ApiException {
 		final Registration updatedRegistration =
-			delegatee.updateRegistration(registrationId, registration);
+			delegatee.updateRegistration(registrationId, edit);
 
 		final Set<RegistrationLight> registrations =
 			getRegistrations(DEFAULT_CATEGORY);

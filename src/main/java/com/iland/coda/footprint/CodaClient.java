@@ -37,6 +37,7 @@ import net.codacloud.model.CVR;
 import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreate;
+import net.codacloud.model.RegistrationEdit;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
@@ -240,12 +241,12 @@ public interface CodaClient {
 	 * Updates a registration.
 	 *
 	 * @param registrationId the registration ID
-	 * @param edit           the {@link Registration registration}
+	 * @param edit           the {@link RegistrationEdit edit}
 	 * @return a {@link Registration registration}
 	 * @throws ApiException
 	 */
 	Registration updateRegistration(final Integer registrationId,
-		final Registration edit) throws ApiException;
+		final RegistrationEdit edit) throws ApiException;
 
 	/**
 	 * Deletes a registration.
