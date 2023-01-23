@@ -58,4 +58,13 @@ public final class KeyAuthentication implements Authentication {
 		return chain.proceed(builder.build());
 	}
 
+	/**
+	 * Returns the API key.
+	 *
+	 * @return the API key
+	 */
+	String getApiKey() {
+		return this.apiKey;
+	}
+
 }

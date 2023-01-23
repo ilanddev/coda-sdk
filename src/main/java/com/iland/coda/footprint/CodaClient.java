@@ -17,6 +17,8 @@ package com.iland.coda.footprint;
 
 import static java.util.stream.Collectors.toMap;
 
+import java.io.File;
+import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -478,6 +480,15 @@ public interface CodaClient {
 	 */
 	List<String> getReportTimestamps(ReportType reportType, Integer accountId)
 		throws ApiException;
+
+	/**
+	 * Retrieve a {@link File pdf} containing the cyber risk report.
+	 *
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a {@link File pdf} containing the cyber risk report
+	 * @throws ApiException
+	 */
+	File getCyberRiskReport(Integer accountId) throws ApiException;
 
 	/**
 	 * Creates a fully managed {@link Registration} accessible by every MSP user.

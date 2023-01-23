@@ -19,3 +19,6 @@ test: clean
 
 install: clean
 	source footprint.env && mvn install
+
+quick: clean
+	source footprint.env && mvn install -Dmaven.test.skip=true

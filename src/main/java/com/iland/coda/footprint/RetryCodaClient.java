@@ -18,6 +18,7 @@ package com.iland.coda.footprint;
 import static com.iland.coda.footprint.AbstractCodaClient.MAX_PAGE_SIZE;
 import static com.iland.coda.footprint.SimpleCodaClient.throwDuplicateKeyException;
 
+import java.io.File;
 import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -249,6 +250,13 @@ final class RetryCodaClient implements CodaClient {
 		final Integer accountId) throws ApiException {
 		return retryIfNecessary(
 			() -> delegatee.getReportTimestamps(reportType, accountId));
+	}
+
+	@Override
+	public File getCyberRiskReport(final Integer accountId)
+		throws ApiException {
+		return retryIfNecessary(
+			() -> delegatee.getCyberRiskReport(accountId));
 	}
 
 	@Override
