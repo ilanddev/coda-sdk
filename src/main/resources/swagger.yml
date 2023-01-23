@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.14.4
+  version: 7.15.0
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -52,12 +52,12 @@ paths:
           name: page
           schema:
             type: integer
-          description: Page that you want to request
+          description: Page to request
         - in: query
           name: size
           schema:
             type: integer
-          description: Number of elements on page
+          description: Number of elements on a page
         - in: query
           name: sortColumn
           schema:
@@ -80,6 +80,7 @@ paths:
             type: string
           description: Field used filter entries by all columns
       tags:
+        - admin/registrations
         - admin
       security:
         - jwtAuth: [ ]
@@ -101,6 +102,7 @@ paths:
 
         This endpoint provides methods for managing any registration via the new RegistrationsController
       tags:
+        - admin/registrations
         - admin
       requestBody:
         content:
@@ -122,13 +124,11 @@ paths:
           description: Returned if provided data is invalid
         '401':
           description: Returned if the logged in user is not a MSP user
-        '406':
-          description: Returned if a registration with the same e-mail address exists
       summary: Registrations view endpoint for admin
   /admin/registrations/{registrationId}/:
     get:
       operationId: adminRegistrationsRetrieve2
-      description: Lists a single registration
+      description: Retrieves a single registration
       parameters:
         - in: path
           name: registrationId
@@ -136,6 +136,7 @@ paths:
             type: integer
           required: true
       tags:
+        - admin/registrations
         - admin
       security:
         - jwtAuth: [ ]
@@ -147,9 +148,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Registration'
           description: ''
-        '401':
-          description: Returned if the logged in user is not a MSP user
-      summary: Lists a single registration
+      summary: Retrieves a single registration
     post:
       operationId: adminRegistrationsCreate
       description: Edits a single registration
@@ -160,12 +159,14 @@ paths:
             type: integer
           required: true
       tags:
+        - admin/registrations
         - admin
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegistrationEdit'
+              $ref: '#/components/schemas/Registration'
+        required: true
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -176,11 +177,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/Registration'
           description: ''
-        '400':
-          description: Returned if the provided data is invalid
-        '401':
-          description: Logged in user is not a MSP user, or does not have permission
-            to edit registration
       summary: Edits a single registration
     delete:
       operationId: adminRegistrationsDestroy
@@ -192,6 +188,7 @@ paths:
             type: integer
           required: true
       tags:
+        - admin/registrations
         - admin
       security:
         - jwtAuth: [ ]
@@ -223,13 +220,14 @@ paths:
           name: page
           schema:
             type: integer
-          description: Page that you want to request
+          description: Page to request
         - in: query
           name: size
           schema:
             type: integer
-          description: Number of elements on page
+          description: Number of elements on a page
       tags:
+        - admin/registrations
         - admin
       security:
         - jwtAuth: [ ]
@@ -805,6 +803,36 @@ paths:
                 $ref: '#/components/schemas/VirtualVulnerability'
           description: ''
       summary: Updates the state of an advanced scanner finding
+  /console/elements/application/{applicationId}/hierarchy/:
+    get:
+      operationId: consoleElementsApplicationHierarchyRetrieve
+      description: Returns the application hierarchy
+      parameters:
+        - in: path
+          name: applicationId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HierarchyResponse'
+          description: ''
+      summary: Returns the application hierarchy
   /console/elements/application/{applicationId}/vulnerabilities/:
     get:
       operationId: consoleElementsApplicationVulnerabilitiesRetrieve
@@ -1438,6 +1466,36 @@ paths:
                   $ref: '#/components/schemas/DeviceDrivers'
           description: ''
       summary: Return drivers on a device
+  /console/elements/device/{deviceId}/hierarchy/:
+    get:
+      operationId: consoleElementsDeviceHierarchyRetrieve
+      description: Returns the device's hierarchy
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: string
+            pattern: ^\d+$
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HierarchyResponse'
+          description: ''
+      summary: Returns the device's hierarchy
   /console/elements/device/{deviceId}/installedUpdates/:
     get:
       operationId: consoleElementsDeviceInstalledUpdatesRetrieve
@@ -2270,6 +2328,34 @@ paths:
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Retrieves the contextual risk reports status for a certain tenant.
+  /console/reporting/cyberRiskReport/:
+    get:
+      operationId: consoleReportingCyberRiskReportRetrieve
+      description: Generates the Contextual Risk Scoring report and returns it as
+        PDF
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '500':
+          description: Returned if an unexpected error occurs.
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      summary: Generates the Contextual Risk Scoring report and returns it as PDF
   /console/reporting/remediationReport/:
     get:
       operationId: consoleReportingRemediationReportRetrieve
@@ -3007,7 +3093,11 @@ components:
       properties:
         id:
           type: integer
-          description: ID of the account
+          description: ID of the account (e.g. tenant id)
+        registrationId:
+          type: integer
+          readOnly: true
+          description: ID of the registration entry
         name:
           type: string
           description: Name of the account
@@ -3027,6 +3117,7 @@ components:
         - isPrimaryAccount
         - name
         - photo
+        - registrationId
     AccountSwitch:
       type: object
       description: Account switch
@@ -3394,9 +3485,20 @@ components:
           type: integer
           readOnly: true
         state:
+          enum:
+            - Online
+            - Offline
           type: string
           readOnly: true
         administrativeState:
+          enum:
+            - Starting
+            - Active
+            - Stopped
+            - Deleted
+            - Offline
+            - Shut Down
+            - Incompatible hardware
           type: string
           readOnly: true
         schedulerConfig:
@@ -3414,6 +3516,13 @@ components:
         privateIp:
           type: string
           nullable: true
+          readOnly: true
+        credentials:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanningCredentials'
+          nullable: true
+          description: Associated credentials for this scanner
           readOnly: true
         guid:
           type: string
@@ -3549,6 +3658,7 @@ components:
           nullable: true
       required:
         - administrativeState
+        - credentials
         - hostname
         - id
         - numberOfIpsScanned
@@ -4871,6 +4981,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CurrentTargetsPort'
+        lastScanned:
+          type: string
+          format: date-time
+          description: Last time when a device was scanned
       required:
         - ipAddress
         - portTransportProtocolList
@@ -5199,6 +5313,134 @@ components:
       required:
         - scanTargets
         - scanners
+    HierarchyNode:
+      type: object
+      description: A regular element in the hierarchy
+      properties:
+        id:
+          type: integer
+          description: ID of the element
+        name:
+          type: string
+          description: Name of the element
+        depth:
+          type: integer
+          description: Level of the element in hierarchy
+        toggled:
+          type: boolean
+          writeOnly: true
+          description: Deprecated boolean value.
+        active:
+          type: boolean
+          writeOnly: true
+          description: Deprecated boolean value.
+        type:
+          enum:
+            - App
+          type: string
+          description: Category/type of the element
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/HierarchyNode'
+          description: Child elements
+      required:
+        - children
+        - depth
+        - id
+        - name
+        - type
+    HierarchyResponse:
+      type: object
+      description: Serializer for the root response type. This is the response that
+        the endpoint actually sends out
+      properties:
+        hierarchy:
+          allOf:
+            - $ref: '#/components/schemas/HierarchyRootElement'
+          description: Root element of the hierarchy (usually organization)
+        path:
+          type: array
+          items:
+            $ref: '#/components/schemas/HierarchyNode'
+          description: Flattened path of parents of the element
+      required:
+        - hierarchy
+        - path
+    HierarchyRootElement:
+      type: object
+      description: Root element - represents the start of the hierarchy
+      properties:
+        id:
+          type: integer
+          description: ID of the element
+        name:
+          type: string
+          description: Name of the element
+        depth:
+          type: integer
+          description: Level of the element in hierarchy
+        toggled:
+          type: boolean
+          writeOnly: true
+          description: Deprecated boolean value.
+        active:
+          type: boolean
+          writeOnly: true
+          description: Deprecated boolean value.
+        type:
+          enum:
+            - Organization
+          type: string
+          description: Category/type of the element
+        children:
+          allOf:
+            - $ref: '#/components/schemas/HierarchyServerElement'
+          description: Server of the hierarchy. Always first and only child of the
+            root element.
+      required:
+        - children
+        - depth
+        - id
+        - name
+        - type
+    HierarchyServerElement:
+      type: object
+      description: Server element - presents a list of elements as children
+      properties:
+        id:
+          type: integer
+          description: ID of the element
+        name:
+          type: string
+          description: Name of the element
+        depth:
+          type: integer
+          description: Level of the element in hierarchy
+        toggled:
+          type: boolean
+          writeOnly: true
+          description: Deprecated boolean value.
+        active:
+          type: boolean
+          writeOnly: true
+          description: Deprecated boolean value.
+        type:
+          enum:
+            - Server
+          type: string
+          description: Category/type of the element
+        children:
+          allOf:
+            - $ref: '#/components/schemas/HierarchyNode'
+          description: Server of the hierarchy. Always first and only child of the
+            root element.
+      required:
+        - children
+        - depth
+        - id
+        - name
+        - type
     Notification:
       type: object
       description: Serializer for the Notification item
@@ -5813,6 +6055,18 @@ components:
           type: boolean
           readOnly: true
           description: Whether the logged in user has access to edit the registration
+        maxBillableAssets:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Maximum amount of billable assets
+        billingPlanType:
+          enum:
+            - monthly
+            - weekly
+            - continuous
+          type: string
+          description: Billing plan type
       required:
         - friendlyType
         - groups
@@ -5902,67 +6156,20 @@ components:
         isAllMspAccessible:
           type: boolean
           description: Whether the tenant should be accessible by all MSP users
+        maxBillableAssets:
+          type: integer
+          description: Max number of billable assets
+        billingPlanType:
+          enum:
+            - monthly
+            - weekly
+            - continuous
+          type: string
+          description: Billing plan type
       required:
         - description
         - label
         - manageType
-    RegistrationEdit:
-      type: object
-      description: Serializer containing the edit fields for a registration
-      properties:
-        label:
-          type: string
-          description: The name of the registration, as it appears in listings
-        description:
-          type: string
-          description: The registration description
-        photo:
-          type: string
-          description: Base64 representation of a photo that is associated with this
-            registration
-        associatedMspUserIds:
-          type: array
-          items:
-            type: integer
-          nullable: true
-          description: |-
-            List of MSP user ids that should be associated with this registration.
-                        If None, it will be ignored
-        managerId:
-          type: integer
-          nullable: true
-          description: |-
-            Optional manager user ID.
-                    Only taken into account if the user requesting the edit has the Global Admin role
-        manageType:
-          enum:
-            - self_managed
-            - co_managed
-            - fully_managed
-            - no_tenant
-          type: string
-          description: Type of management for the registration
-        associatedMspGroupIds:
-          type: array
-          items:
-            type: integer
-          nullable: true
-          description: |2-
-
-                    Groups of MSP users that should be associated with this registration
-                    If None, it will be ignored
-        signupData:
-          allOf:
-            - $ref: '#/components/schemas/RegistrationSignupData'
-          description: "\n        Optional overrides for the signup data.\n      \
-            \  If a tenant is not created yet, this can be used to change the default\
-            \ username\n        account that will be created\n        "
-        isPayingCustomer:
-          type: boolean
-          description: Change a tenant from trial to paying or vice versa
-        isAllMspAccessible:
-          type: boolean
-          description: Whether the tenant should be accessible by all MSP users
     RegistrationHistory:
       type: object
       description: Serializer for registration state change history entries
@@ -6298,6 +6505,63 @@ components:
       required:
         - serverUrl
         - token
+    ScanningCredentials:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        label:
+          type: string
+          maxLength: 100
+        credentialsType:
+          enum:
+            - ssh_password
+            - ssh_key
+            - snmp
+            - rdp
+          type: string
+          readOnly: true
+        state:
+          enum:
+            - valid
+            - invalid
+          type: string
+          readOnly: true
+        createdOn:
+          type: string
+          format: date-time
+          readOnly: true
+        userInputsCount:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        keyPassphrase:
+          type: string
+          writeOnly: true
+        key:
+          type: string
+          writeOnly: true
+        elevatedPassword:
+          type: string
+          writeOnly: true
+        community:
+          type: string
+          writeOnly: true
+      required:
+        - createdOn
+        - credentialsType
+        - id
+        - label
+        - password
+        - state
+        - userInputsCount
+        - username
     Session:
       # modified by Tag; formerly oneOf
       $ref: '#/components/schemas/SessionLoggedInOrOut'
@@ -6346,6 +6610,9 @@ components:
         accountId:
           type: integer
           description: ID of the account the user last logged into
+        registrationId:
+          type: integer
+          description: ID of the registration account the user last logged into
         registrationToken:
           type: string
           description: Token of the associated registration of the user
@@ -6415,6 +6682,7 @@ components:
         - lastName
         - photo
         - refresh
+        - registrationId
         - registrationToken
         - releaseChannel
         - role
@@ -6691,6 +6959,16 @@ components:
         billableAssets:
           type: integer
           description: Max number of assets in report
+        maxBillableAssets:
+          type: integer
+          description: Max number of billable assets in report
+        billingPlanType:
+          enum:
+            - monthly
+            - weekly
+            - continuous
+          type: string
+          description: Billing plan type
         reportYear:
           type: integer
           description: The year of the report
@@ -6709,9 +6987,11 @@ components:
       required:
         - assetsCountHistory
         - billableAssets
+        - billingPlanType
         - clientName
         - clientType
         - currentAssets
+        - maxBillableAssets
         - photo
         - reportMonth
         - reportYear
@@ -7042,6 +7322,8 @@ components:
         appName:
           type: string
           maxLength: 256
+        appLogo:
+          type: string
         dateFormat:
           type: string
           maxLength: 255
@@ -7055,6 +7337,8 @@ components:
         hideInstallPatchesButton:
           type: boolean
         hideRemediateWithButton:
+          type: boolean
+        hideExtraBillingInfo:
           type: boolean
       required:
         - supportEmail
@@ -7090,6 +7374,8 @@ tags:
     description: 💻 Operations made in the Footprint Console
   - name: admin
     description: 💼 Operations made in the MSP Console. These require `elevated` access.
+  - name: admin/registrations
+    description: 📋 Admin endpoints relating to the registrations module.
   - name: common
     description: 📁 Operations common to both MSP and Footprint consoles
   - name: internalScanner

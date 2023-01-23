@@ -46,7 +46,6 @@ import net.codacloud.model.ExtendMessage;
 import net.codacloud.model.PaginatedRegistrationLightList;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreate;
-import net.codacloud.model.RegistrationEdit;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.ScanStatus;
@@ -129,9 +128,9 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	public Registration updateRegistration(final Integer registrationId,
-		final RegistrationEdit edit) throws ApiException {
+		final Registration registration) throws ApiException {
 		return retryIfNecessary(
-			() -> delegatee.updateRegistration(registrationId, edit));
+			() -> delegatee.updateRegistration(registrationId, registration));
 	}
 
 	@Override
