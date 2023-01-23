@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.15.0
+  version: 7.15.1
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -165,9 +165,7 @@ paths:
         content:
           application/json:
             schema:
-              # Preserved by Tag
               $ref: '#/components/schemas/RegistrationEdit'
-        required: true
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -5938,10 +5936,7 @@ components:
       description: |-
         Registration Serializer
 
-        Converts between a Registration entry and a JSON representation of it.
-
-        You can specify a 'fields' key in the context to trim extra fields.
-        https://stackoverflow.com/a/47120048
+        Represents a Registration from the database
       properties:
         id:
           type: integer
@@ -6171,7 +6166,6 @@ components:
         - description
         - label
         - manageType
-    # Preserved by Tag as a temporary work around for the new edit Internal Server Error
     RegistrationEdit:
       type: object
       description: Serializer containing the edit fields for a registration
@@ -6229,6 +6223,16 @@ components:
         isAllMspAccessible:
           type: boolean
           description: Whether the tenant should be accessible by all MSP users
+        maxBillableAssets:
+          type: integer
+          description: Max number of billable assets
+        billingPlanType:
+          enum:
+            - monthly
+            - weekly
+            - continuous
+          type: string
+          description: Billing plan type
     RegistrationHistory:
       type: object
       description: Serializer for registration state change history entries
@@ -6323,11 +6327,6 @@ components:
           type: boolean
           description: Whether the user has checked the promotional materials check
             or not
-      required:
-        - companyWebsite
-        - email
-        - firstName
-        - lastName
     RegistrationStatistics:
       type: object
       properties:
