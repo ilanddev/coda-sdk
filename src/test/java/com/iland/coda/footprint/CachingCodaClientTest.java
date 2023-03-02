@@ -28,7 +28,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import com.google.common.base.Stopwatch;
-import net.codacloud.model.RegistrationEdit;
+import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import org.junit.jupiter.api.Test;
 
@@ -107,8 +107,8 @@ class CachingCodaClientTest {
 
 		final String description = "foo";
 		client.updateRegistration(registration.getId(),
-			new RegistrationEdit().description(description)
-				.manageType(RegistrationEdit.ManageTypeEnum.FULLY_MANAGED));
+			new RegistrationEditRequest().description(description).manageType(
+				RegistrationEditRequest.ManageTypeEnum.FULLY_MANAGED));
 
 		final Optional<RegistrationLight> optionalRegistration =
 			client.getRegistrationForLabel(TEST_LABEL);

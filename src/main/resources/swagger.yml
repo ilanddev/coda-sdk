@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.15.1
+  version: 7.15.9
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -108,7 +108,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegistrationCreate'
+              $ref: '#/components/schemas/RegistrationCreateRequest'
         required: true
       security:
         - jwtAuth: [ ]
@@ -165,7 +165,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegistrationEdit'
+              $ref: '#/components/schemas/RegistrationEditRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -326,7 +326,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedScannerEdit'
+              $ref: '#/components/schemas/PatchedScannerEditRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -409,13 +409,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/TokenObtainPairRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/TokenObtainPairRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenObtainPair'
+              $ref: '#/components/schemas/TokenObtainPairRequest'
         required: true
       security:
         - ApiKeyAuth: [ ]
@@ -447,13 +447,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/TokenRefreshRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/TokenRefreshRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TokenRefresh'
+              $ref: '#/components/schemas/TokenRefreshRequest'
         required: true
       security:
         - ApiKeyAuth: [ ]
@@ -503,7 +503,7 @@ paths:
       summary: Retrieves branding information
   /common/auth/session/:
     get:
-      operationId: commonAuthSessionRetrieve
+      operationId: checkSession
       description: Returns the current session information
       tags:
         - common
@@ -516,7 +516,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Session'
+                $ref: '#/components/schemas/SessionLoggedInSrz'
           description: ''
       parameters:
         - in: header
@@ -527,7 +527,7 @@ paths:
             back on `original_tenant_id` from the auth endpoint
       summary: Returns the current session information
     post:
-      operationId: commonAuthSessionCreate
+      operationId: login
       description: Authenticates a user
       tags:
         - common
@@ -535,14 +535,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SessionLogin'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SessionLogin'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SessionLogin'
-        required: true
+              $ref: '#/components/schemas/SessionLoginSrzRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -552,7 +545,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionLogin'
+                $ref: '#/components/schemas/SessionLoggedInSrz'
           description: ''
         '400':
           description: Returned on invalid username/password
@@ -622,13 +615,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountSwitch'
+              $ref: '#/components/schemas/AccountSwitchRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/AccountSwitch'
+              $ref: '#/components/schemas/AccountSwitchRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/AccountSwitch'
+              $ref: '#/components/schemas/AccountSwitchRequest'
         required: true
       security:
         - jwtAuth: [ ]
@@ -680,8 +673,7 @@ paths:
         - in: path
           name: applicationId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -711,8 +703,7 @@ paths:
         - in: path
           name: applicationId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -737,8 +728,7 @@ paths:
         - in: path
           name: applicationId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -768,8 +758,7 @@ paths:
         - in: path
           name: applicationId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -783,13 +772,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VulnerabilityChange'
+              $ref: '#/components/schemas/VulnerabilityChangeRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/VulnerabilityChange'
+              $ref: '#/components/schemas/VulnerabilityChangeRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/VulnerabilityChange'
+              $ref: '#/components/schemas/VulnerabilityChangeRequest'
         required: true
       security:
         - jwtAuth: [ ]
@@ -810,8 +799,7 @@ paths:
         - in: path
           name: applicationId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -840,8 +828,7 @@ paths:
         - in: path
           name: applicationId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -869,8 +856,7 @@ paths:
         - in: path
           name: applicationId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -884,13 +870,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VulnerabilityChange'
+              $ref: '#/components/schemas/VulnerabilityChangeRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/VulnerabilityChange'
+              $ref: '#/components/schemas/VulnerabilityChangeRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/VulnerabilityChange'
+              $ref: '#/components/schemas/VulnerabilityChangeRequest'
         required: true
       security:
         - jwtAuth: [ ]
@@ -1036,8 +1022,7 @@ paths:
         - in: path
           name: contextId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1079,7 +1064,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedBCOwnerGroup'
+              $ref: '#/components/schemas/PatchedBCOwnerGroupRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -1114,7 +1099,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedBCOwnerUser'
+              $ref: '#/components/schemas/PatchedBCOwnerUserRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -1175,8 +1160,7 @@ paths:
         - in: path
           name: contextId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1205,8 +1189,7 @@ paths:
         - in: path
           name: contextId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: query
           name: page
@@ -1233,14 +1216,13 @@ paths:
       summary: Returns a certain page of applications for a technical context
   /console/elements/contexts/technical/{contextId}/devices/:
     get:
-      operationId: consoleElementsContextsTechnicalDevicesRetrieve
+      operationId: technicalContextDevices
       description: Returns a certain page of devices for a technical context
       parameters:
         - in: path
           name: contextId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: query
           name: page
@@ -1262,7 +1244,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedDeviceList'
+                $ref: '#/components/schemas/PaginatedTechnicalContextDeviceSrzList'
           description: ''
       summary: Returns a certain page of devices for a technical context
   /console/elements/contexts/technical/{contextId}/setOwnerGroup/:
@@ -1286,7 +1268,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedTCOwnerGroup'
+              $ref: '#/components/schemas/PatchedTCOwnerGroupRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -1321,7 +1303,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedTCOwnerUser'
+              $ref: '#/components/schemas/PatchedTCOwnerUserRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -1343,8 +1325,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1373,8 +1354,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1406,8 +1386,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1441,8 +1420,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1473,8 +1451,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1503,8 +1480,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1533,8 +1509,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1565,8 +1540,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1591,8 +1565,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1675,8 +1648,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1707,8 +1679,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1737,8 +1708,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1767,8 +1737,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1793,8 +1762,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1819,8 +1787,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -1851,8 +1818,7 @@ paths:
         - in: path
           name: deviceId
           schema:
-            type: string
-            pattern: ^\d+$
+            type: integer
           required: true
         - in: header
           name: FootprintTenantId
@@ -2345,6 +2311,8 @@ paths:
                 type: string
                 format: binary
           description: ''
+        '412':
+          description: No findings available to generate the report.
         '500':
           description: Returned if an unexpected error occurs.
       parameters:
@@ -2516,7 +2484,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExtendMessage'
+              $ref: '#/components/schemas/ExtendMessageRequest'
         required: true
       security:
         - jwtAuth: [ ]
@@ -2563,7 +2531,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedScopeChange'
+              $ref: '#/components/schemas/PatchedScopeChangeRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -2616,7 +2584,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedScanSurfaceRescan'
+              $ref: '#/components/schemas/PatchedScanSurfaceRescanRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -2706,88 +2674,6 @@ paths:
             back on `original_tenant_id` from the auth endpoint
       summary: Get list of available scanners. This includes the default Cloud Scanner,
         as well as internal scanners
-    post:
-      operationId: consoleScanSurfaceScannersCreate
-      description: Sends commands to scanners.
-      tags:
-        - console
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '501':
-          description: Not implemented
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      summary: Sends commands to scanners.
-    patch:
-      operationId: consoleScanSurfaceScannersPartialUpdate
-      description: Edits values and parameters of a scanner
-      tags:
-        - console
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedScannerEdit'
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          description: Scanner updated successfully
-        '400':
-          description: Scanner edit info invalid
-        '401':
-          description: Permissions required to remove the scanner.
-        '404':
-          description: Scanner ID not found
-        '500':
-          description: Returned if a server error occurs
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      summary: Edits values and parameters of a scanner
-    delete:
-      operationId: consoleScanSurfaceScannersDestroy
-      description: Delete a configured internal scanner
-      parameters:
-        - in: path
-          name: scannerId
-          schema:
-            type: string
-          description: ID of the scanner you want to delete
-          required: true
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          description: Scanner removed successfully
-        '401':
-          description: Permissions required to remove the scanner.
-        '404':
-          description: Scanner ID not found
-        '500':
-          description: Returned if a server error occurs
-      summary: Delete a configured internal scanner
   /console/scanSurface/userInputs/{userInputId}/rescan/:
     patch:
       operationId: consoleScanSurfaceUserInputsRescanPartialUpdate
@@ -2811,7 +2697,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedScanSurfaceUserInputRequest'
+              $ref: '#/components/schemas/PatchedScanSurfaceUserInputRequestRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -2836,7 +2722,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ScanSurfaceUserInputRequest'
+              $ref: '#/components/schemas/ScanSurfaceUserInputRequestRequest'
         required: true
       security:
         - jwtAuth: [ ]
@@ -2918,13 +2804,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TaskEdit'
+              $ref: '#/components/schemas/TaskEditRequest'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/TaskEdit'
+              $ref: '#/components/schemas/TaskEditRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/TaskEdit'
+              $ref: '#/components/schemas/TaskEditRequest'
         required: true
       security:
         - jwtAuth: [ ]
@@ -3013,10 +2899,10 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedTenantInfoEdit'
+              $ref: '#/components/schemas/PatchedTenantInfoEditRequest'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedTenantInfoEdit'
+              $ref: '#/components/schemas/PatchedTenantInfoEditRequest'
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -3095,8 +2981,16 @@ components:
           description: ID of the account (e.g. tenant id)
         registrationId:
           type: integer
-          readOnly: true
           description: ID of the registration entry
+        managedType:
+          enum:
+            - self_managed
+            - co_managed
+            - fully_managed
+            - no_tenant
+          type: string
+          readOnly: true
+          description: Manage type of the account
         name:
           type: string
           description: Name of the account
@@ -3109,15 +3003,16 @@ components:
           nullable: true
           description: Timestamp of the last login into this account
         isPrimaryAccount:
-          type: string
+          type: boolean
           readOnly: true
       required:
         - id
         - isPrimaryAccount
+        - managedType
         - name
         - photo
         - registrationId
-    AccountSwitch:
+    AccountSwitchRequest:
       type: object
       description: Account switch
       properties:
@@ -3195,12 +3090,6 @@ components:
           type: boolean
         isServiceAccount:
           type: boolean
-        password:
-          type: string
-          writeOnly: true
-        newPassword:
-          type: string
-          writeOnly: true
         accountId:
           type: integer
           readOnly: true
@@ -3785,9 +3674,14 @@ components:
           allOf:
             - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
           readOnly: true
+        crss:
+          type: number
+          format: float
+          readOnly: true
       required:
         - applicationType
         - cpe
+        - crss
         - discoveredOn
         - hostname
         - id
@@ -4458,7 +4352,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/CVRFaia'
           description: FAIA is the Footprint AI indicator representing a criticality
-            threshold calculated based on the information on the scan surface
+            threshold calculated basedon the information on the scan surface
         remediationEffort:
           allOf:
             - $ref: '#/components/schemas/CVRRemediationEffort'
@@ -4983,6 +4877,7 @@ components:
         lastScanned:
           type: string
           format: date-time
+          nullable: true
           description: Last time when a device was scanned
       required:
         - ipAddress
@@ -5074,6 +4969,9 @@ components:
         avoidBruteForce:
           type: boolean
           description: Whether to avoid brute force scans on this device
+        businessImpact:
+          type: integer
+          description: Business impact of the device
         isAdvancedScanPossible:
           type: boolean
           description: 'Whether an Advanced scan is possible on this device: the task
@@ -5087,6 +4985,7 @@ components:
         - agentStatus
         - applicationsCount
         - avoidBruteForce
+        - businessImpact
         - disclaimer
         - discoveredOn
         - hasAgentInstalled
@@ -5290,7 +5189,7 @@ components:
           type: string
       required:
         - status
-    ExtendMessage:
+    ExtendMessageRequest:
       type: object
       description: Serializer that validates user inputted data
       properties:
@@ -5298,6 +5197,7 @@ components:
           type: array
           items:
             type: string
+            minLength: 1
             maxLength: 255
           description: Targets to scan. Accepted values are IP addresses, IP ranges
             in CIDR format (e.g. 0.0.0.0/24) URLs and e-mail addresses.
@@ -5325,14 +5225,6 @@ components:
         depth:
           type: integer
           description: Level of the element in hierarchy
-        toggled:
-          type: boolean
-          writeOnly: true
-          description: Deprecated boolean value.
-        active:
-          type: boolean
-          writeOnly: true
-          description: Deprecated boolean value.
         type:
           enum:
             - App
@@ -5379,14 +5271,6 @@ components:
         depth:
           type: integer
           description: Level of the element in hierarchy
-        toggled:
-          type: boolean
-          writeOnly: true
-          description: Deprecated boolean value.
-        active:
-          type: boolean
-          writeOnly: true
-          description: Deprecated boolean value.
         type:
           enum:
             - Organization
@@ -5416,14 +5300,6 @@ components:
         depth:
           type: integer
           description: Level of the element in hierarchy
-        toggled:
-          type: boolean
-          writeOnly: true
-          description: Deprecated boolean value.
-        active:
-          type: boolean
-          writeOnly: true
-          description: Deprecated boolean value.
         type:
           enum:
             - Server
@@ -5736,6 +5612,27 @@ components:
         - page
         - totalCount
         - totalPages
+    PaginatedTechnicalContextDeviceSrzList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechnicalContextDeviceSrz'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
     PaginatedUsageReportList:
       type: object
       properties:
@@ -5778,56 +5675,58 @@ components:
         - page
         - totalCount
         - totalPages
-    PatchedBCOwnerGroup:
+    PatchedBCOwnerGroupRequest:
       type: object
       properties:
         ownerGroupId:
           type: integer
           nullable: true
-    PatchedBCOwnerUser:
+    PatchedBCOwnerUserRequest:
       type: object
       properties:
         ownerUserId:
           type: integer
           nullable: true
-    PatchedScanSurfaceRescan:
+    PatchedScanSurfaceRescanRequest:
       type: object
       properties:
         success:
           type: boolean
           description: Whether the request completed successfully or not
-    PatchedScanSurfaceUserInputRequest:
+    PatchedScanSurfaceUserInputRequestRequest:
       type: object
       properties:
         userInputTags:
           type: array
           items: { }
           description: List of dictionaries having the following keys
-    PatchedScannerEdit:
+    PatchedScannerEditRequest:
       type: object
       properties:
         label:
           type: string
+          minLength: 1
           description: Label of the scanner
-    PatchedScopeChange:
+    PatchedScopeChangeRequest:
       type: object
       description: Serializer that validates a scope change value
       properties:
         scope:
           type: string
-    PatchedTCOwnerGroup:
+          minLength: 1
+    PatchedTCOwnerGroupRequest:
       type: object
       properties:
         ownerGroupId:
           type: integer
           nullable: true
-    PatchedTCOwnerUser:
+    PatchedTCOwnerUserRequest:
       type: object
       properties:
         ownerUserId:
           type: integer
           nullable: true
-    PatchedTenantInfoEdit:
+    PatchedTenantInfoEditRequest:
       type: object
       description: Serializer for Tenant Info edit.
       properties:
@@ -5985,9 +5884,11 @@ components:
           type: string
           readOnly: true
         signupData:
-          type: object
-          additionalProperties: { }
-          readOnly: true
+          allOf:
+            - $ref: '#/components/schemas/RegistrationSignupData'
+          description: "\n        Optional overrides for the signup data.\n      \
+            \  If a tenant is not created yet, this can be used to change the default\
+            \ username\n        account that will be created\n        "
         token:
           type: string
           description: |-
@@ -6075,7 +5976,6 @@ components:
         - managers
         - meta
         - photo
-        - signupData
         - state
         - statistics
         - token
@@ -6094,12 +5994,13 @@ components:
         - agentbased
         - agentless
         - total
-    RegistrationCreate:
+    RegistrationCreateRequest:
       type: object
       description: Serializer containing the create fields for a registration
       properties:
         label:
           type: string
+          minLength: 1
           description: The name of the registration, as it appears in listings
         description:
           type: string
@@ -6142,7 +6043,7 @@ components:
                     If None, it will be ignored
         signupData:
           allOf:
-            - $ref: '#/components/schemas/RegistrationSignupData'
+            - $ref: '#/components/schemas/RegistrationSignupDataRequest'
           description: "\n        Optional overrides for the signup data.\n      \
             \  If a tenant is not created yet, this can be used to change the default\
             \ username\n        account that will be created\n        "
@@ -6166,12 +6067,15 @@ components:
         - description
         - label
         - manageType
-    RegistrationEdit:
+    RegistrationEditRequest:
       type: object
-      description: Serializer containing the edit fields for a registration
+      description: |-
+        Serializer containing the edit fields for a registration
+        TODO: Rename label here because it clashes with serializer
       properties:
         label:
           type: string
+          minLength: 1
           description: The name of the registration, as it appears in listings
         description:
           type: string
@@ -6213,7 +6117,7 @@ components:
                     If None, it will be ignored
         signupData:
           allOf:
-            - $ref: '#/components/schemas/RegistrationSignupData'
+            - $ref: '#/components/schemas/RegistrationSignupDataRequest'
           description: "\n        Optional overrides for the signup data.\n      \
             \  If a tenant is not created yet, this can be used to change the default\
             \ username\n        account that will be created\n        "
@@ -6327,6 +6231,29 @@ components:
           type: boolean
           description: Whether the user has checked the promotional materials check
             or not
+    RegistrationSignupDataRequest:
+      type: object
+      description: |-
+        Data that the user provides during signup.
+        It is used to generate tenant information, and can be edited at any time.
+      properties:
+        firstName:
+          type: string
+          description: First name of the user
+        lastName:
+          type: string
+          description: Last name of the user
+        email:
+          type: string
+          format: email
+          description: E-mail address of the user
+        companyWebsite:
+          type: string
+          description: Company website of the user
+        marketingOptIn:
+          type: boolean
+          description: Whether the user has checked the promotional materials check
+            or not
     RegistrationStatistics:
       type: object
       properties:
@@ -6350,6 +6277,9 @@ components:
     RemediationReport:
       type: object
       properties:
+        id:
+          type: integer
+          description: Remediation entry id
         crss:
           type: integer
           description: CRSS score for this entry
@@ -6374,6 +6304,7 @@ components:
       required:
         - crss
         - devicesAffected
+        - id
         - information
         - isWeaponized
         - riskIndicator
@@ -6542,7 +6473,7 @@ components:
         - firstName
         - lastName
         - photo
-    ScanSurfaceUserInputRequest:
+    ScanSurfaceUserInputRequestRequest:
       type: object
       properties:
         userInputTags:
@@ -6593,37 +6524,14 @@ components:
         userInputsCount:
           type: integer
           readOnly: true
-        username:
-          type: string
-          writeOnly: true
-        password:
-          type: string
-          writeOnly: true
-        keyPassphrase:
-          type: string
-          writeOnly: true
-        key:
-          type: string
-          writeOnly: true
-        elevatedPassword:
-          type: string
-          writeOnly: true
-        community:
-          type: string
-          writeOnly: true
       required:
         - createdOn
         - credentialsType
         - id
         - label
-        - password
         - state
         - userInputsCount
-        - username
-    Session:
-      # modified by Tag; formerly oneOf
-      $ref: '#/components/schemas/SessionLoggedInOrOut'
-    SessionLoggedInOrOut:
+    SessionLoggedInSrz:
       type: object
       description: Response when user is logged in
       properties:
@@ -6632,39 +6540,6 @@ components:
         id:
           type: integer
           description: The user ID
-        email:
-          type: string
-          format: email
-          description: User e-mail address
-        tenantPhoto:
-          type: string
-          description: Base64-encoded tenant photo
-        username:
-          type: string
-          description: Username - usually same as e-mail
-        role:
-          enum:
-            - admin
-            - technical
-            - business
-          type: string
-          description: User Footprint role
-        lastName:
-          type: string
-          description: User last name
-        photo:
-          type: string
-          description: Base64-encoded user photo
-        firstName:
-          type: string
-          description: User first name
-        releaseChannel:
-          enum:
-            - develop-
-            - master-
-            - master-production
-          type: string
-          description: Footprint installation release channel
         accountId:
           type: integer
           description: ID of the account the user last logged into
@@ -6674,18 +6549,48 @@ components:
         registrationToken:
           type: string
           description: Token of the associated registration of the user
-        trialDaysRemaining:
-          type: integer
-          description: Number of trial days remaining, if user account is in trial
-            mode
-        weeklyCvrEnabled:
-          type: boolean
-          description: Whether weekly CVR report e-mail notifications are enabled
+        refresh:
+          type: string
+          readOnly: true
+          description: JWT Refresh token
+        access:
+          type: string
+          readOnly: true
+          description: JWT Access token
+        email:
+          type: string
+          format: email
+          description: User e-mail address
+        firstName:
+          type: string
+          description: User first name
+        lastName:
+          type: string
+          description: User last name
+        username:
+          type: string
+          description: Username - usually same as e-mail
+        role:
+          enum:
+            - ''
+            - admin
+            - technical
+            - business
+            - clientAccess
+          type: string
+          description: User Footprint role
+        photo:
+          type: string
+          description: Base64-encoded user photo
+        tenantPhoto:
+          type: string
+          description: Base64-encoded tenant photo
         syncEmails:
           type: boolean
           description: Whether periodic e-mail reports are enabled
         syncPeriod:
           enum:
+            - ''
             - daily
             - weekly
             - monthly
@@ -6698,17 +6603,28 @@ components:
           type: boolean
           description: Whether usage report e-mails are enabled (valid only for MSP
             users)
-        domainsRemaining:
-          type: integer
-          description: Number of domain scans remaining (only in trial mode)
+        weeklyCvrEnabled:
+          type: boolean
+          description: Whether weekly CVR report e-mail notifications are enabled
         isTrialMode:
           type: boolean
+          readOnly: true
           description: Whether the user account is in trial mode
         isTrialExpired:
           type: boolean
+          readOnly: true
           description: Whether the user account trial is expired
+        trialDaysRemaining:
+          type: integer
+          description: Number of trial days remaining, if user account is in trial
+            mode
+        domainsRemaining:
+          type: integer
+          readOnly: true
+          description: Number of domain scans remaining (only in trial mode)
         clearDatabaseRemaining:
           type: integer
+          readOnly: true
           description: Number of clear database operations remaining (only in trial
             mode)
         isInstallationAdmin:
@@ -6716,13 +6632,15 @@ components:
           description: Whether the user is an installation admin
         isCustomBrandingApplied:
           type: boolean
+          readOnly: true
           description: Whether the tenant has custom branding
-        refresh:
+        isFeedbackSurveyCompleted:
+          type: boolean
+          description: Whether the user has completed the feedback survey
+        releaseChannel:
           type: string
-          description: JWT Refresh token
-        access:
-          type: string
-          description: JWT Access token
+          readOnly: true
+          description: Footprint installation release channel
       required:
         - access
         - accountId
@@ -6733,10 +6651,11 @@ components:
         - firstName
         - id
         - isCustomBrandingApplied
+        - isFeedbackSurveyCompleted
         - isInstallationAdmin
+        - isLoggedIn
         - isTrialExpired
         - isTrialMode
-        - isLoggedIn
         - lastName
         - photo
         - refresh
@@ -6751,20 +6670,22 @@ components:
         - usageReportEmails
         - username
         - weeklyCvrEnabled
-    # SessionLoggedOut removed by Tag
-    SessionLogin:
+    SessionLoginSrzRequest:
       type: object
       description: Username and password login for user
       properties:
         username:
           type: string
+          minLength: 1
           description: The username/e-mail address of the user
         password:
           type: string
+          minLength: 1
           description: The password of the user
-      required:
-        - password
-        - username
+        msauthToken:
+          type: string
+          minLength: 1
+          description: Microsoft authentication token
     Stat:
       type: object
       properties:
@@ -6904,7 +6825,7 @@ components:
         - priority
         - scanScope
         - scannerId
-    TaskEdit:
+    TaskEditRequest:
       type: object
       properties:
         priority:
@@ -6948,15 +6869,51 @@ components:
         - page
         - totalCount
         - totalPages
+    TechnicalContextDeviceSrz:
+      type: object
+      description: Serializer for the technical context device listing
+      properties:
+        type:
+          enum:
+            - Server
+          type: string
+          readOnly: true
+        id:
+          type: integer
+        name:
+          type: string
+        state:
+          type: string
+        status:
+          type: string
+        discoveredOn:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        ip:
+          type: string
+        numberOfCves:
+          type: integer
+          readOnly: true
+        numberOfAttackAvenues:
+          type: integer
+          readOnly: true
+      required:
+        - discoveredOn
+        - id
+        - ip
+        - lastSeen
+        - name
+        - numberOfAttackAvenues
+        - numberOfCves
+        - state
+        - status
+        - type
     TokenObtainPair:
       type: object
       properties:
-        username:
-          type: string
-          writeOnly: true
-        password:
-          type: string
-          writeOnly: true
         access:
           type: string
           readOnly: true
@@ -6965,8 +6922,20 @@ components:
           readOnly: true
       required:
         - access
-        - password
         - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+        - password
         - username
     TokenRefresh:
       type: object
@@ -6974,11 +6943,16 @@ components:
         access:
           type: string
           readOnly: true
+      required:
+        - access
+    TokenRefreshRequest:
+      type: object
+      properties:
         refresh:
           type: string
           writeOnly: true
+          minLength: 1
       required:
-        - access
         - refresh
     TopScenario:
       type: object
@@ -7319,7 +7293,7 @@ components:
         - stateLastChangedOn
         - summary
         - userInteractionRequired
-    VulnerabilityChange:
+    VulnerabilityChangeRequest:
       type: object
       description: Request for changing a vulnerability's state
       properties:
@@ -7341,6 +7315,7 @@ components:
           description: New state of vulnerability
         motivationText:
           type: string
+          minLength: 1
           description: Motivation text. Required for action plan state
       required:
         - ids
@@ -7349,6 +7324,8 @@ components:
     WLBranding:
       type: object
       properties:
+        appLogo:
+          type: string
         supportName:
           type: string
           readOnly: true
@@ -7380,8 +7357,6 @@ components:
         appName:
           type: string
           maxLength: 256
-        appLogo:
-          type: string
         dateFormat:
           type: string
           maxLength: 255
@@ -7398,7 +7373,12 @@ components:
           type: boolean
         hideExtraBillingInfo:
           type: boolean
+        hideSurveys:
+          type: boolean
+        hideActionPlan:
+          type: boolean
       required:
+        - appLogo
         - supportEmail
         - supportName
   securitySchemes:

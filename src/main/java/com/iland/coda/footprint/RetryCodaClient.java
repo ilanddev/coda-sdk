@@ -43,13 +43,13 @@ import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
-import net.codacloud.model.ExtendMessage;
+import net.codacloud.model.ExtendMessageRequest;
 import net.codacloud.model.PaginatedRegistrationLightList;
 import net.codacloud.model.Registration;
-import net.codacloud.model.RegistrationCreate;
-import net.codacloud.model.RegistrationEdit;
+import net.codacloud.model.RegistrationCreateRequest;
+import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
-import net.codacloud.model.RegistrationSignupData;
+import net.codacloud.model.RegistrationSignupDataRequest;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import org.slf4j.Logger;
@@ -68,6 +68,7 @@ final class RetryCodaClient implements CodaClient {
 		LoggerFactory.getLogger(RetryCodaClient.class);
 
 	private static final Set<Integer> retryCodes;
+
 	static {
 		final Set<Integer> set = new HashSet<>();
 		set.add(401);
@@ -124,13 +125,13 @@ final class RetryCodaClient implements CodaClient {
 
 	@Override
 	public RegistrationLight createRegistration(
-		final RegistrationCreate registration) throws ApiException {
+		final RegistrationCreateRequest registration) throws ApiException {
 		return retryIfNecessary(
 			() -> delegatee.createRegistration(registration));
 	}
 
 	public Registration updateRegistration(final Integer registrationId,
-		final RegistrationEdit edit) throws ApiException {
+		final RegistrationEditRequest edit) throws ApiException {
 		return retryIfNecessary(
 			() -> delegatee.updateRegistration(registrationId, edit));
 	}
@@ -155,17 +156,17 @@ final class RetryCodaClient implements CodaClient {
 	public void updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
-		final List<ExtendMessage> batches =
+		final List<ExtendMessageRequest> batches =
 			new ScanSurfaceBatcher().createBatches(targets).stream()
 				.map(batch -> batch.scanners(scanners))
 				.collect(Collectors.toList());
-		for (final ExtendMessage batch : batches) {
+		for (final ExtendMessageRequest batch : batches) {
 			updateScanSurface(batch, accountId);
 		}
 	}
 
 	@Override
-	public void updateScanSurface(final ExtendMessage message,
+	public void updateScanSurface(final ExtendMessageRequest message,
 		final Integer accountId) throws ApiException {
 		retryIfNecessary(() -> {
 			delegatee.updateScanSurface(message, accountId);
@@ -255,18 +256,17 @@ final class RetryCodaClient implements CodaClient {
 	@Override
 	public File getCyberRiskReport(final Integer accountId)
 		throws ApiException {
-		return retryIfNecessary(
-			() -> delegatee.getCyberRiskReport(accountId));
+		return retryIfNecessary(() -> delegatee.getCyberRiskReport(accountId));
 	}
 
 	@Override
-	public RegistrationCreate createFullyManagedRegistration(final String label,
-		final String description,
-		final RegistrationSignupData registrationSignupData,
+	public RegistrationCreateRequest createFullyManagedRegistration(
+		final String label, final String description,
+		final RegistrationSignupDataRequest request,
 		final List<Integer> associatedMspUserIds) throws ApiException {
 		return retryIfNecessary(
 			() -> delegatee.createFullyManagedRegistration(label, description,
-				registrationSignupData, associatedMspUserIds));
+				request, associatedMspUserIds));
 	}
 
 	@Override

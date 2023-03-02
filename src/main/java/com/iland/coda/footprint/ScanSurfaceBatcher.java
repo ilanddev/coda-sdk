@@ -23,11 +23,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import net.codacloud.model.ExtendMessage;
+import net.codacloud.model.ExtendMessageRequest;
 import org.apache.commons.net.util.SubnetUtils;
 
 /**
- * {@link ScanSurfaceBatcher} batches a list of targets into one or more {@link ExtendMessage messages} with a configurable maximum size.
+ * {@link ScanSurfaceBatcher} batches a list of targets into one or more {@link ExtendMessageRequest messages} with a configurable maximum size.
  */
 final class ScanSurfaceBatcher {
 
@@ -47,12 +47,12 @@ final class ScanSurfaceBatcher {
 	}
 
 	/**
-	 * Creates batches with a maximum size from a list of targets into one or more {@link ExtendMessage messages}.
+	 * Creates batches with a maximum size from a list of targets into one or more {@link ExtendMessageRequest messages}.
 	 *
 	 * @param targets a {@link Collection} of targets, e.g. hostname, IP address, or CIDR notation
-	 * @return a {@link List} of {@link ExtendMessage messages} without the scanners initialized
+	 * @return a {@link List} of {@link ExtendMessageRequest messages} without the scanners initialized
 	 */
-	List<ExtendMessage> createBatches(final Collection<String> targets) {
+	List<ExtendMessageRequest> createBatches(final Collection<String> targets) {
 		final String cidrRegex =
 			"\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}";
 		final List<String> addresses = targets.stream().map(String::trim)
@@ -68,7 +68,8 @@ final class ScanSurfaceBatcher {
 		return Stream.of(addresses, cidrAddresses).flatMap(List::stream)
 			.collect(Collectors.groupingBy(
 				it -> counter.getAndIncrement() / maxIpsPerBatch)).values()
-			.stream().map(batch -> new ExtendMessage().scanTargets(batch))
+			.stream()
+			.map(batch -> new ExtendMessageRequest().scanTargets(batch))
 			.collect(Collectors.toList());
 	}
 
