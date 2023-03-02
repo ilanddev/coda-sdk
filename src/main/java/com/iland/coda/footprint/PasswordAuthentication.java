@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 import net.codacloud.ApiClient;
 import net.codacloud.ApiException;
 import net.codacloud.api.CommonApi;
-import net.codacloud.model.SessionLogin;
+import net.codacloud.model.SessionLoginSrzRequest;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
@@ -51,9 +51,9 @@ public final class PasswordAuthentication implements Authentication {
 	public void authenticate(final ApiClient apiClient) throws ApiException {
 		accessToken.set(null);
 
-		final SessionLogin credentials =
-			new SessionLogin().username(username).password(password);
-		new CommonApi(apiClient).commonAuthSessionCreate(credentials, null);
+		final SessionLoginSrzRequest credentials =
+			new SessionLoginSrzRequest().username(username).password(password);
+		new CommonApi(apiClient).login(null, credentials);
 	}
 
 	@NotNull

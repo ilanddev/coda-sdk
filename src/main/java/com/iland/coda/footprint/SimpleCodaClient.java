@@ -17,15 +17,12 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.Registrations.toLight;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.LocalDateTime;
@@ -47,15 +44,15 @@ import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
-import net.codacloud.model.ExtendMessage;
+import net.codacloud.model.ExtendMessageRequest;
 import net.codacloud.model.PaginatedRegistrationLightList;
 import net.codacloud.model.PaginatedScanSurfaceEntryList;
-import net.codacloud.model.PatchedScanSurfaceRescan;
+import net.codacloud.model.PatchedScanSurfaceRescanRequest;
 import net.codacloud.model.Registration;
-import net.codacloud.model.RegistrationCreate;
-import net.codacloud.model.RegistrationEdit;
+import net.codacloud.model.RegistrationCreateRequest;
+import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
-import net.codacloud.model.RegistrationSignupData;
+import net.codacloud.model.RegistrationSignupDataRequest;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import org.slf4j.Logger;
@@ -105,14 +102,14 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 	@Override
 	public RegistrationLight createRegistration(
-		final RegistrationCreate newRegistration) throws ApiException {
+		final RegistrationCreateRequest newRegistration) throws ApiException {
 		// this is really a PUT, not an update
 		return toLight(adminApi.adminRegistrationsUpdate(newRegistration));
 	}
 
 	@Override
 	public Registration updateRegistration(final Integer registrationId,
-		final RegistrationEdit edit) throws ApiException {
+		final RegistrationEditRequest edit) throws ApiException {
 		return adminApi.adminRegistrationsCreate(registrationId, edit);
 	}
 
@@ -132,25 +129,26 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	public void updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
-		final List<ExtendMessage> batches =
+		final List<ExtendMessageRequest> batches =
 			new ScanSurfaceBatcher().createBatches(targets).stream()
 				.map(batch -> batch.scanners(scanners))
 				.collect(Collectors.toList());
-		for (final ExtendMessage batch : batches) {
+		for (final ExtendMessageRequest batch : batches) {
 			updateScanSurface(batch, accountId);
 		}
 	}
 
 	@Override
-	public void updateScanSurface(final ExtendMessage message,
+	public void updateScanSurface(final ExtendMessageRequest message,
 		final Integer accountId) throws ApiException {
 		consoleApi.consoleScanSurfaceCreate(message, accountId);
 	}
 
 	@Override
 	public void rescan(final Integer accountId) throws ApiException {
-		final PatchedScanSurfaceRescan rescan = new PatchedScanSurfaceRescan();
-		consoleApi.consoleScanSurfaceRescanPartialUpdate(accountId, rescan);
+		final PatchedScanSurfaceRescanRequest request =
+			new PatchedScanSurfaceRescanRequest();
+		consoleApi.consoleScanSurfaceRescanPartialUpdate(accountId, request);
 	}
 
 
@@ -305,14 +303,15 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public RegistrationCreate createFullyManagedRegistration(final String label,
-		final String description,
-		final RegistrationSignupData registrationSignupData,
+	public RegistrationCreateRequest createFullyManagedRegistration(
+		final String label, final String description,
+		final RegistrationSignupDataRequest request,
 		final List<Integer> associatedMspUserIds) {
-		final RegistrationCreate allMspAccessible =
-			new RegistrationCreate().label(label).description(description)
-				.manageType(RegistrationCreate.ManageTypeEnum.FULLY_MANAGED)
-				.signupData(registrationSignupData)
+		final RegistrationCreateRequest allMspAccessible =
+			new RegistrationCreateRequest().label(label)
+				.description(description).manageType(
+					RegistrationCreateRequest.ManageTypeEnum.FULLY_MANAGED)
+				.signupData(request)
 				.associatedMspGroupIds(Collections.emptyList())
 				.isAllMspAccessible(true);
 

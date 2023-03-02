@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import net.codacloud.model.ExtendMessage;
+import net.codacloud.model.ExtendMessageRequest;
 import org.junit.jupiter.api.Test;
 
 class ScanSurfaceBatcherTest {
@@ -43,7 +43,7 @@ class ScanSurfaceBatcherTest {
 		final ScanSurfaceBatcher scanSurfaceBatcher =
 			new ScanSurfaceBatcher(batchSize);
 		final Set<String> targets = expectedRangeSizeByCidr.keySet();
-		final List<ExtendMessage> batches =
+		final List<ExtendMessageRequest> batches =
 			scanSurfaceBatcher.createBatches(targets);
 		final Supplier<Integer> nextBatchSize =
 			() -> batches.remove(0).getScanTargets().size();

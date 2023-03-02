@@ -38,12 +38,13 @@ import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
-import net.codacloud.model.ExtendMessage;
+import net.codacloud.model.ExtendMessageRequest;
 import net.codacloud.model.Registration;
-import net.codacloud.model.RegistrationCreate;
-import net.codacloud.model.RegistrationEdit;
+import net.codacloud.model.RegistrationCreateRequest;
+import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
+import net.codacloud.model.RegistrationSignupDataRequest;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import org.slf4j.Logger;
@@ -115,9 +116,11 @@ final class CachingCodaClient implements CodaClient {
 		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
 			.expireAfterWrite(1, TimeUnit.HOURS).removalListener(
 				CachingCodaClient.<String, List<AdminUser>>createRemovalListener(
-					"User cache")).build(new CacheLoader<String, List<AdminUser>>() {
+					"User cache"))
+			.build(new CacheLoader<String, List<AdminUser>>() {
 				@Override
-				public List<AdminUser> load(final String value) throws Exception {
+				public List<AdminUser> load(final String value)
+					throws Exception {
 					return delegatee.listUsers();
 				}
 			});
@@ -180,7 +183,7 @@ final class CachingCodaClient implements CodaClient {
 
 	@Override
 	public RegistrationLight createRegistration(
-		final RegistrationCreate registration) throws ApiException {
+		final RegistrationCreateRequest registration) throws ApiException {
 		final RegistrationLight newRegistration =
 			delegatee.createRegistration(registration);
 
@@ -192,7 +195,7 @@ final class CachingCodaClient implements CodaClient {
 
 	@Override
 	public Registration updateRegistration(final Integer registrationId,
-		final RegistrationEdit edit) throws ApiException {
+		final RegistrationEditRequest edit) throws ApiException {
 		final Registration updatedRegistration =
 			delegatee.updateRegistration(registrationId, edit);
 
@@ -247,7 +250,7 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public void updateScanSurface(final ExtendMessage message,
+	public void updateScanSurface(final ExtendMessageRequest message,
 		final Integer accountId) throws ApiException {
 		delegatee.updateScanSurface(message, accountId);
 	}
@@ -303,12 +306,12 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public RegistrationCreate createFullyManagedRegistration(final String label,
-		final String description,
-		final RegistrationSignupData registrationSignupData,
+	public RegistrationCreateRequest createFullyManagedRegistration(
+		final String label, final String description,
+		final RegistrationSignupDataRequest request,
 		final List<Integer> associatedMspUserIds) throws ApiException {
 		return delegatee.createFullyManagedRegistration(label, description,
-			registrationSignupData, associatedMspUserIds);
+			request, associatedMspUserIds);
 	}
 
 	@Override

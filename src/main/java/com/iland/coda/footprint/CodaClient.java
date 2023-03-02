@@ -18,7 +18,6 @@ package com.iland.coda.footprint;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
@@ -36,12 +35,13 @@ import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
-import net.codacloud.model.ExtendMessage;
+import net.codacloud.model.ExtendMessageRequest;
 import net.codacloud.model.Registration;
-import net.codacloud.model.RegistrationCreate;
-import net.codacloud.model.RegistrationEdit;
+import net.codacloud.model.RegistrationCreateRequest;
+import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
+import net.codacloud.model.RegistrationSignupDataRequest;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import org.slf4j.Logger;
@@ -218,13 +218,13 @@ public interface CodaClient {
 		final String description) throws ApiException {
 		logger().info("{}: Registering account '{}'", label, description);
 
-		final RegistrationSignupData registrationSignupData =
-			new RegistrationSignupData().firstName("").lastName("").email("")
-				.companyWebsite("");
+		final RegistrationSignupDataRequest request =
+			new RegistrationSignupDataRequest().firstName("").lastName("")
+				.email("").companyWebsite("");
 		final List<Integer> activeGlobalAdminIds = getActiveGlobalAdminIds();
-		final RegistrationCreate newRegistration =
-			createFullyManagedRegistration(label, description,
-				registrationSignupData, activeGlobalAdminIds);
+		final RegistrationCreateRequest newRegistration =
+			createFullyManagedRegistration(label, description, request,
+				activeGlobalAdminIds);
 
 		return createRegistration(newRegistration);
 	}
@@ -232,23 +232,23 @@ public interface CodaClient {
 	/**
 	 * Creates a new registration. The registration will automatically be marked as managed by the current logged-in account.
 	 *
-	 * @param registration the {@link RegistrationCreate registration}
+	 * @param registration the {@link RegistrationCreateRequest registration}
 	 * @return a {@link Registration registration}
 	 * @throws ApiException
 	 */
-	RegistrationLight createRegistration(final RegistrationCreate registration)
-		throws ApiException;
+	RegistrationLight createRegistration(
+		final RegistrationCreateRequest registration) throws ApiException;
 
 	/**
 	 * Updates a registration.
 	 *
 	 * @param registrationId the registration ID
-	 * @param edit           the {@link RegistrationEdit edit}
+	 * @param edit           the {@link RegistrationEditRequest edit}
 	 * @return a {@link Registration registration}
 	 * @throws ApiException
 	 */
 	Registration updateRegistration(final Integer registrationId,
-		final RegistrationEdit edit) throws ApiException;
+		final RegistrationEditRequest edit) throws ApiException;
 
 	/**
 	 * Deletes a registration.
@@ -320,12 +320,12 @@ public interface CodaClient {
 	/**
 	 * Updates the scan surface with new data (extend scan surface modal). <strong>This is an idempotent operation!</strong>
 	 *
-	 * @param message   a {@link ExtendMessage message} of targets and scanners
+	 * @param message   a {@link ExtendMessageRequest message} of targets and scanners
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @throws ApiException
 	 */
-	void updateScanSurface(final ExtendMessage message, final Integer accountId)
-		throws ApiException;
+	void updateScanSurface(final ExtendMessageRequest message,
+		final Integer accountId) throws ApiException;
 
 	/**
 	 * Rescans all user inputs from Scan Surface.
@@ -493,16 +493,15 @@ public interface CodaClient {
 	/**
 	 * Creates a fully managed {@link Registration} accessible by every MSP user.
 	 *
-	 * @param label                  the label of the registration
-	 * @param description            a description
-	 * @param registrationSignupData the signup data
-	 * @param associatedMspUserIds   the {@link AdminUser user IDs}
-	 * @return the {@link RegistrationCreate created registration}
+	 * @param label                the label of the registration
+	 * @param description          a description
+	 * @param request              the signup data
+	 * @param associatedMspUserIds the {@link AdminUser user IDs}
+	 * @return the {@link RegistrationCreateRequest created registration}
 	 * @throws ApiException
 	 */
-	RegistrationCreate createFullyManagedRegistration(final String label,
-		final String description,
-		final RegistrationSignupData registrationSignupData,
+	RegistrationCreateRequest createFullyManagedRegistration(final String label,
+		final String description, final RegistrationSignupDataRequest request,
 		final List<Integer> associatedMspUserIds) throws ApiException;
 
 	/**
