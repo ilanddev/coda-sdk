@@ -55,6 +55,8 @@ import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
+import net.codacloud.model.Task;
+import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -323,6 +325,26 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	@Override
 	public List<AdminUser> listUsers() throws ApiException {
 		return adminApi.adminUsersRetrieve();
+	}
+
+	@Override
+	public List<Task> listScheduledTasks(final String scannerId,
+		final Integer accountId) throws ApiException {
+		return consoleApi.consoleSchedulerList(scannerId, accountId);
+	}
+
+	@Override
+	public Task updateSchedule(final String taskId, final String action,
+		final Integer accountId) throws ApiException {
+		return consoleApi.consoleSchedulerCreate2(action, taskId, accountId, "");
+	}
+
+	@Override
+	public Task updateSchedule(final String taskId,
+		final TaskEditRequest taskEditRequest, final Integer accountId)
+		throws ApiException {
+		return consoleApi.consoleSchedulerCreate(taskId, taskEditRequest,
+			accountId);
 	}
 
 }
