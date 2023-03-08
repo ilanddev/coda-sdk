@@ -6573,7 +6573,8 @@ components:
           type: integer
           readOnly: true
         lastDurationSec:
-          type: integer
+          # modified by Tag
+          type: number
           readOnly: true
         # modified by Tag; formerly oneOf
         #        scanScope:
