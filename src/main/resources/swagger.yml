@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.15.9
+  version: 7.16.11
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -2141,50 +2141,6 @@ paths:
           description: ''
       summary: Provides a listing of vulnerabilities that have been added to action
         plan
-  /console/reporting/contextualRiskReport/:
-    get:
-      operationId: consoleReportingContextualRiskReportRetrieve
-      description: Retrieves the contextual risk report
-      parameters:
-        - in: query
-          name: contextLabel
-          schema:
-            type: string
-          description: Label of the business context you want the report for
-        - in: query
-          name: deviceLabel
-          schema:
-            type: string
-          description: Label of the device you want the report for
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Page you want to request
-        - in: query
-          name: size
-          schema:
-            type: integer
-          description: Number of items you want on a page
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedContextualRiskReportEntryList'
-          description: ''
-      summary: Retrieves the contextual risk report
   /console/reporting/contextualRiskReport/businessContextsLabels/:
     get:
       operationId: consoleReportingContextualRiskReportBusinessContextsLabelsRetrieve
@@ -2203,11 +2159,11 @@ paths:
                 additionalProperties: { }
                 description: Unspecified response body
               examples:
-                ListOfContexts:
+                ListOfContextsIdAndName:
                   value:
                     - Organizational Footprint
-                  summary: List of contexts
-          description: List of context labels
+                  summary: List of contexts id and name
+          description: List of contexts id and name
       parameters:
         - in: header
           name: FootprintTenantId
@@ -2859,6 +2815,13 @@ paths:
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
+      # added by Tag to avoid null content-type
+      requestBody:
+        content:
+          text/plain:
+            schema:
+              type: string
+              default: ''
       security:
         - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
@@ -4662,162 +4625,6 @@ components:
         - nonvisible
         - secure
         - vulnerable
-    ContextualRiskReportEntry:
-      type: object
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        dnsNames:
-          type: array
-          items:
-            type: string
-          readOnly: true
-        vulnerabilityState:
-          enum:
-            - discovered
-            - addedToActionPlan
-            - fixPendingConfirmation
-            - fixNotConfirmed
-            - fixConfirmed
-            - falsePositive
-            - acceptRisk
-          type: string
-          readOnly: true
-        index:
-          type: integer
-          readOnly: true
-        cve:
-          type: string
-          nullable: true
-        description:
-          type: string
-          nullable: true
-        ip:
-          type: string
-          maxLength: 40
-        deviceLabel:
-          type: string
-        deviceId:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-          nullable: true
-        applicationName:
-          type: string
-          maxLength: 300
-        applicationId:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-          nullable: true
-        cpe:
-          type: string
-          nullable: true
-          maxLength: 300
-        cvssV2BaseScore:
-          type: number
-          format: float
-          nullable: true
-        cvssV3BaseScore:
-          type: number
-          format: float
-          nullable: true
-        cvssNormalized:
-          type: number
-          format: float
-          nullable: true
-        cvssNormalizedSeverity:
-          type: string
-          maxLength: 20
-        cvssAv:
-          type: number
-          format: float
-          nullable: true
-        attackVector:
-          type: string
-          nullable: true
-          maxLength: 20
-        port:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-          nullable: true
-        protocol:
-          type: string
-          nullable: true
-          maxLength: 20
-        solution:
-          type: string
-          nullable: true
-        weaponized:
-          type: boolean
-        exploitable:
-          type: boolean
-        campaign:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-        clientSystem:
-          type: string
-          maxLength: 300
-        clientSystemId:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-          nullable: true
-        assetZone:
-          type: string
-          maxLength: 300
-        accessibleBy:
-          type: string
-          maxLength: 300
-        businessImpact:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-        zoneExposure:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-        userExposure:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-        exploitScore:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-        crsProbability:
-          type: number
-          format: float
-        crss:
-          type: number
-          format: float
-        crssSeverity:
-          type: string
-          maxLength: 20
-      required:
-        - accessibleBy
-        - applicationName
-        - assetZone
-        - businessImpact
-        - clientSystem
-        - crsProbability
-        - crss
-        - crssSeverity
-        - cvssNormalizedSeverity
-        - deviceLabel
-        - dnsNames
-        - exploitScore
-        - exploitable
-        - id
-        - index
-        - ip
-        - userExposure
-        - vulnerabilityState
-        - weaponized
-        - zoneExposure
     ContextualRiskReportStatus:
       type: object
       properties:
@@ -5439,27 +5246,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Context'
-      required:
-        - items
-        - page
-        - totalCount
-        - totalPages
-    PaginatedContextualRiskReportEntryList:
-      type: object
-      properties:
-        page:
-          type: integer
-          description: Page this response contains
-        totalPages:
-          type: integer
-          description: Number of total pages
-        totalCount:
-          type: integer
-          description: Number of total elements
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/ContextualRiskReportEntry'
       required:
         - items
         - page
@@ -6571,6 +6357,7 @@ components:
           type: string
           description: Username - usually same as e-mail
         role:
+          # modified by Tag
           enum:
             - ''
             - admin
@@ -6589,6 +6376,7 @@ components:
           type: boolean
           description: Whether periodic e-mail reports are enabled
         syncPeriod:
+          # modified by Tag
           enum:
             - ''
             - daily
@@ -7372,6 +7160,8 @@ components:
         hideRemediateWithButton:
           type: boolean
         hideExtraBillingInfo:
+          type: boolean
+        hideZapScans:
           type: boolean
         hideSurveys:
           type: boolean

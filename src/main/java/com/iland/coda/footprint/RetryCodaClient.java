@@ -52,6 +52,8 @@ import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
+import net.codacloud.model.Task;
+import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -272,6 +274,28 @@ final class RetryCodaClient implements CodaClient {
 	@Override
 	public List<AdminUser> listUsers() throws ApiException {
 		return retryIfNecessary(() -> delegatee.listUsers());
+	}
+
+	@Override
+	public List<Task> listScheduledTasks(final String scannerId,
+		final Integer accountId) throws ApiException {
+		return retryIfNecessary(
+			() -> delegatee.listScheduledTasks(scannerId, accountId));
+	}
+
+	@Override
+	public Task updateSchedule(final String taskId, final String action,
+		final Integer accountId) throws ApiException {
+		return retryIfNecessary(
+			() -> delegatee.updateSchedule(taskId, action, accountId));
+	}
+
+	@Override
+	public Task updateSchedule(final String taskId,
+		final TaskEditRequest taskEditRequest, final Integer accountId)
+		throws ApiException {
+		return retryIfNecessary(
+			() -> delegatee.updateSchedule(taskId, taskEditRequest, accountId));
 	}
 
 	@SuppressWarnings({"unchecked"})

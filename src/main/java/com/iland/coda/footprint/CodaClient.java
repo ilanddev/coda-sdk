@@ -44,6 +44,8 @@ import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.RegistrationSignupDataRequest;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
+import net.codacloud.model.Task;
+import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -523,5 +525,105 @@ public interface CodaClient {
 	 * @throws ApiException
 	 */
 	List<AdminUser> listUsers() throws ApiException;
+
+	/**
+	 * Lists {@link Task scheduled tasks} for the provided {@link String scannerId} and {@link Integer accountId}.
+	 *
+	 * @param scannerId a {@link AgentlessScannerSrz scanner} ID
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a {@link List} of {@link Task schedules}
+	 * @throws ApiException
+	 */
+	List<Task> listScheduledTasks(String scannerId, Integer accountId)
+		throws ApiException;
+
+	/**
+	 * Disables the {@link Task scheduled task} specified by {@link String taskId}.
+	 *
+	 * @param taskId    a {@link Task task} ID
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the disabled {@link Task scheduled task}
+	 * @throws ApiException
+	 */
+	default Task disableScheduledTask(String taskId, Integer accountId)
+		throws ApiException {
+		return updateSchedule(taskId, "disable", accountId);
+	}
+
+	/**
+	 * Enables the {@link Task scheduled task} specified by {@link String taskId}.
+	 *
+	 * @param taskId    a {@link Task task} ID
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the enabled {@link Task scheduled task}
+	 * @throws ApiException
+	 */
+	default Task enableScheduledTask(String taskId, Integer accountId)
+		throws ApiException {
+		return updateSchedule(taskId, "enable", accountId);
+	}
+
+	/**
+	 * Resets the {@link Task scheduled task} specified by {@link String taskId}.
+	 *
+	 * @param taskId    a {@link Task task} ID
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the reset {@link Task scheduled task}
+	 * @throws ApiException
+	 */
+	default Task resetScheduledTask(String taskId, Integer accountId)
+		throws ApiException {
+		return updateSchedule(taskId, "reset", accountId);
+	}
+
+	/**
+	 * Starts the {@link Task scheduled task} specified by {@link String taskId}.
+	 *
+	 * @param taskId    a {@link Task task} ID
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the started {@link Task scheduled task}
+	 * @throws ApiException
+	 */
+	default Task startScheduledTask(String taskId, Integer accountId)
+		throws ApiException {
+		return updateSchedule(taskId, "start", accountId);
+	}
+
+	/**
+	 * Stops the {@link Task scheduled task} specified by {@link String taskId}.
+	 *
+	 * @param taskId    a {@link Task task} ID
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the stopped {@link Task scheduled task}
+	 * @throws ApiException
+	 */
+	default Task stopScheduledTask(String taskId, Integer accountId)
+		throws ApiException {
+		return updateSchedule(taskId, "stop", accountId);
+	}
+
+	/**
+	 * Modifies a schedule and returns the updated schedule.
+	 *
+	 * @param taskId    the {@link Task schedule} ID
+	 * @param action    one of "disable", "enable", "reset", "start", and "stop"
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the updated {@link Task schedule}
+	 * @throws ApiException
+	 */
+	Task updateSchedule(String taskId, String action, Integer accountId)
+		throws ApiException;
+
+	/**
+	 * Modifies a schedule and returns the updated schedule.
+	 *
+	 * @param taskId          the {@link Task schedule} ID
+	 * @param taskEditRequest one of "disable", "enable", "reset", "start", and "stop"
+	 * @param accountId       Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the updated {@link Task schedule}
+	 * @throws ApiException
+	 */
+	Task updateSchedule(String taskId, TaskEditRequest taskEditRequest,
+		Integer accountId) throws ApiException;
 
 }
