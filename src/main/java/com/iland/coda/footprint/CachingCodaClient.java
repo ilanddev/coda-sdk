@@ -44,8 +44,10 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
+import net.codacloud.model.RescanScannerScanId;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
+import net.codacloud.model.ScanSurfaceScanId;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -243,28 +245,30 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public void updateScanSurface(final List<String> targets,
+	public List<ScanSurfaceScanId> updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
 		// TODO: invalidate scan surface cache
-		delegatee.updateScanSurface(targets, scanners, accountId);
+		return delegatee.updateScanSurface(targets, scanners, accountId);
 	}
 
 	@Override
-	public void updateScanSurface(final ExtendMessageRequest message,
-		final Integer accountId) throws ApiException {
-		delegatee.updateScanSurface(message, accountId);
-	}
-
-	@Override
-	public void rescan(final Integer accountId) throws ApiException {
-		delegatee.rescan(accountId);
-	}
-
-	@Override
-	public void rescan(final Integer scannerId, final Integer accountId)
+	public ScanSurfaceScanId updateScanSurface(
+		final ExtendMessageRequest message, final Integer accountId)
 		throws ApiException {
-		delegatee.rescan(scannerId, accountId);
+		return delegatee.updateScanSurface(message, accountId);
+	}
+
+	@Override
+	public RescanScannerScanId rescan(final Integer accountId)
+		throws ApiException {
+		return delegatee.rescan(accountId);
+	}
+
+	@Override
+	public RescanScannerScanId rescan(final Integer scannerId,
+		final Integer accountId) throws ApiException {
+		return delegatee.rescan(scannerId, accountId);
 	}
 
 	@Override
@@ -273,6 +277,11 @@ final class CachingCodaClient implements CodaClient {
 		return delegatee.getScanStatus(accountId);
 	}
 
+	@Override
+	public ScanStatus getScanStatus(final String scanId,
+		final Integer accountId) throws ApiException {
+		return delegatee.getScanStatus(scanId, accountId);
+	}
 
 	@Override
 	public List<ScanSurfaceEntry> getScanSurface(final Integer scannerId,
