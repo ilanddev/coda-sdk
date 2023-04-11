@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.16.11
+  version: 7.17.6
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -2141,6 +2141,45 @@ paths:
           description: ''
       summary: Provides a listing of vulnerabilities that have been added to action
         plan
+  /console/reporting/contextualRiskReport/:
+    get:
+      operationId: consoleReportingContextualRiskReportRetrieve
+      description: Retrieves the contextual risk report
+      parameters:
+        - in: query
+          name: deviceLabel
+          schema:
+            type: string
+          description: Label of the device you want the report for
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page you want to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of items you want on a page
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedContextualRiskReportEntryList'
+          description: ''
+      summary: Retrieves the contextual risk report
   /console/reporting/contextualRiskReport/businessContextsLabels/:
     get:
       operationId: consoleReportingContextualRiskReportBusinessContextsLabelsRetrieve
@@ -2267,8 +2306,8 @@ paths:
                 type: string
                 format: binary
           description: ''
-        '412':
-          description: No findings available to generate the report.
+        '409':
+          description: 'Report cannot be generated: running extend scan on the tenant'
         '500':
           description: Returned if an unexpected error occurs.
       parameters:
@@ -2287,18 +2326,24 @@ paths:
         - in: query
           name: context
           schema:
-            type: integer
-          description: ID of the context you want the RR for
+            type: string
+          description: Business Contexts IDs list you want the RR for
         - in: query
           name: device
           schema:
-            type: integer
-          description: ID of the device you want the RR for
+            type: string
+          description: Devices IDs list you want the RR for
         - in: query
           name: filter
           schema:
             type: string
           description: Text filter
+        - in: query
+          name: hide_remediations_added_to_action_plan
+          schema:
+            type: boolean
+          description: Whether to hide remediations that have already been added to
+            an Action Plan entry or not
         - in: query
           name: page
           schema:
@@ -2338,63 +2383,6 @@ paths:
                 $ref: '#/components/schemas/PaginatedRemediationReportList'
           description: ''
       summary: Retrieves the remediation report
-  /console/reporting/remediationReport/businessContext/{contextId}/devices/:
-    get:
-      operationId: consoleReportingRemediationReportBusinessContextDevicesList
-      description: Get devices for business context
-      parameters:
-        - in: path
-          name: contextId
-          schema:
-            type: integer
-          required: true
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RemediationReportDeviceLabel'
-          description: ''
-      summary: Get devices for business context
-  /console/reporting/remediationReport/businessContextsLabels/:
-    get:
-      operationId: consoleReportingRemediationReportBusinessContextsLabelsList
-      description: Get business contexts that have remediation reports
-      tags:
-        - console
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/RemediationReportBCLabel'
-          description: ''
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      summary: Get business contexts that have remediation reports
   /console/scanSurface/:
     get:
       operationId: consoleScanSurfaceRetrieve
@@ -2447,7 +2435,15 @@ paths:
         - ApiKeyAuth: [ ]
       responses:
         '200':
-          description: Scan processed and queued for starting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanSurfaceScanId'
+              examples:
+                ExampleScanID:
+                  value: '{"scanId": "4a75b36b-d9cc-1615-048e-3c38fb0873c7"}'
+                  summary: Example for scan id
+          description: ''
         '400':
           description: Returned if requested scan items are invalid
         '401':
@@ -2546,7 +2542,16 @@ paths:
         - ApiKeyAuth: [ ]
       responses:
         '200':
-          description: Rescan accepted and will start in a few moments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescanScannerScanId'
+              examples:
+                ExampleScanID:
+                  value: '[{"scanId": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
+                    1}]'
+                  summary: Example for scan id
+          description: ''
         '401':
           description: User does not have necessary permissions to start a rescan
         '402':
@@ -2584,7 +2589,15 @@ paths:
         - ApiKeyAuth: [ ]
       responses:
         '200':
-          description: Rescan accepted and will start in a few moments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescanScannerScanId'
+              examples:
+                ExampleScanID:
+                  value: '{"scanId": "4a75b36b-d9cc-1615-048e-3c38fb0873c7"}'
+                  summary: Example for scan id
+          description: ''
         '400':
           description: Returned if requested scanner id is invalid
         '401':
@@ -2699,6 +2712,34 @@ paths:
             back on `original_tenant_id` from the auth endpoint
       summary: Allows uploading a file that defines tags to be automatically added
         on devices
+  /console/scans/{scanId}/:
+    get:
+      operationId: consoleScansRetrieve
+      parameters:
+        - in: path
+          name: scanId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScanStatus'
+          description: ''
+      summary: ''
   /console/scheduler/:
     get:
       operationId: consoleSchedulerList
@@ -2844,7 +2885,11 @@ paths:
         - ApiKeyAuth: [ ]
       responses:
         '200':
-          description: Auto contexts generation enabled or disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantInfoEdit'
+          description: ''
       parameters:
         - in: header
           name: FootprintTenantId
@@ -2965,16 +3010,46 @@ components:
           format: date-time
           nullable: true
           description: Timestamp of the last login into this account
+        isTrialMode:
+          type: boolean
+          description: Whether the user account is in trial mode
+        isTrialExpired:
+          type: boolean
+          readOnly: true
+          description: Whether the user account trial is expired
+        trialDaysRemaining:
+          type: integer
+          description: Number of trial days remaining, if user account is in trial
+            mode
+        domainsRemaining:
+          type: integer
+          readOnly: true
+          description: Number of domain scans remaining (only in trial mode)
+        clearDatabaseRemaining:
+          type: integer
+          readOnly: true
+          description: Number of clear database operations remaining (only in trial
+            mode)
+        isCustomBrandingApplied:
+          type: boolean
+          readOnly: true
+          description: Whether the tenant has custom branding
         isPrimaryAccount:
           type: boolean
           readOnly: true
       required:
+        - clearDatabaseRemaining
+        - domainsRemaining
         - id
+        - isCustomBrandingApplied
         - isPrimaryAccount
+        - isTrialExpired
+        - isTrialMode
         - managedType
         - name
         - photo
         - registrationId
+        - trialDaysRemaining
     AccountSwitchRequest:
       type: object
       description: Account switch
@@ -2984,43 +3059,6 @@ components:
           description: Account ID that you want to switch to
       required:
         - id
-    ActiveTaskStatus:
-      type: object
-      properties:
-        isRunning:
-          type: boolean
-        progress:
-          type: integer
-          readOnly: true
-        id:
-          type: string
-          readOnly: true
-        description:
-          type: string
-          readOnly: true
-        message:
-          type: string
-          readOnly: true
-        startDate:
-          type: string
-          format: date-time
-          readOnly: true
-        scanner:
-          allOf:
-            - $ref: '#/components/schemas/TaskScanner'
-          readOnly: true
-        meta:
-          type: object
-          additionalProperties: { }
-          readOnly: true
-      required:
-        - description
-        - id
-        - message
-        - meta
-        - progress
-        - scanner
-        - startDate
     AdminUser:
       type: object
       description: 'TODO: This is only used in admin endpoints. It should be generalized
@@ -3329,6 +3367,39 @@ components:
       required:
         - agents
         - token
+    AgentlessScannerLite:
+      type: object
+      description: Light representation of an internal scanner
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        publicIp:
+          type: string
+          nullable: true
+          maxLength: 50
+        label:
+          type: string
+          nullable: true
+          maxLength: 1000
+        administrativeState:
+          enum:
+            - Starting
+            - Active
+            - Stopped
+            - Deleted
+            - Offline
+            - Shut Down
+            - Incompatible hardware
+          type: string
+          readOnly: true
+        state:
+          type: string
+          readOnly: true
+      required:
+        - administrativeState
+        - id
+        - state
     AgentlessScannerSrz:
       type: object
       properties:
@@ -4625,6 +4696,162 @@ components:
         - nonvisible
         - secure
         - vulnerable
+    ContextualRiskReportEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        dnsNames:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        vulnerabilityState:
+          enum:
+            - discovered
+            - addedToActionPlan
+            - fixPendingConfirmation
+            - fixNotConfirmed
+            - fixConfirmed
+            - falsePositive
+            - acceptRisk
+          type: string
+          readOnly: true
+        index:
+          type: integer
+          readOnly: true
+        cve:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        ip:
+          type: string
+          maxLength: 40
+        deviceLabel:
+          type: string
+        deviceId:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        applicationName:
+          type: string
+          maxLength: 300
+        applicationId:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        cpe:
+          type: string
+          nullable: true
+          maxLength: 300
+        cvssV2BaseScore:
+          type: number
+          format: float
+          nullable: true
+        cvssV3BaseScore:
+          type: number
+          format: float
+          nullable: true
+        cvssNormalized:
+          type: number
+          format: float
+          nullable: true
+        cvssNormalizedSeverity:
+          type: string
+          maxLength: 20
+        cvssAv:
+          type: number
+          format: float
+          nullable: true
+        attackVector:
+          type: string
+          nullable: true
+          maxLength: 20
+        port:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        protocol:
+          type: string
+          nullable: true
+          maxLength: 20
+        solution:
+          type: string
+          nullable: true
+        weaponized:
+          type: boolean
+        exploitable:
+          type: boolean
+        campaign:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        clientSystem:
+          type: string
+          maxLength: 300
+        clientSystemId:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+        assetZone:
+          type: string
+          maxLength: 300
+        accessibleBy:
+          type: string
+          maxLength: 300
+        businessImpact:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        zoneExposure:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        userExposure:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        exploitScore:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        crsProbability:
+          type: number
+          format: float
+        crss:
+          type: number
+          format: float
+        crssSeverity:
+          type: string
+          maxLength: 20
+      required:
+        - accessibleBy
+        - applicationName
+        - assetZone
+        - businessImpact
+        - clientSystem
+        - crsProbability
+        - crss
+        - crssSeverity
+        - cvssNormalizedSeverity
+        - deviceLabel
+        - dnsNames
+        - exploitScore
+        - exploitable
+        - id
+        - index
+        - ip
+        - userExposure
+        - vulnerabilityState
+        - weaponized
+        - zoneExposure
     ContextualRiskReportStatus:
       type: object
       properties:
@@ -4636,6 +4863,25 @@ components:
       required:
         - meta
         - state
+    Count:
+      type: object
+      properties:
+        applications:
+          type: integer
+        bc:
+          type: integer
+        servers:
+          type: integer
+        tc:
+          type: integer
+        agents:
+          type: integer
+      required:
+        - agents
+        - applications
+        - bc
+        - servers
+        - tc
     CurrentTargetCountStats:
       type: object
       properties:
@@ -5246,6 +5492,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Context'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedContextualRiskReportEntryList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContextualRiskReportEntry'
       required:
         - items
         - page
@@ -6095,46 +6362,34 @@ components:
         - isWeaponized
         - riskIndicator
         - title
-    RemediationReportBCLabel:
+    RescanScannerScanId:
       type: object
+      description: Rescan accepted and will start in a few moments.
       properties:
-        id:
-          type: integer
-          description: ID of the context
-        label:
+        scanId:
           type: string
-          description: Label of the context
-      required:
-        - id
-        - label
-    RemediationReportDeviceLabel:
-      type: object
-      properties:
-        id:
+          description: '[Not implemented yet] Scan ID'
+        scannerId:
           type: integer
-          description: ID of the device
-        name:
-          type: string
-          description: Name of the context
+          description: '[Not implemented yet] Scanner ID'
       required:
-        - id
-        - name
+        - scanId
+        - scannerId
     ScanStatus:
       type: object
       properties:
-        areaScanJobs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ActiveTaskStatus'
-          description: Extend scan area jobs
-        runningJobs:
-          type: array
-          items:
-            $ref: '#/components/schemas/ActiveTaskStatus'
-          description: Other scan jobs
+        status:
+          enum:
+            - created
+            - requested
+            - stopped
+            - running
+            - interrupted
+            - done
+          type: string
+          description: Scan status based on scan id
       required:
-        - areaScanJobs
-        - runningJobs
+        - status
     ScanSurfaceCurrentTarget:
       type: object
       properties:
@@ -6219,6 +6474,15 @@ components:
       required:
         - source
         - value
+    ScanSurfaceScanId:
+      type: object
+      description: Scan processed and queued for starting.
+      properties:
+        scanId:
+          type: string
+          description: '[Not implemented yet] Scan ID. Example: 4a75b36b-d9cc-1615-048e-3c38fb0873c7'
+      required:
+        - scanId
     ScanSurfaceScannerEntry:
       type: object
       properties:
@@ -6394,34 +6658,9 @@ components:
         weeklyCvrEnabled:
           type: boolean
           description: Whether weekly CVR report e-mail notifications are enabled
-        isTrialMode:
-          type: boolean
-          readOnly: true
-          description: Whether the user account is in trial mode
-        isTrialExpired:
-          type: boolean
-          readOnly: true
-          description: Whether the user account trial is expired
-        trialDaysRemaining:
-          type: integer
-          description: Number of trial days remaining, if user account is in trial
-            mode
-        domainsRemaining:
-          type: integer
-          readOnly: true
-          description: Number of domain scans remaining (only in trial mode)
-        clearDatabaseRemaining:
-          type: integer
-          readOnly: true
-          description: Number of clear database operations remaining (only in trial
-            mode)
         isInstallationAdmin:
           type: boolean
           description: Whether the user is an installation admin
-        isCustomBrandingApplied:
-          type: boolean
-          readOnly: true
-          description: Whether the tenant has custom branding
         isFeedbackSurveyCompleted:
           type: boolean
           description: Whether the user has completed the feedback survey
@@ -6433,17 +6672,12 @@ components:
         - access
         - accountId
         - asyncEmails
-        - clearDatabaseRemaining
-        - domainsRemaining
         - email
         - firstName
         - id
-        - isCustomBrandingApplied
         - isFeedbackSurveyCompleted
         - isInstallationAdmin
         - isLoggedIn
-        - isTrialExpired
-        - isTrialMode
         - lastName
         - photo
         - refresh
@@ -6454,7 +6688,6 @@ components:
         - syncEmails
         - syncPeriod
         - tenantPhoto
-        - trialDaysRemaining
         - usageReportEmails
         - username
         - weeklyCvrEnabled
@@ -6525,14 +6758,13 @@ components:
       type: object
       properties:
         count:
-          type: object
-          additionalProperties: { }
-          description: Counts of contexts, applications and devices
+          allOf:
+            - $ref: '#/components/schemas/Count'
+          description: Counts of contexts, agents, applications and devices
         internalScanners:
           type: array
           items:
-            type: object
-            additionalProperties: { }
+            $ref: '#/components/schemas/AgentlessScannerLite'
           description: List of installed internal scanners and their statuses
       required:
         - count
@@ -6576,14 +6808,14 @@ components:
           # modified by Tag
           type: number
           readOnly: true
-        # modified by Tag; formerly oneOf
-        #        scanScope:
-        #          oneOf:
-        #          - type: string
-        #          - type: array
-        #            items:
-        #              type: integer
-        #          readOnly: true
+# modified by Tag; formerly oneOf
+#        scanScope:
+#          oneOf:
+#          - type: string
+#          - type: array
+#            items:
+#              type: integer
+#          readOnly: true
         lastRun:
           type: string
           format: date-time
@@ -6624,19 +6856,6 @@ components:
       required:
         - executesEverySec
         - priority
-    TaskScanner:
-      type: object
-      properties:
-        scannerId:
-          type: integer
-        taskId:
-          type: integer
-        hostname:
-          type: string
-      required:
-        - hostname
-        - scannerId
-        - taskId
     TechnicalContext:
       type: object
       properties:
@@ -6700,6 +6919,13 @@ components:
         - state
         - status
         - type
+    TenantInfoEdit:
+      type: object
+      description: Serializer for Tenant Info edit.
+      properties:
+        isAutoContextsGenerationEnabled:
+          type: boolean
+          description: Auto contexts generation enabled or disabled
     TokenObtainPair:
       type: object
       properties:
@@ -7167,6 +7393,8 @@ components:
         hideSurveys:
           type: boolean
         hideActionPlan:
+          type: boolean
+        disableAllContextsInCrr:
           type: boolean
       required:
         - appLogo
