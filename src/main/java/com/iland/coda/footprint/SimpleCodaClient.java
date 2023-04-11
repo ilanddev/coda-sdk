@@ -15,6 +15,7 @@
 
 package com.iland.coda.footprint;
 
+import static com.google.common.base.Throwables.throwIfInstanceOf;
 import static com.iland.coda.footprint.Registrations.toLight;
 
 import java.io.File;
@@ -30,6 +31,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -53,8 +55,10 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
+import net.codacloud.model.RescanScannerScanId;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
+import net.codacloud.model.ScanSurfaceScanId;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -128,36 +132,46 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public void updateScanSurface(final List<String> targets,
+	public List<ScanSurfaceScanId> updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
-		final List<ExtendMessageRequest> batches =
-			new ScanSurfaceBatcher().createBatches(targets).stream()
-				.map(batch -> batch.scanners(scanners))
+		try {
+			return new ScanSurfaceBatcher().createBatches(targets).stream()
+				.map(batch -> batch.scanners(scanners)).map(batch -> {
+					try {
+						return updateScanSurface(batch, accountId);
+					} catch (final ApiException e) {
+						throw new RuntimeException(e);
+					}
+				}).filter(Objects::nonNull).distinct()
 				.collect(Collectors.toList());
-		for (final ExtendMessageRequest batch : batches) {
-			updateScanSurface(batch, accountId);
+		} catch (final RuntimeException e) {
+			throwIfInstanceOf(e.getCause(), ApiException.class);
+			throw e;
 		}
 	}
 
 	@Override
-	public void updateScanSurface(final ExtendMessageRequest message,
-		final Integer accountId) throws ApiException {
-		consoleApi.consoleScanSurfaceCreate(message, accountId);
+	public ScanSurfaceScanId updateScanSurface(
+		final ExtendMessageRequest message, final Integer accountId)
+		throws ApiException {
+		return consoleApi.consoleScanSurfaceCreate(message, accountId);
 	}
 
 	@Override
-	public void rescan(final Integer accountId) throws ApiException {
+	public RescanScannerScanId rescan(final Integer accountId)
+		throws ApiException {
 		final PatchedScanSurfaceRescanRequest request =
 			new PatchedScanSurfaceRescanRequest();
-		consoleApi.consoleScanSurfaceRescanPartialUpdate(accountId, request);
+		return consoleApi.consoleScanSurfaceRescanPartialUpdate(accountId,
+			request);
 	}
 
-
 	@Override
-	public void rescan(final Integer scannerId, final Integer accountId)
-		throws ApiException {
-		consoleApi.consoleScanSurfaceRescanPartialUpdate2(scannerId, accountId);
+	public RescanScannerScanId rescan(final Integer scannerId,
+		final Integer accountId) throws ApiException {
+		return consoleApi.consoleScanSurfaceRescanPartialUpdate2(scannerId,
+			accountId);
 	}
 
 	@Override
@@ -166,6 +180,11 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		return consoleApi.consoleStatusScanRetrieve(accountId);
 	}
 
+	@Override
+	public ScanStatus getScanStatus(final String scanId,
+		final Integer accountId) throws ApiException {
+		return consoleApi.consoleScansRetrieve(scanId, accountId);
+	}
 
 	@Override
 	public List<ScanSurfaceEntry> getScanSurface(final Integer scannerId,
@@ -336,7 +355,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	@Override
 	public Task updateSchedule(final String taskId, final String action,
 		final Integer accountId) throws ApiException {
-		return consoleApi.consoleSchedulerCreate2(action, taskId, accountId, "");
+		return consoleApi.consoleSchedulerCreate2(action, taskId, accountId,
+			"");
 	}
 
 	@Override

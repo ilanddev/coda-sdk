@@ -177,12 +177,14 @@ abstract class AbstractCodaClient implements CodaClient {
 			 *
 			 * @param body       The JSON string
 			 * @param returnType The type to deserialize into
-			 * @return
 			 * @param <T>
+			 * @return
 			 */
 			@Override
 			public <T> T deserialize(final String body, final Type returnType) {
-				final String fixedBody = body.replaceAll("\\\\null", "\"");
+				final String fixedBody = body.replaceAll("\\\\null", "\"")
+					.replaceAll("\"criticalLevel\":\"(\\w+)\"",
+						"\"criticalLevel\":-1");
 
 				jsonLock.lock();
 				try {

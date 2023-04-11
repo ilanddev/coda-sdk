@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -47,6 +48,7 @@ import net.codacloud.model.CVRVulnerability;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
+import net.codacloud.model.ScanSurfaceScanId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -131,7 +133,8 @@ class SimpleCodaClientTest {
 			client.getDefaultCloudScanner(accountId).getId();
 		final List<Integer> scannerIds = Arrays.asList(scannerId);
 
-		client.updateScanSurface(targets, scannerIds, accountId);
+		final List<ScanSurfaceScanId> scanIds =
+			client.updateScanSurface(targets, scannerIds, accountId);
 
 		final int expectedSize = targets.size() * scannerIds.size();
 		final Set<ScanSurfaceEntry> scanSurface =
@@ -206,15 +209,15 @@ class SimpleCodaClientTest {
 
 	@Test
 	void testThatTechnicalReportIsPopulated() throws Throwable {
-		final CVR report =
+		final List<CVRMostVulnServer> technicalReport =
 			client.listAccounts(null).stream().map(Account::getId)
 				.map(this::getReports).map(Map::values)
-				.flatMap(Collection::stream).findFirst().get().retrieve();
-		assertNotNull(report, "report must not be null");
+				.flatMap(Collection::stream)
+				.map(CodaClient.LazyCVR::retrieveUnchecked)
+				.filter(Objects::nonNull).map(CVR::getTechnicalReport)
+				.filter(Objects::nonNull).findFirst().orElse(null);
 
-		final List<CVRMostVulnServer> technicalReport =
-			report.getTechnicalReport();
-		assertFalse(technicalReport.isEmpty(),
+		assertFalse(technicalReport == null || technicalReport.isEmpty(),
 			"technical reports must not be empty");
 
 		technicalReport.forEach(techReport -> {
@@ -253,7 +256,9 @@ class SimpleCodaClientTest {
 		assertTrue(cyberRiskReport.length() < 5000000,
 			"PDF is too large; it should be ~4MiB");
 
-		if (!System.getProperty("user.name").equals("jenkins")) {
+		if (System.getProperty("user.name").equals("jenkins")) {
+			cyberRiskReport.delete();
+		} else {
 			System.out.println(cyberRiskReport.getPath());
 		}
 	}

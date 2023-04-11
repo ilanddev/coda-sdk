@@ -2719,7 +2719,7 @@ paths:
         - in: path
           name: scanId
           schema:
-            type: integer
+            type: string
           required: true
         - in: header
           name: FootprintTenantId

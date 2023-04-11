@@ -42,8 +42,10 @@ import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.RegistrationSignupDataRequest;
+import net.codacloud.model.RescanScannerScanId;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
+import net.codacloud.model.ScanSurfaceScanId;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -78,6 +80,17 @@ public interface CodaClient {
 	interface LazyCVR {
 
 		CVR retrieve() throws ApiException;
+
+		/**
+		 * @return the {@link CVR} or {@literal null} in the event of an {@link ApiException}
+		 */
+		default CVR retrieveUnchecked() {
+			try {
+				return retrieve();
+			} catch (final ApiException e) {
+				return null;
+			}
+		}
 
 	}
 
@@ -314,37 +327,42 @@ public interface CodaClient {
 	 * @param targets   a {@link List} of targets, e.g. hostname, IP address, or CIDR notation
 	 * @param scanners  There's no documentation on this value. The scanners to use for the scan?
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a {@link List} of {@link ScanSurfaceScanId scan IDs}
 	 * @throws ApiException
 	 */
-	void updateScanSurface(List<String> targets, List<Integer> scanners,
-		Integer accountId) throws ApiException;
+	List<ScanSurfaceScanId> updateScanSurface(List<String> targets,
+		List<Integer> scanners, Integer accountId) throws ApiException;
 
 	/**
 	 * Updates the scan surface with new data (extend scan surface modal). <strong>This is an idempotent operation!</strong>
 	 *
 	 * @param message   a {@link ExtendMessageRequest message} of targets and scanners
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the {@link ScanSurfaceScanId scan ID}
 	 * @throws ApiException
 	 */
-	void updateScanSurface(final ExtendMessageRequest message,
+	ScanSurfaceScanId updateScanSurface(final ExtendMessageRequest message,
 		final Integer accountId) throws ApiException;
 
 	/**
 	 * Rescans all user inputs from Scan Surface.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the {@link RescanScannerScanId}
 	 * @throws ApiException
 	 */
-	void rescan(final Integer accountId) throws ApiException;
+	RescanScannerScanId rescan(final Integer accountId) throws ApiException;
 
 	/**
 	 * Rescans all user inputs from Scan Surface for requested Agentless Scanner.
 	 *
 	 * @param scannerId the scanner ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the {@link RescanScannerScanId}
 	 * @throws ApiException
 	 */
-	void rescan(Integer scannerId, Integer accountId) throws ApiException;
+	RescanScannerScanId rescan(Integer scannerId, Integer accountId)
+		throws ApiException;
 
 	/**
 	 * Provides information regarding currently active scans.
@@ -354,6 +372,17 @@ public interface CodaClient {
 	 * @throws ApiException
 	 */
 	ScanStatus getScanStatus(Integer accountId) throws ApiException;
+
+	/**
+	 * Provides information regarding currently active scans.
+	 *
+	 * @param scanId    the scan ID
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return the {@link ScanStatus scan status}
+	 * @throws ApiException
+	 */
+	ScanStatus getScanStatus(String scanId, Integer accountId)
+		throws ApiException;
 
 	/**
 	 * Retrieve the collated {@link ScanSurfaceEntry scan surface entries} for all scanners for the given {@link Integer accountId}.
