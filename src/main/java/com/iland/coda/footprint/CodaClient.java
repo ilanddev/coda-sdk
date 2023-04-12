@@ -15,6 +15,7 @@
 
 package com.iland.coda.footprint;
 
+import static com.google.common.base.Throwables.throwIfInstanceOf;
 import static java.util.stream.Collectors.toMap;
 
 import java.io.File;
@@ -29,7 +30,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Throwables;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
@@ -42,10 +42,10 @@ import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.RegistrationSignupDataRequest;
-import net.codacloud.model.RescanScannerScanId;
+import net.codacloud.model.RescanScannerScanUuid;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.ScanSurfaceScanId;
+import net.codacloud.model.ScanSurfaceScanUuid;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -113,7 +113,7 @@ public interface CodaClient {
 	 * Authenticate against the CODA service.
 	 *
 	 * @return {@link CodaClient this}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	CodaClient login() throws ApiException;
 
@@ -123,17 +123,22 @@ public interface CodaClient {
 	 * @param label       the {@link String label}
 	 * @param description the {@link String description}
 	 * @return the {@link RegistrationLight registration}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default RegistrationLight findOrCreateRegistration(final String label,
 		final String description) throws ApiException {
-		return getRegistrationForLabel(label).orElseGet(() -> {
-			try {
-				return createRegistration(label, description);
-			} catch (ApiException e) {
-				throw new CodaException(e);
-			}
-		});
+		try {
+			return getRegistrationForLabel(label).orElseGet(() -> {
+				try {
+					return createRegistration(label, description);
+				} catch (final ApiException e) {
+					throw new RuntimeException(e);
+				}
+			});
+		} catch (final RuntimeException e) {
+			throwIfInstanceOf(e.getCause(), ApiException.class);
+			throw e;
+		}
 	}
 
 	/**
@@ -141,7 +146,7 @@ public interface CodaClient {
 	 *
 	 * @param label the {@link String label} for a {@link Registration}
 	 * @return an {@link Optional} {@link RegistrationLight registration}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Optional<RegistrationLight> getRegistrationForLabel(
 		final String label) throws ApiException {
@@ -154,7 +159,7 @@ public interface CodaClient {
 	 * Provides a listing of active registrations.
 	 *
 	 * @return a listing of active registrations
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Set<RegistrationLight> listRegistrations() throws ApiException {
 		return listRegistrations(null);
@@ -165,7 +170,7 @@ public interface CodaClient {
 	 *
 	 * @param category the category of registrations you want
 	 * @return a listing of active registrations for a specific category
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	Set<RegistrationLight> listRegistrations(final String category)
 		throws ApiException;
@@ -175,7 +180,7 @@ public interface CodaClient {
 	 *
 	 * @param label a {@link String label}
 	 * @return the {@link Integer accountId} for the supplied {@link String label}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Integer labelToAccountId(final String label) throws ApiException {
 		return findAccountWithName(label).map(Account::getId).orElseThrow(
@@ -188,7 +193,7 @@ public interface CodaClient {
 	 *
 	 * @param registration a {@link RegistrationLight registration}
 	 * @return the {@link Integer accountId} for the supplied {@link RegistrationLight registration}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Integer registrationToAccountId(
 		final RegistrationLight registration) throws ApiException {
@@ -203,7 +208,7 @@ public interface CodaClient {
 	 *
 	 * @param name the name of the {@link Account}
 	 * @return an {@link Optional} {@link Account} with the supplied name
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Optional<Account> findAccountWithName(final String name)
 		throws ApiException {
@@ -213,11 +218,11 @@ public interface CodaClient {
 	}
 
 	/**
-	 * Lists accounts into which the current user can sign in to.
+	 * Lists {@link Account accounts} into which the current user can sign in to.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint
-	 * @return a list of accounts that the current user can sign in to
-	 * @throws ApiException
+	 * @return a {@link Set set} of {@link Account accounts} that the current user can sign in to
+	 * @throws ApiException ...
 	 */
 	Set<Account> listAccounts(Integer accountId) throws ApiException;
 
@@ -227,7 +232,7 @@ public interface CodaClient {
 	 * @param label       the label of the registration
 	 * @param description a description
 	 * @return the created {@link RegistrationLight registration}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default RegistrationLight createRegistration(final String label,
 		final String description) throws ApiException {
@@ -249,7 +254,7 @@ public interface CodaClient {
 	 *
 	 * @param registration the {@link RegistrationCreateRequest registration}
 	 * @return a {@link Registration registration}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	RegistrationLight createRegistration(
 		final RegistrationCreateRequest registration) throws ApiException;
@@ -260,7 +265,7 @@ public interface CodaClient {
 	 * @param registrationId the registration ID
 	 * @param edit           the {@link RegistrationEditRequest edit}
 	 * @return a {@link Registration registration}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	Registration updateRegistration(final Integer registrationId,
 		final RegistrationEditRequest edit) throws ApiException;
@@ -269,7 +274,7 @@ public interface CodaClient {
 	 * Deletes a registration.
 	 *
 	 * @param registration the {@link Registration} to delete
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	void deleteRegistration(RegistrationLight registration) throws ApiException;
 
@@ -293,7 +298,7 @@ public interface CodaClient {
 	 *
 	 * @param accountId Account ID you want to receive request for.
 	 * @return a {@link Map} of scanner IDs keyed by scanner label
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Map<String, Integer> getScannerIdByLabel(final Integer accountId)
 		throws ApiException {
@@ -308,7 +313,7 @@ public interface CodaClient {
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a {@link List} of available {@link AgentlessScannerSrz scanners}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	List<AgentlessScannerSrz> getScanners(Integer accountId)
 		throws ApiException;
@@ -327,10 +332,10 @@ public interface CodaClient {
 	 * @param targets   a {@link List} of targets, e.g. hostname, IP address, or CIDR notation
 	 * @param scanners  There's no documentation on this value. The scanners to use for the scan?
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return a {@link List} of {@link ScanSurfaceScanId scan IDs}
-	 * @throws ApiException
+	 * @return a {@link List} of {@link ScanSurfaceScanUuid scan UUIDs}
+	 * @throws ApiException ...
 	 */
-	List<ScanSurfaceScanId> updateScanSurface(List<String> targets,
+	List<ScanSurfaceScanUuid> updateScanSurface(List<String> targets,
 		List<Integer> scanners, Integer accountId) throws ApiException;
 
 	/**
@@ -338,30 +343,31 @@ public interface CodaClient {
 	 *
 	 * @param message   a {@link ExtendMessageRequest message} of targets and scanners
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return the {@link ScanSurfaceScanId scan ID}
-	 * @throws ApiException
+	 * @return a {@link List list} of {@link ScanSurfaceScanUuid scan UUIDs}
+	 * @throws ApiException ...
 	 */
-	ScanSurfaceScanId updateScanSurface(final ExtendMessageRequest message,
-		final Integer accountId) throws ApiException;
+	List<ScanSurfaceScanUuid> updateScanSurface(
+		final ExtendMessageRequest message, final Integer accountId)
+		throws ApiException;
 
 	/**
 	 * Rescans all user inputs from Scan Surface.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return the {@link RescanScannerScanId}
-	 * @throws ApiException
+	 * @return the {@link RescanScannerScanUuid scan UUID}
+	 * @throws ApiException ...
 	 */
-	RescanScannerScanId rescan(final Integer accountId) throws ApiException;
+	RescanScannerScanUuid rescan(final Integer accountId) throws ApiException;
 
 	/**
 	 * Rescans all user inputs from Scan Surface for requested Agentless Scanner.
 	 *
 	 * @param scannerId the scanner ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return the {@link RescanScannerScanId}
-	 * @throws ApiException
+	 * @return the {@link RescanScannerScanUuid scan UUID}
+	 * @throws ApiException ...
 	 */
-	RescanScannerScanId rescan(Integer scannerId, Integer accountId)
+	RescanScannerScanUuid rescan(Integer scannerId, Integer accountId)
 		throws ApiException;
 
 	/**
@@ -369,7 +375,7 @@ public interface CodaClient {
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the {@link ScanStatus scan status}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	ScanStatus getScanStatus(Integer accountId) throws ApiException;
 
@@ -379,7 +385,7 @@ public interface CodaClient {
 	 * @param scanId    the scan ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the {@link ScanStatus scan status}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	ScanStatus getScanStatus(String scanId, Integer accountId)
 		throws ApiException;
@@ -389,7 +395,7 @@ public interface CodaClient {
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a collated {@link ScanSurfaceEntry scan surface entries} for all scanners for the given {@link Integer accountId}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Set<ScanSurfaceEntry> getScanSurface(final Integer accountId)
 		throws ApiException {
@@ -403,7 +409,7 @@ public interface CodaClient {
 					}
 				}).flatMap(Collection::stream).collect(Collectors.toSet());
 		} catch (RuntimeException e) {
-			Throwables.throwIfInstanceOf(e.getCause(), ApiException.class);
+			throwIfInstanceOf(e.getCause(), ApiException.class);
 			throw e;
 		}
 	}
@@ -414,7 +420,7 @@ public interface CodaClient {
 	 * @param scannerIds a {@link List} of scanner IDs
 	 * @param accountId  Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a collated {@link ScanSurfaceEntry scan surface entries} for all scanners for the given {@link Integer accountId}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Set<ScanSurfaceEntry> getScanSurface(final List<Integer> scannerIds,
 		final Integer accountId) throws ApiException {
@@ -427,18 +433,18 @@ public interface CodaClient {
 				}
 			}).flatMap(Collection::stream).collect(Collectors.toSet());
 		} catch (RuntimeException e) {
-			Throwables.throwIfInstanceOf(e.getCause(), ApiException.class);
+			throwIfInstanceOf(e.getCause(), ApiException.class);
 			throw e;
 		}
 	}
 
 	/**
-	 * Retrieve list of user inputs and the resulting assets.
+	 * Retrieve {@link List list} of user inputs and the resulting assets.
 	 *
 	 * @param scannerId Optional scanner ID filter. If not set or invalid, falls back on all scanners
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return
-	 * @throws ApiException
+	 * @return a {@link List list} of {@link ScanSurfaceEntry entries}
+	 * @throws ApiException ...
 	 */
 	List<ScanSurfaceEntry> getScanSurface(Integer scannerId, Integer accountId)
 		throws ApiException;
@@ -448,23 +454,27 @@ public interface CodaClient {
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return an {@link Optional} containing the latest (i.e. newest) {@link CVR report}
-	 * @throws ApiException
-	 * @throws CodaException
+	 * @throws ApiException ...
 	 */
 	default Optional<CVR> getLatestReport(Integer accountId)
 		throws ApiException {
 		final Map<LocalDateTime, CodaClient.LazyCVR> reports =
 			getSnapshotReports(accountId);
 
-		return reports.keySet().stream()
-			.max(Comparator.comparing(ldt -> ldt.toEpochSecond(ZoneOffset.UTC)))
-			.map(reports::get).map(lazyCvr -> {
-				try {
-					return lazyCvr.retrieve();
-				} catch (ApiException e) {
-					throw new CodaException(e);
-				}
-			});
+		try {
+			return reports.keySet().stream().max(
+					Comparator.comparing(ldt -> ldt.toEpochSecond(ZoneOffset.UTC)))
+				.map(reports::get).map(lazyCvr -> {
+					try {
+						return lazyCvr.retrieve();
+					} catch (ApiException e) {
+						throw new RuntimeException(e);
+					}
+				});
+		} catch (final RuntimeException e) {
+			throwIfInstanceOf(e.getCause(), ApiException.class);
+			throw e;
+		}
 	}
 
 	/**
@@ -472,7 +482,7 @@ public interface CodaClient {
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a map of {@link LazyCVR lazily-loadable reports} keyed by date, e.g. "2022-05-16 21:33:29"
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Map<LocalDateTime, LazyCVR> getSnapshotReports(Integer accountId)
 		throws ApiException {
@@ -485,7 +495,7 @@ public interface CodaClient {
 	 * @param reportType the {@link ReportType report type}
 	 * @param accountId  Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a map of {@link LazyCVR lazily-loadable reports} keyed by date, e.g. "2022-05-16 21:33:29"
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	Map<LocalDateTime, LazyCVR> getReports(ReportType reportType,
 		Integer accountId) throws ApiException;
@@ -496,7 +506,7 @@ public interface CodaClient {
 	 * @param reportType the {@link ReportType report type}
 	 * @param accountId  Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a map of {@link LazyCvrJson lazily-loadable reports} keyed by date, e.g. "2022-05-16 21:33:29"
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	Map<LocalDateTime, LazyCvrJson> getReportsJson(ReportType reportType,
 		Integer accountId) throws ApiException;
@@ -507,7 +517,7 @@ public interface CodaClient {
 	 * @param reportType the {@link ReportType}
 	 * @param accountId  Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return available report dates
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	List<String> getReportTimestamps(ReportType reportType, Integer accountId)
 		throws ApiException;
@@ -517,7 +527,7 @@ public interface CodaClient {
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a {@link File pdf} containing the cyber risk report
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	File getCyberRiskReport(Integer accountId) throws ApiException;
 
@@ -529,7 +539,7 @@ public interface CodaClient {
 	 * @param request              the signup data
 	 * @param associatedMspUserIds the {@link AdminUser user IDs}
 	 * @return the {@link RegistrationCreateRequest created registration}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	RegistrationCreateRequest createFullyManagedRegistration(final String label,
 		final String description, final RegistrationSignupDataRequest request,
@@ -539,7 +549,7 @@ public interface CodaClient {
 	 * Returns a {@link List} of IDs for active users with the <code>"Global Admin"</code> role.
 	 *
 	 * @return a {@link List} of IDs for active users with the <code>"Global Admin"</code> role
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default List<Integer> getActiveGlobalAdminIds() throws ApiException {
 		return listUsers().stream().filter(
@@ -551,7 +561,7 @@ public interface CodaClient {
 	 * Lists all users.
 	 *
 	 * @return a {@link List} of {@link AdminUser users}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	List<AdminUser> listUsers() throws ApiException;
 
@@ -561,7 +571,7 @@ public interface CodaClient {
 	 * @param scannerId a {@link AgentlessScannerSrz scanner} ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return a {@link List} of {@link Task schedules}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	List<Task> listScheduledTasks(String scannerId, Integer accountId)
 		throws ApiException;
@@ -572,7 +582,7 @@ public interface CodaClient {
 	 * @param taskId    a {@link Task task} ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the disabled {@link Task scheduled task}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Task disableScheduledTask(String taskId, Integer accountId)
 		throws ApiException {
@@ -585,7 +595,7 @@ public interface CodaClient {
 	 * @param taskId    a {@link Task task} ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the enabled {@link Task scheduled task}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Task enableScheduledTask(String taskId, Integer accountId)
 		throws ApiException {
@@ -598,7 +608,7 @@ public interface CodaClient {
 	 * @param taskId    a {@link Task task} ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the reset {@link Task scheduled task}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Task resetScheduledTask(String taskId, Integer accountId)
 		throws ApiException {
@@ -611,7 +621,7 @@ public interface CodaClient {
 	 * @param taskId    a {@link Task task} ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the started {@link Task scheduled task}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Task startScheduledTask(String taskId, Integer accountId)
 		throws ApiException {
@@ -624,7 +634,7 @@ public interface CodaClient {
 	 * @param taskId    a {@link Task task} ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the stopped {@link Task scheduled task}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	default Task stopScheduledTask(String taskId, Integer accountId)
 		throws ApiException {
@@ -638,7 +648,7 @@ public interface CodaClient {
 	 * @param action    one of "disable", "enable", "reset", "start", and "stop"
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the updated {@link Task schedule}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	Task updateSchedule(String taskId, String action, Integer accountId)
 		throws ApiException;
@@ -650,7 +660,7 @@ public interface CodaClient {
 	 * @param taskEditRequest one of "disable", "enable", "reset", "start", and "stop"
 	 * @param accountId       Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the updated {@link Task schedule}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	Task updateSchedule(String taskId, TaskEditRequest taskEditRequest,
 		Integer accountId) throws ApiException;

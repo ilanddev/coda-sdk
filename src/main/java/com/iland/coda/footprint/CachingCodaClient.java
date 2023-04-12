@@ -44,10 +44,10 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
-import net.codacloud.model.RescanScannerScanId;
+import net.codacloud.model.RescanScannerScanUuid;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.ScanSurfaceScanId;
+import net.codacloud.model.ScanSurfaceScanUuid;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -97,7 +97,9 @@ final class CachingCodaClient implements CodaClient {
 				public Set<Account> load(final Integer accountId)
 					throws Exception {
 					return delegatee.listAccounts(
-						accountId == DEFAULT_ACCOUNT_ID ? null : accountId);
+						Objects.equals(accountId, DEFAULT_ACCOUNT_ID) ?
+							null :
+							accountId);
 				}
 			});
 
@@ -112,7 +114,9 @@ final class CachingCodaClient implements CodaClient {
 				public List<AgentlessScannerSrz> load(final Integer accountId)
 					throws Exception {
 					return delegatee.getScanners(
-						accountId == DEFAULT_ACCOUNT_ID ? null : accountId);
+						Objects.equals(accountId, DEFAULT_ACCOUNT_ID) ?
+							null :
+							accountId);
 				}
 			});
 	private final LoadingCache<String, List<AdminUser>> userCache =
@@ -223,7 +227,8 @@ final class CachingCodaClient implements CodaClient {
 
 		final Set<RegistrationLight> registrations =
 			getRegistrations(DEFAULT_CATEGORY);
-		registrations.stream().filter(r -> r.getId() == registration.getId())
+		registrations.stream()
+			.filter(r -> Objects.equals(r.getId(), registration.getId()))
 			.findFirst().ifPresent(registrations::remove);
 	}
 
@@ -245,28 +250,28 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public List<ScanSurfaceScanId> updateScanSurface(final List<String> targets,
-		final List<Integer> scanners, final Integer accountId)
-		throws ApiException {
+	public List<ScanSurfaceScanUuid> updateScanSurface(
+		final List<String> targets, final List<Integer> scanners,
+		final Integer accountId) throws ApiException {
 		// TODO: invalidate scan surface cache
 		return delegatee.updateScanSurface(targets, scanners, accountId);
 	}
 
 	@Override
-	public ScanSurfaceScanId updateScanSurface(
+	public List<ScanSurfaceScanUuid> updateScanSurface(
 		final ExtendMessageRequest message, final Integer accountId)
 		throws ApiException {
 		return delegatee.updateScanSurface(message, accountId);
 	}
 
 	@Override
-	public RescanScannerScanId rescan(final Integer accountId)
+	public RescanScannerScanUuid rescan(final Integer accountId)
 		throws ApiException {
 		return delegatee.rescan(accountId);
 	}
 
 	@Override
-	public RescanScannerScanId rescan(final Integer scannerId,
+	public RescanScannerScanUuid rescan(final Integer scannerId,
 		final Integer accountId) throws ApiException {
 		return delegatee.rescan(scannerId, accountId);
 	}

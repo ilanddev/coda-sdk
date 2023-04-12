@@ -15,13 +15,13 @@
 
 package com.iland.coda.footprint;
 
+import static com.google.common.base.Throwables.throwIfInstanceOf;
 import static com.iland.coda.footprint.AbstractCodaClient.MAX_PAGE_SIZE;
 import static com.iland.coda.footprint.SimpleCodaClient.throwDuplicateKeyException;
 
 import java.io.File;
 import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -39,7 +39,6 @@ import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
 import com.github.rholder.retry.WaitStrategies;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
@@ -51,10 +50,10 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
-import net.codacloud.model.RescanScannerScanId;
+import net.codacloud.model.RescanScannerScanUuid;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.ScanSurfaceScanId;
+import net.codacloud.model.ScanSurfaceScanUuid;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -158,26 +157,26 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public List<ScanSurfaceScanId> updateScanSurface(final List<String> targets,
-		final List<Integer> scanners, final Integer accountId)
-		throws ApiException {
-		final List<ScanSurfaceScanId> scanIds = new ArrayList<>();
-
-		final List<ExtendMessageRequest> batches =
-			new ScanSurfaceBatcher().createBatches(targets).stream()
-				.map(batch -> batch.scanners(scanners))
-				.collect(Collectors.toList());
-		for (final ExtendMessageRequest batch : batches) {
-			final ScanSurfaceScanId scanId =
-				updateScanSurface(batch, accountId);
-			scanIds.add(scanId);
+	public List<ScanSurfaceScanUuid> updateScanSurface(
+		final List<String> targets, final List<Integer> scanners,
+		final Integer accountId) throws ApiException {
+		try {
+			return new ScanSurfaceBatcher().createBatches(targets).stream()
+				.map(batch -> batch.scanners(scanners)).map(message -> {
+					try {
+						return updateScanSurface(message, accountId);
+					} catch (ApiException e) {
+						throw new RuntimeException(e);
+					}
+				}).flatMap(List::stream).collect(Collectors.toList());
+		} catch (final RuntimeException e) {
+			throwIfInstanceOf(e.getCause(), ApiException.class);
+			throw e;
 		}
-
-		return scanIds;
 	}
 
 	@Override
-	public ScanSurfaceScanId updateScanSurface(
+	public List<ScanSurfaceScanUuid> updateScanSurface(
 		final ExtendMessageRequest message, final Integer accountId)
 		throws ApiException {
 		return retryIfNecessary(
@@ -185,13 +184,13 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public RescanScannerScanId rescan(final Integer accountId)
+	public RescanScannerScanUuid rescan(final Integer accountId)
 		throws ApiException {
 		return retryIfNecessary(() -> delegatee.rescan(accountId));
 	}
 
 	@Override
-	public RescanScannerScanId rescan(final Integer scannerId,
+	public RescanScannerScanUuid rescan(final Integer scannerId,
 		final Integer accountId) throws ApiException {
 		return retryIfNecessary(() -> delegatee.rescan(scannerId, accountId));
 	}
@@ -327,7 +326,7 @@ final class RetryCodaClient implements CodaClient {
 				}
 			});
 		} catch (ExecutionException | RetryException e) {
-			Throwables.throwIfInstanceOf(e.getCause(), ApiException.class);
+			throwIfInstanceOf(e.getCause(), ApiException.class);
 
 			throw new ApiException(e);
 		}

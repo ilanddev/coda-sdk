@@ -64,7 +64,7 @@ public final class Paginator<I, V> {
 	 * Fetch and return all items from all pages.
 	 *
 	 * @return a {@link List} of {@link V items} from all pages
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	public List<V> fetchAll() throws ApiException {
 		return fetchAll(Function.identity(), ArrayList::new);
@@ -74,7 +74,7 @@ public final class Paginator<I, V> {
 	 * Fetch and return all items from all pages.
 	 *
 	 * @return a {@link Set} of {@link V items} from all pages
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	public Set<V> fetchAllAsync() throws ApiException {
 		return fetchAll(IntStream::parallel, HashSet::new);
@@ -89,7 +89,7 @@ public final class Paginator<I, V> {
 		try {
 			final C items = streamMapper.apply(
 					IntStream.range(2, firstPage.getTotalPages() + 1))
-				.mapToObj(pageNo -> fetch(pageNo, count)).map(pageMapper::apply)
+				.mapToObj(pageNo -> fetch(pageNo, count)).map(pageMapper)
 				.map(Page::getItems).flatMap(List::stream)
 				.collect(Collectors.toCollection(supplier));
 			items.addAll(firstPage.getItems());

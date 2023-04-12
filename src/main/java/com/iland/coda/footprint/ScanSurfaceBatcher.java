@@ -28,13 +28,15 @@ import org.apache.commons.net.util.SubnetUtils;
 
 /**
  * {@link ScanSurfaceBatcher} batches a list of targets into one or more {@link ExtendMessageRequest messages} with a configurable maximum size.
+ * <p>
+ * For context, CODA asked us to honor the {@literal scanTargets.maxItems} value as too many targets was causing issues on their side.
  */
 final class ScanSurfaceBatcher {
 
 	/**
 	 * components.schemas.ExtendMessage.properties.scanTargets.maxItems in swagger.yml
 	 */
-	private static final int MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1024;
+	static int MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1024;
 
 	private final int maxIpsPerBatch;
 
