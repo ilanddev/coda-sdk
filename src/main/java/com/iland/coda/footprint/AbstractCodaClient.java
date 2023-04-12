@@ -85,10 +85,6 @@ abstract class AbstractCodaClient implements CodaClient {
 		this.consoleApi = new ConsoleApi(apiClient);
 	}
 
-	private void init() {
-
-	}
-
 	private static OkHttpClient createClient(Interceptor... interceptors) {
 		OkHttpClient.Builder builder = new OkHttpClient.Builder();
 		//builder.addNetworkInterceptor(getProgressInterceptor());
@@ -138,7 +134,7 @@ abstract class AbstractCodaClient implements CodaClient {
 	 * @param body a {@link String}
 	 * @return the body with all dates replaced with properly formatted values
 	 */
-	private static final String fixAllDates(final String body) {
+	private static String fixAllDates(final String body) {
 		// e.g. replace "2018-07-19 01:29:00+00:00" or "2022-05-18 15:28:09.807554+00:00" with "2022-05-18T15:28:09..."
 		return body.replaceAll(
 			"(\\d{4}-\\d{2}-\\d{2})\\s*(\\d{2}:\\d{2}:\\d{2})(\\.\\d+)?(\\+00:00)",
@@ -177,8 +173,8 @@ abstract class AbstractCodaClient implements CodaClient {
 			 *
 			 * @param body       The JSON string
 			 * @param returnType The type to deserialize into
-			 * @param <T>
-			 * @return
+			 * @param <T>        the return type
+			 * @return an instance of {@link T}
 			 */
 			@Override
 			public <T> T deserialize(final String body, final Type returnType) {

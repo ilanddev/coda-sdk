@@ -30,7 +30,7 @@ public interface Authentication extends Interceptor {
 	 * Authenticate against the supplied {@link ApiClient API client}.
 	 *
 	 * @param apiClient an {@link ApiClient API client}
-	 * @throws ApiException
+	 * @throws ApiException ...
 	 */
 	void authenticate(ApiClient apiClient) throws ApiException;
 

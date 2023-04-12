@@ -32,6 +32,8 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class KeyAuthentication implements Authentication {
 
+	private static final String FOOTPRINT_API_KEY = "FootprintApiKey";
+
 	private String apiKey;
 
 	public KeyAuthentication(final String apiKey) {
@@ -53,7 +55,7 @@ public final class KeyAuthentication implements Authentication {
 	public Response intercept(@NotNull final Chain chain) throws IOException {
 		final Request request = chain.request();
 		final Request.Builder builder = request.newBuilder();
-		builder.header("FootprintApiKey", apiKey);
+		builder.header(FOOTPRINT_API_KEY, apiKey);
 
 		return chain.proceed(builder.build());
 	}

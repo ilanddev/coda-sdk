@@ -19,13 +19,13 @@ import static com.google.common.base.Throwables.throwIfInstanceOf;
 import static com.iland.coda.footprint.Registrations.toLight;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -55,10 +55,10 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
-import net.codacloud.model.RescanScannerScanId;
+import net.codacloud.model.RescanScannerScanUuid;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.ScanSurfaceScanId;
+import net.codacloud.model.ScanSurfaceScanUuid;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -132,9 +132,9 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public List<ScanSurfaceScanId> updateScanSurface(final List<String> targets,
-		final List<Integer> scanners, final Integer accountId)
-		throws ApiException {
+	public List<ScanSurfaceScanUuid> updateScanSurface(
+		final List<String> targets, final List<Integer> scanners,
+		final Integer accountId) throws ApiException {
 		try {
 			return new ScanSurfaceBatcher().createBatches(targets).stream()
 				.map(batch -> batch.scanners(scanners)).map(batch -> {
@@ -143,7 +143,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 					} catch (final ApiException e) {
 						throw new RuntimeException(e);
 					}
-				}).filter(Objects::nonNull).distinct()
+				}).flatMap(List::stream).filter(Objects::nonNull).distinct()
 				.collect(Collectors.toList());
 		} catch (final RuntimeException e) {
 			throwIfInstanceOf(e.getCause(), ApiException.class);
@@ -152,14 +152,14 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public ScanSurfaceScanId updateScanSurface(
+	public List<ScanSurfaceScanUuid> updateScanSurface(
 		final ExtendMessageRequest message, final Integer accountId)
 		throws ApiException {
 		return consoleApi.consoleScanSurfaceCreate(message, accountId);
 	}
 
 	@Override
-	public RescanScannerScanId rescan(final Integer accountId)
+	public RescanScannerScanUuid rescan(final Integer accountId)
 		throws ApiException {
 		final PatchedScanSurfaceRescanRequest request =
 			new PatchedScanSurfaceRescanRequest();
@@ -168,7 +168,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public RescanScannerScanId rescan(final Integer scannerId,
+	public RescanScannerScanUuid rescan(final Integer scannerId,
 		final Integer accountId) throws ApiException {
 		return consoleApi.consoleScanSurfaceRescanPartialUpdate2(scannerId,
 			accountId);
@@ -313,7 +313,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 			file.deleteOnExit();
 
 			try (final InputStream in = urlConnection.getInputStream();
-				final OutputStream out = new FileOutputStream(file)) {
+				final OutputStream out = Files.newOutputStream(file.toPath())) {
 				ByteStreams.copy(in, out);
 			}
 
