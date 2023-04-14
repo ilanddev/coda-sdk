@@ -50,10 +50,9 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
-import net.codacloud.model.RescanScannerScanUuid;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.ScanSurfaceScanUuid;
+import net.codacloud.model.ScanUuidScannerId;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -157,9 +156,9 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public List<ScanSurfaceScanUuid> updateScanSurface(
-		final List<String> targets, final List<Integer> scanners,
-		final Integer accountId) throws ApiException {
+	public List<ScanUuidScannerId> updateScanSurface(final List<String> targets,
+		final List<Integer> scanners, final Integer accountId)
+		throws ApiException {
 		try {
 			return new ScanSurfaceBatcher().createBatches(targets).stream()
 				.map(batch -> batch.scanners(scanners)).map(message -> {
@@ -176,7 +175,7 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public List<ScanSurfaceScanUuid> updateScanSurface(
+	public List<ScanUuidScannerId> updateScanSurface(
 		final ExtendMessageRequest message, final Integer accountId)
 		throws ApiException {
 		return retryIfNecessary(
@@ -184,13 +183,13 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public RescanScannerScanUuid rescan(final Integer accountId)
+	public List<ScanUuidScannerId> rescan(final Integer accountId)
 		throws ApiException {
 		return retryIfNecessary(() -> delegatee.rescan(accountId));
 	}
 
 	@Override
-	public RescanScannerScanUuid rescan(final Integer scannerId,
+	public ScanUuidScannerId rescan(final Integer scannerId,
 		final Integer accountId) throws ApiException {
 		return retryIfNecessary(() -> delegatee.rescan(scannerId, accountId));
 	}

@@ -48,7 +48,7 @@ import net.codacloud.model.CVRVulnerability;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.ScanSurfaceScanUuid;
+import net.codacloud.model.ScanUuidScannerId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -135,7 +135,7 @@ class SimpleCodaClientTest {
 
 		// force multiple batches to check the behavior of `updateScanSurface`
 		//ScanSurfaceBatcher.MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1;
-		final List<ScanSurfaceScanUuid> scanIds =
+		final List<ScanUuidScannerId> scanIds =
 			client.updateScanSurface(targets, scannerIds, accountId);
 		final int expectedSize = targets.size() * scannerIds.size();
 		final Set<ScanSurfaceEntry> scanSurface =
