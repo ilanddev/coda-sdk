@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.17.7
+  version: 7.17.8
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -2436,22 +2436,22 @@ paths:
       responses:
         '200':
           content:
-            # modified by Tag to reflect received responses
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ScanSurfaceScanUuid'
+                  $ref: '#/components/schemas/ScanUuidScannerId'
               examples:
                 ExampleScanUUID:
-                  value: '{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7"}'
+                  value: '[{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
+                    1}]'
                   summary: Example for scan uuid
           description: ''
         '400':
           description: Returned if requested scan items are invalid
         '401':
           description: Returned if user does not have necessary permissions to start
-            a new scan
+            a new scan or cannot start the scan
         '402':
           description: Returned if user attempts scan in trial mode after trial limits
             expired
@@ -2548,7 +2548,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RescanScannerScanUuid'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScanUuidScannerId'
               examples:
                 ExampleScanUUID:
                   value: '[{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
@@ -2595,10 +2597,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RescanScannerScanUuid'
+                $ref: '#/components/schemas/ScanUuidScannerId'
               examples:
                 ExampleScanUUID:
-                  value: '{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7"}'
+                  value: '{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
+                    1}'
                   summary: Example for scan uuid
           description: ''
         '400':
@@ -2678,7 +2681,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RescanScannerScanUuid'
+                $ref: '#/components/schemas/ScanUuidScannerId'
+              examples:
+                ExampleScanUUID:
+                  value: '{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
+                    1}'
+                  summary: Example for scan uuid
           description: Rescan was started successfully
         '404':
           description: User input doesn't exist
@@ -6369,19 +6377,6 @@ components:
         - isWeaponized
         - riskIndicator
         - title
-    RescanScannerScanUuid:
-      type: object
-      description: Rescan accepted and will start in a few moments.
-      properties:
-        scanUuid:
-          type: string
-          description: Scan UUID for an Extend Scan
-        scannerId:
-          type: integer
-          description: Scanner ID for an Extend Scan
-      required:
-        - scanUuid
-        - scannerId
     ScanStatus:
       type: object
       properties:
@@ -6481,15 +6476,6 @@ components:
       required:
         - source
         - value
-    ScanSurfaceScanUuid:
-      type: object
-      description: Scan processed and queued for starting.
-      properties:
-        scanUuid:
-          type: string
-          description: Scan UUID for an Extend Scan
-      required:
-        - scanUuid
     ScanSurfaceScannerEntry:
       type: object
       properties:
@@ -6539,6 +6525,19 @@ components:
           description: List of dictionaries having the following keys
       required:
         - userInputTags
+    ScanUuidScannerId:
+      type: object
+      description: Rescan accepted and will start in a few moments.
+      properties:
+        scanUuid:
+          type: string
+          description: Scan UUID for an Extend Scan
+        scannerId:
+          type: integer
+          description: Scanner ID for an Extend Scan
+      required:
+        - scanUuid
+        - scannerId
     ScannerSetup:
       type: object
       properties:

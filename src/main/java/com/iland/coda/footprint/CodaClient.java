@@ -42,10 +42,9 @@ import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.RegistrationSignupDataRequest;
-import net.codacloud.model.RescanScannerScanUuid;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
-import net.codacloud.model.ScanSurfaceScanUuid;
+import net.codacloud.model.ScanUuidScannerId;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
 import org.slf4j.Logger;
@@ -332,10 +331,10 @@ public interface CodaClient {
 	 * @param targets   a {@link List} of targets, e.g. hostname, IP address, or CIDR notation
 	 * @param scanners  There's no documentation on this value. The scanners to use for the scan?
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return a {@link List} of {@link ScanSurfaceScanUuid scan UUIDs}
+	 * @return a {@link List} of {@link ScanUuidScannerId scan UUIDs}
 	 * @throws ApiException ...
 	 */
-	List<ScanSurfaceScanUuid> updateScanSurface(List<String> targets,
+	List<ScanUuidScannerId> updateScanSurface(List<String> targets,
 		List<Integer> scanners, Integer accountId) throws ApiException;
 
 	/**
@@ -343,10 +342,10 @@ public interface CodaClient {
 	 *
 	 * @param message   a {@link ExtendMessageRequest message} of targets and scanners
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return a {@link List list} of {@link ScanSurfaceScanUuid scan UUIDs}
+	 * @return a {@link List list} of {@link ScanUuidScannerId scan UUIDs}
 	 * @throws ApiException ...
 	 */
-	List<ScanSurfaceScanUuid> updateScanSurface(
+	List<ScanUuidScannerId> updateScanSurface(
 		final ExtendMessageRequest message, final Integer accountId)
 		throws ApiException;
 
@@ -357,17 +356,17 @@ public interface CodaClient {
 	 * @return the {@link RescanScannerScanUuid scan UUID}
 	 * @throws ApiException ...
 	 */
-	RescanScannerScanUuid rescan(final Integer accountId) throws ApiException;
+	List<ScanUuidScannerId> rescan(final Integer accountId) throws ApiException;
 
 	/**
 	 * Rescans all user inputs from Scan Surface for requested Agentless Scanner.
 	 *
 	 * @param scannerId the scanner ID
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return the {@link RescanScannerScanUuid scan UUID}
+	 * @return the {@link ScanUuidScannerId scan UUID}
 	 * @throws ApiException ...
 	 */
-	RescanScannerScanUuid rescan(Integer scannerId, Integer accountId)
+	ScanUuidScannerId rescan(Integer scannerId, Integer accountId)
 		throws ApiException;
 
 	/**
@@ -376,6 +375,7 @@ public interface CodaClient {
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
 	 * @return the {@link ScanStatus scan status}
 	 * @throws ApiException ...
+	 * @deprecated use {@link #getScanStatus(String, Integer)} instead!
 	 */
 	ScanStatus getScanStatus(Integer accountId) throws ApiException;
 
