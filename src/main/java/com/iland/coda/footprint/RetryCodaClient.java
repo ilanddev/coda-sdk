@@ -44,6 +44,7 @@ import net.codacloud.model.Account;
 import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.ExtendMessageRequest;
+import net.codacloud.model.PaginatedAccountList;
 import net.codacloud.model.PaginatedRegistrationLightList;
 import net.codacloud.model.Registration;
 import net.codacloud.model.RegistrationCreateRequest;
@@ -123,6 +124,18 @@ final class RetryCodaClient implements CodaClient {
 	@Override
 	public Set<Account> listAccounts(final Integer accountId)
 		throws ApiException {
+		if (delegatee instanceof SimpleCodaClient) {
+			final SimpleCodaClient simpleCodaClient =
+				(SimpleCodaClient) delegatee;
+
+			return new Paginator<>(pageNo -> retryIfNecessary(
+				() -> simpleCodaClient.commonApi.getAccounts(null, pageNo,
+					MAX_PAGE_SIZE, accountId)), PaginatedAccountList::getPage,
+				PaginatedAccountList::getTotalPages,
+				PaginatedAccountList::getTotalCount,
+				PaginatedAccountList::getItems).fetchAllAsync();
+		}
+
 		return retryIfNecessary(() -> delegatee.listAccounts(accountId));
 	}
 

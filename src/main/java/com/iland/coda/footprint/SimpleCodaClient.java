@@ -47,6 +47,7 @@ import net.codacloud.model.AdminUser;
 import net.codacloud.model.AgentlessScannerSrz;
 import net.codacloud.model.CVR;
 import net.codacloud.model.ExtendMessageRequest;
+import net.codacloud.model.PaginatedAccountList;
 import net.codacloud.model.PaginatedRegistrationLightList;
 import net.codacloud.model.PaginatedScanSurfaceEntryList;
 import net.codacloud.model.PatchedScanSurfaceRescanRequest;
@@ -101,8 +102,18 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	@Override
 	public Set<Account> listAccounts(final Integer accountId)
 		throws ApiException {
-		return commonApi.commonAuthSessionAccountsList(accountId).stream()
-			.collect(Collectors.toSet());
+		logger.debug("Retrieving accounts...");
+		final Stopwatch stopwatch = Stopwatch.createStarted();
+		try {
+			return new Paginator<>(
+				pageNo -> commonApi.getAccounts(null, pageNo, DEFAULT_PAGE_SIZE,
+					accountId), PaginatedAccountList::getPage,
+				PaginatedAccountList::getTotalPages,
+				PaginatedAccountList::getTotalCount,
+				PaginatedAccountList::getItems).fetchAllAsync();
+		} finally {
+			logger.debug("...registrations retrieved in {}", stopwatch);
+		}
 	}
 
 	@Override
