@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.17.28
+  version: 7.18.0
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -579,8 +579,30 @@ paths:
       summary: Logs out the current user
   /common/auth/session/accounts/:
     get:
-      operationId: commonAuthSessionAccountsList
+      operationId: getAccounts
       description: 📃 Lists accounts into which the current user can login
+      parameters:
+        - in: query
+          name: filter
+          schema:
+            type: string
+          description: Text filter
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on a page
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
       tags:
         - common
       security:
@@ -591,20 +613,11 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Account'
+                $ref: '#/components/schemas/PaginatedAccountList'
           description: ''
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
       summary: 📃 Lists accounts into which the current user can login
     post:
-      operationId: commonAuthSessionAccountsCreate
+      operationId: switchAccount
       description: |-
         🔃 Switches the current profile_fk tenant ID with the one provided.
 
@@ -2293,6 +2306,18 @@ paths:
       operationId: consoleReportingCyberRiskReportRetrieve
       description: Generates the Contextual Risk Scoring report and returns it as
         PDF
+      parameters:
+        - in: query
+          name: isLight
+          schema:
+            type: boolean
+          description: Whether to generate the lighter version of the report
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
       tags:
         - console
       security:
@@ -2310,13 +2335,6 @@ paths:
           description: 'Report cannot be generated: running extend scan on the tenant'
         '500':
           description: Returned if an unexpected error occurs.
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
       summary: Generates the Contextual Risk Scoring report and returns it as PDF
   /console/reporting/remediationReport/:
     get:
@@ -3128,6 +3146,8 @@ components:
           type: boolean
         weeklyCvrEnabled:
           type: boolean
+        internalScannerOfflineEmails:
+          type: boolean
         apiKeyName:
           type: string
         apiKeyGenerationDate:
@@ -3166,6 +3186,7 @@ components:
         - firstName
         - groups
         - id
+        - internalScannerOfflineEmails
         - isActive
         - isInstallationAdmin
         - isLoggedIn
@@ -5456,6 +5477,27 @@ components:
         - timestamp
         - title
         - type
+    PaginatedAccountList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
     PaginatedApplicationDetailsList:
       type: object
       properties:
