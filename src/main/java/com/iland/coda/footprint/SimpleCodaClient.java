@@ -15,6 +15,7 @@
 
 package com.iland.coda.footprint;
 
+import static com.google.common.base.Predicates.not;
 import static com.google.common.base.Throwables.throwIfInstanceOf;
 import static com.iland.coda.footprint.Registrations.toLight;
 
@@ -65,6 +66,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.iland.coda.footprint.pagination.Paginator;
+import com.iland.networking.NetworkUtils;
 
 /**
  * {@link SimpleCodaClient}.
@@ -145,9 +147,14 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	public List<ScanUuidScannerId> updateScanSurface(final List<String> targets,
 		final List<Integer> scanners, final Integer accountId)
 		throws ApiException {
+
+		final List<String> filteredTargets = NetworkUtils.toStream(targets)
+			.filter(not(NetworkUtils::isRFC1918IpAddress))
+			.collect(Collectors.toList());
+
 		try {
-			return new ScanSurfaceBatcher().createBatches(targets).stream()
-				.map(batch -> batch.scanners(scanners)).map(batch -> {
+			return new ScanSurfaceBatcher().createBatches(filteredTargets)
+				.stream().map(batch -> batch.scanners(scanners)).map(batch -> {
 					try {
 						return updateScanSurface(batch, accountId);
 					} catch (final ApiException e) {
