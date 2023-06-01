@@ -264,6 +264,13 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
+	public void deleteScanSurfaceEntry(final ScanSurfaceEntry entry,
+		final boolean deleteAssets, final Integer accountId)
+		throws ApiException {
+		delegatee.deleteScanSurfaceEntry(entry, deleteAssets, accountId);
+	}
+
+	@Override
 	public List<ScanUuidScannerId> rescan(final Integer accountId)
 		throws ApiException {
 		return delegatee.rescan(accountId);

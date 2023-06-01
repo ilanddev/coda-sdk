@@ -142,6 +142,14 @@ class SimpleCodaClientTest {
 			client.getScanSurface(accountId);
 		assertEquals(expectedSize, scanSurface.size(), "invalid scan surface");
 
+		final ScanSurfaceEntry scanSurfaceEntry =
+			scanSurface.stream().findAny().get();
+		client.deleteScanSurfaceEntry(scanSurfaceEntry, true, accountId);
+		final Set<ScanSurfaceEntry> newScanSurface =
+			client.getScanSurface(accountId);
+		assertEquals(scanSurface.size() - 1, newScanSurface.size(),
+			"scan surface entry deletion failed");
+
 		client.rescan(accountId);
 	}
 
