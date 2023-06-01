@@ -128,6 +128,9 @@ class SimpleCodaClientTest {
 		final List<String> targets = Arrays.asList(addresses).stream()
 			.filter(address -> address instanceof Inet4Address)
 			.map(InetAddress::getHostAddress).collect(Collectors.toList());
+		final int targetsSize = targets.size();
+		final String internalIp = "192.168.1.1";
+		targets.add(internalIp);
 
 		final Integer scannerId =
 			client.getDefaultCloudScanner(accountId).getId();
@@ -137,10 +140,14 @@ class SimpleCodaClientTest {
 		//ScanSurfaceBatcher.MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1;
 		final List<ScanUuidScannerId> scanIds =
 			client.updateScanSurface(targets, scannerIds, accountId);
-		final int expectedSize = targets.size() * scannerIds.size();
+		assertEquals(1, scanIds.size(), "multiple scan IDs generated");
+		final int expectedSize = targetsSize * scannerIds.size();
 		final Set<ScanSurfaceEntry> scanSurface =
 			client.getScanSurface(accountId);
 		assertEquals(expectedSize, scanSurface.size(), "invalid scan surface");
+		assertFalse(scanSurface.stream().map(ScanSurfaceEntry::getInput)
+				.anyMatch(internalIp::equals),
+			"internal IP addresses were not filtered out");
 
 		final ScanSurfaceEntry scanSurfaceEntry =
 			scanSurface.stream().findAny().get();
