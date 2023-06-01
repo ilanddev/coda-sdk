@@ -196,6 +196,17 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
+	public void deleteScanSurfaceEntry(final ScanSurfaceEntry entry,
+		final boolean deleteAssets, final Integer accountId)
+		throws ApiException {
+		retryIfNecessary(() -> {
+			delegatee.deleteScanSurfaceEntry(entry, deleteAssets, accountId);
+
+			return null;
+		});
+	}
+
+	@Override
 	public List<ScanUuidScannerId> rescan(final Integer accountId)
 		throws ApiException {
 		return retryIfNecessary(() -> delegatee.rescan(accountId));

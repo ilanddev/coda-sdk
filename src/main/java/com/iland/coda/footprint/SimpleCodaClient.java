@@ -169,6 +169,14 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
+	public void deleteScanSurfaceEntry(final ScanSurfaceEntry entry,
+		final boolean deleteAssets, final Integer accountId)
+		throws ApiException {
+		consoleApi.consoleScanSurfaceEntryDestroy(entry.getId(), deleteAssets,
+			accountId);
+	}
+
+	@Override
 	public List<ScanUuidScannerId> rescan(final Integer accountId)
 		throws ApiException {
 		final PatchedScanSurfaceRescanRequest request =
@@ -254,7 +262,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	@Override
 	public List<String> getReportTimestamps(final ReportType reportType,
 		final Integer accountId) throws ApiException {
-		return consoleApi.consoleReportRetrieve(reportType.value(), accountId);
+		return consoleApi.allCvrDatesRetrieve(reportType.value(), accountId);
 	}
 
 	CVR getReport(final String timestamp, final ReportType reportType,
@@ -262,8 +270,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		final Stopwatch stopwatch = Stopwatch.createStarted();
 
 		try {
-			return consoleApi.consoleReportRetrieve2(timestamp,
-				reportType.value(), accountId);
+			return consoleApi.cvrRetrieve(timestamp, reportType.value(),
+				accountId);
 		} finally {
 			logger.debug("Retrieved report after {}", stopwatch);
 		}

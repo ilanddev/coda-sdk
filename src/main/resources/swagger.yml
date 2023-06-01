@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.18.0
+  version: 7.17.35
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -401,8 +401,8 @@ paths:
     post:
       operationId: authTokenCreate
       description: |-
-        Takes a set of user credentials and returns an access and refresh JSON web
-        token pair to prove the authentication of those credentials.
+        Takes a set of user credentials and returns an access and refresh JSON web token pair to prove
+        authentication of those credentials.
       tags:
         - auth
       requestBody:
@@ -410,15 +410,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/TokenObtainPairRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TokenObtainPairRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TokenObtainPairRequest'
         required: true
       security:
+        - jwtAuth: [ ]
         - ApiKeyAuth: [ ]
+        - { }
       responses:
         '200':
           content:
@@ -434,7 +430,7 @@ paths:
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Takes a set of user credentials and returns an access and refresh JSON
-        web
+        web token pair to prove
   /auth/token/refresh/:
     post:
       operationId: authTokenRefreshCreate
@@ -547,6 +543,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/SessionLoggedInSrz'
           description: ''
+        '203':
+          description: Returned if user has OTP enabled. Continue login via e-mail
         '400':
           description: Returned on invalid username/password
       parameters:
@@ -654,6 +652,243 @@ paths:
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: 🔃 Switches the current profile_fk tenant ID with the one provided.
+  /console/actionPlan/:
+    get:
+      operationId: actionPlanRetrieve
+      description: Lists all Action Plan entries that match GET parameters
+      parameters:
+        - in: query
+          name: businessContextIds
+          schema:
+            type: string
+          description: List of business context IDs based on which the entities are
+            filtered
+        - in: query
+          name: closedStates
+          schema:
+            type: string
+          description: List of sub-states to be displayed - applicable for Closed type
+        - in: query
+          name: devicesIds
+          schema:
+            type: string
+          description: List of devices IDs based on which the entities are filtered
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum:
+              - json
+              - pdf
+        - in: query
+          name: ownerGroupIds
+          schema:
+            type: string
+          description: List of owner group IDs based on which the entities are filtered
+        - in: query
+          name: ownerUserIds
+          schema:
+            type: string
+          description: List of owner user IDs based on which the entities are filtered
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to request
+        - in: query
+          name: pageSize
+          schema:
+            type: integer
+          description: The size of each page
+        - in: query
+          name: textFilter
+          schema:
+            type: string
+          description: Text based on which the entities are filtered
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum:
+              - APPROVAL
+              - CLOSED
+              - EXECUTION
+              - FIX_PENDING_CONFIRMATION
+              - PLANNING
+            default: PLANNING
+          description: The status of the requested entities
+          required: true
+        - in: query
+          name: withinDeadlineOnly
+          schema:
+            type: boolean
+          description: Whether the result should contain only entries that have not
+            exceeded their deadline or not
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedActionPlanEntryList'
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/PaginatedActionPlanEntryList'
+          description: ''
+      summary: Lists all Action Plan entries that match GET parameters
+    post:
+      operationId: actionPlanCreate
+      description: Creates an Action Plan
+      parameters:
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum:
+              - json
+              - pdf
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionPlanEntryRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ActionPlanEntryRequest'
+        required: true
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { }
+                description: Unspecified response body
+            application/pdf:
+              schema:
+                type: object
+                additionalProperties: { }
+                description: Unspecified response body
+          description: ''
+      summary: Creates an Action Plan
+    delete:
+      operationId: actionPlanDelete
+      description: Deletes a list of Action Plan entries
+      parameters:
+        - in: query
+          name: actionPlanEntriesIds
+          schema:
+            type: array
+            items:
+              type: number
+          description: Action Plan entry ids to be deleted
+          required: true
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum:
+              - json
+              - pdf
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { }
+                description: Unspecified response body
+            application/pdf:
+              schema:
+                type: object
+                additionalProperties: { }
+                description: Unspecified response body
+          description: ''
+      summary: Deletes a list of Action Plan entries
+  /console/actionPlan/devices/:
+    get:
+      operationId: actionPlanDevicesRetrieve
+      description: Lists all devices that appear in Action Plan entries.
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionPlanDevices'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      summary: Lists all devices that appear in Action Plan entries.
+  /console/actionPlan/entries/:
+    get:
+      operationId: actionPlanEntriesRetrieve
+      description: Lists all Action Plan entries
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ActionPlanEntries'
+          description: ''
+      parameters:
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      summary: Lists all Action Plan entries
   /console/agent/:
     get:
       operationId: consoleAgentRetrieve
@@ -1168,7 +1403,7 @@ paths:
   /console/elements/contexts/technical/{contextId}/:
     get:
       operationId: consoleElementsContextsTechnicalRetrieve2
-      description: Returns details of a certain technical context
+      description: Returns details of a certain Technical Context
       parameters:
         - in: path
           name: contextId
@@ -1193,11 +1428,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Context'
           description: ''
-      summary: Returns details of a certain technical context
+      summary: Returns details of a certain Technical Context
   /console/elements/contexts/technical/{contextId}/applications/:
     get:
       operationId: consoleElementsContextsTechnicalApplicationsRetrieve
-      description: Returns a certain page of applications for a technical context
+      description: Returns a certain page of applications for a Technical Context
       parameters:
         - in: path
           name: contextId
@@ -1226,7 +1461,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedApplicationInListingList'
           description: ''
-      summary: Returns a certain page of applications for a technical context
+      summary: Returns a certain page of applications for a Technical Context
   /console/elements/contexts/technical/{contextId}/devices/:
     get:
       operationId: technicalContextDevices
@@ -1860,6 +2095,15 @@ paths:
       description: Returns list of discovered devices
       parameters:
         - in: query
+          name: deviceApps
+          schema:
+            type: string
+            enum:
+              - all
+              - withApps
+              - withoutApps
+          description: Filter based on the existence of applications on it
+        - in: query
           name: filter
           schema:
             type: string
@@ -1872,6 +2116,15 @@ paths:
           name: pageSize
           schema:
             type: integer
+        - in: query
+          name: reachabilityStatus
+          schema:
+            type: string
+            enum:
+              - all
+              - reachable
+              - unreachable
+          description: Filter devices that respond to Ping scan
         - in: query
           name: riskLevel
           schema:
@@ -1907,11 +2160,6 @@ paths:
               - external
               - internal
           description: Scan scope filter
-        - in: query
-          name: showDevicesWithNoApps
-          schema:
-            type: boolean
-          description: Also show devices without discovered applications
         - in: query
           name: sortColumn
           schema:
@@ -1961,7 +2209,7 @@ paths:
   /console/notifications/:
     get:
       operationId: consoleNotificationsRetrieve
-      description: 🔔 Returns the list of available notifications (alerts) on the platform
+      description: Returns the list of available notifications (alerts) on the platform
       parameters:
         - in: query
           name: level
@@ -2017,10 +2265,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedNotificationList'
           description: ''
-      summary: 🔔 Returns the list of available notifications (alerts) on the platform
+      summary: Returns the list of available notifications (alerts) on the platform
   /console/report/{reportType}/:
     get:
-      operationId: consoleReportRetrieve
+      operationId: allCvrDatesRetrieve
       description: Returns available report dates
       parameters:
         - in: path
@@ -2055,7 +2303,7 @@ paths:
       summary: Returns available report dates
   /console/report/{reportType}/{reportDate}/:
     get:
-      operationId: consoleReportRetrieve2
+      operationId: cvrRetrieve
       description: Returns the available CVR report, or the requested CVR report if
         type and date are provided
       parameters:
@@ -2482,6 +2730,40 @@ paths:
             back on `original_tenant_id` from the auth endpoint
       summary: 🎯 Endpoint that updates the scan surface with new data (extend scan
         surface modal)
+  /console/scanSurface/{entryId}/:
+    delete:
+      operationId: consoleScanSurfaceEntryDestroy
+      description: Deletes endpoint for a certain scan entry
+      parameters:
+        - in: path
+          name: entryId
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: deleteAssets
+          schema:
+            type: boolean
+          required: false
+          description: whether or not to delete associated devices and applications
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          description: Returned on successful delete
+        '401':
+          description: Logged in user is not a MSP user, or does not have permission
+            to delete registration
+      summary: Deletes endpoint for a certain scan entry
   /console/scanSurface/currentTargets/{targetId}/:
     patch:
       operationId: consoleScanSurfaceCurrentTargetsPartialUpdate
@@ -2546,6 +2828,35 @@ paths:
                 $ref: '#/components/schemas/PaginatedCurrentTargetsPortsList'
           description: ''
       summary: Retrieve user input, current targets, port.
+  /console/scanSurface/currentTargets/reachableDevices/:
+    get:
+      operationId: getUserInputCurrentReachableDevices
+      description: Retrieve user input, current targets, reachability state.
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page you want to request
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCurrentTargetsReachableDevicesList'
+          description: ''
+      summary: Retrieve user input, current targets, reachability state.
   /console/scanSurface/rescan/:
     patch:
       operationId: consoleScanSurfaceRescanPartialUpdate
@@ -3023,6 +3334,17 @@ components:
         registrationId:
           type: integer
           description: ID of the registration entry
+        label:
+          type: string
+          maxLength: 128
+        photo:
+          type: string
+          description: Base64-encoded photo of the account
+        lastLogin:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the last login into this account
         managedType:
           enum:
             - self_managed
@@ -3032,24 +3354,30 @@ components:
           type: string
           readOnly: true
           description: Manage type of the account
-        name:
-          type: string
-          description: Name of the account
-        photo:
-          type: string
-          description: Base64-encoded photo of the account
-        lastLogin:
-          type: string
-          format: date-time
-          nullable: true
-          description: Timestamp of the last login into this account
+        isPrimaryAccount:
+          type: boolean
+          readOnly: true
         isTrialMode:
           type: boolean
-          description: Whether the user account is in trial mode
         isTrialExpired:
           type: boolean
           readOnly: true
           description: Whether the user account trial is expired
+        isMspAccessible:
+          type: boolean
+          description: Whether tenant has granted access to all MSP users
+        isCvrOfferedToMsp:
+          type: boolean
+          description: Whether the tenant has granted MSPs access to CVRs
+        isCustomBrandingApplied:
+          type: boolean
+          readOnly: true
+          description: Whether the tenant has custom branding
+        clearDatabaseRemaining:
+          type: integer
+          readOnly: true
+          description: Number of clear database operations remaining (only in trial
+            mode)
         trialDaysRemaining:
           type: integer
           description: Number of trial days remaining, if user account is in trial
@@ -3058,23 +3386,15 @@ components:
           type: integer
           readOnly: true
           description: Number of domain scans remaining (only in trial mode)
-        clearDatabaseRemaining:
-          type: integer
-          readOnly: true
-          description: Number of clear database operations remaining (only in trial
-            mode)
-        isCustomBrandingApplied:
-          type: boolean
-          readOnly: true
-          description: Whether the tenant has custom branding
-        isPrimaryAccount:
-          type: boolean
-          readOnly: true
+        name:
+          type: string
+          description: Name of the account
       required:
         - clearDatabaseRemaining
         - domainsRemaining
         - id
         - isCustomBrandingApplied
+        - isMspAccessible
         - isPrimaryAccount
         - isTrialExpired
         - isTrialMode
@@ -3092,6 +3412,437 @@ components:
           description: Account ID that you want to switch to
       required:
         - id
+    ActionPlanDeviceAffected:
+      type: object
+      properties:
+        deviceId:
+          type: integer
+        hostname:
+          type: string
+        ip:
+          type: string
+        riskLevel:
+          enum:
+            - critical
+            - vulnerable
+            - unknown
+            - secure
+          type: string
+        deviceState:
+          enum:
+            - AVAILABLE
+            - DECOMISSIONED
+          type: string
+        fixedVulnerabilities:
+          type: integer
+        totalVulnerabilities:
+          type: integer
+      required:
+        - deviceId
+        - deviceState
+        - fixedVulnerabilities
+        - hostname
+        - ip
+        - riskLevel
+        - totalVulnerabilities
+    ActionPlanDeviceAffectedRequest:
+      type: object
+      properties:
+        deviceId:
+          type: integer
+        hostname:
+          type: string
+          minLength: 1
+        ip:
+          type: string
+          minLength: 1
+        riskLevel:
+          enum:
+            - critical
+            - vulnerable
+            - unknown
+            - secure
+          type: string
+        deviceState:
+          enum:
+            - AVAILABLE
+            - DECOMISSIONED
+          type: string
+        fixedVulnerabilities:
+          type: integer
+        totalVulnerabilities:
+          type: integer
+      required:
+        - deviceId
+        - deviceState
+        - fixedVulnerabilities
+        - hostname
+        - ip
+        - riskLevel
+        - totalVulnerabilities
+    ActionPlanDevices:
+      type: object
+      description: Action Plan Devices
+      properties:
+        deviceId:
+          type: integer
+          description: Device ID
+        deviceName:
+          type: string
+          description: Device Name
+      required:
+        - deviceId
+        - deviceName
+    ActionPlanEntries:
+      type: object
+      description: Action Plan Entries List
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Action Plan Entry display name
+          maxLength: 255
+      required:
+        - id
+        - name
+    ActionPlanEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Action Plan Entry display name
+          maxLength: 255
+        state:
+          enum:
+            - PLANNING
+            - EXECUTION
+            - APPROVAL
+            - FIX_PENDING_CONFIRMATION
+            - CLOSED
+          type: string
+          readOnly: true
+          description: Action Plan Entry current state
+        remediations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPlanEntryRemediation'
+        uploadedFiles:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPlanFile'
+          readOnly: true
+        approvalState:
+          enum:
+            - FALSE_POSITIVE
+            - ACCEPT_RISK
+            - null
+          type: string
+          readOnly: true
+          nullable: true
+        closedState:
+          enum:
+            - FALSE_POSITIVE
+            - ACCEPTED_RISK
+            - FIXED_CONFIRMED
+            - null
+          type: string
+          readOnly: true
+          nullable: true
+        falsePositiveReason:
+          type: string
+          readOnly: true
+          description: Action Plan Entry false positive reason
+        treatedReason:
+          enum:
+            - DECOMMISSIONED
+            - OVERRIDE_FIX_CONFIRMED
+            - null
+          type: string
+          readOnly: true
+          nullable: true
+        acceptRiskReason:
+          type: string
+          readOnly: true
+          description: Accepted Risk Action Plan Entry reason
+        acceptRiskDeadline:
+          type: string
+          format: date
+          readOnly: true
+          description: Accepted Risk Action Plan Entry deadline
+        executionDeadline:
+          type: string
+          format: date
+          description: Production environments competition deadline
+        impliedDeadline:
+          type: string
+          readOnly: true
+        uatTestingDeadline:
+          type: string
+          format: date
+          nullable: true
+          description: User Acceptance Testing deadline
+        mitigation:
+          type: string
+          readOnly: true
+          nullable: true
+        mitigationDescription:
+          type: string
+          readOnly: true
+        ownerUserId:
+          type: integer
+          nullable: true
+          description: Owner User ID
+        ownerGroupId:
+          type: integer
+          nullable: true
+          description: Owner Group ID
+        ownerUser:
+          type: string
+          readOnly: true
+          nullable: true
+        ownerGroup:
+          type: string
+          readOnly: true
+          nullable: true
+        createdBy:
+          type: string
+          readOnly: true
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Action Plan Entry creation date
+        lastStateUpdatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Action plan last modification date
+        planId:
+          type: string
+          readOnly: true
+          description: Action Plan ID
+        devDeadline:
+          type: string
+          format: date
+          nullable: true
+          description: Development environments completion deadline
+      required:
+        - acceptRiskDeadline
+        - acceptRiskReason
+        - approvalState
+        - closedState
+        - createdAt
+        - createdBy
+        - executionDeadline
+        - falsePositiveReason
+        - id
+        - impliedDeadline
+        - lastStateUpdatedAt
+        - mitigation
+        - mitigationDescription
+        - name
+        - ownerGroup
+        - ownerGroupId
+        - ownerUser
+        - ownerUserId
+        - planId
+        - remediations
+        - state
+        - treatedReason
+        - uploadedFiles
+    ActionPlanEntryRemediation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          readOnly: true
+          description: Action Plan Entry Remediation title
+        information:
+          type: string
+          readOnly: true
+        uniqueVulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPlanUniqueVulnerability'
+          readOnly: true
+        uniqueVirtualVulnerabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPlanUniqueVirtualVulnerability'
+          readOnly: true
+        devicesAffected:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPlanDeviceAffected'
+          readOnly: true
+      required:
+        - devicesAffected
+        - id
+        - information
+        - title
+        - uniqueVirtualVulnerabilities
+        - uniqueVulnerabilities
+    ActionPlanEntryRemediationRequest:
+      type: object
+      properties:
+        devicesAffectedIds:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+          description: Affected Devices IDs
+        remediationId:
+          type: integer
+          writeOnly: true
+          description: Remediation ID
+      required:
+        - devicesAffectedIds
+        - remediationId
+    ActionPlanEntryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Action Plan Entry display name
+          maxLength: 255
+        remediations:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPlanEntryRemediationRequest'
+        executionDeadline:
+          type: string
+          format: date
+          description: Production environments competition deadline
+        uatTestingDeadline:
+          type: string
+          format: date
+          nullable: true
+          description: User Acceptance Testing deadline
+        ownerUserId:
+          type: integer
+          nullable: true
+          description: Owner User ID
+        ownerGroupId:
+          type: integer
+          nullable: true
+          description: Owner Group ID
+        businessContextId:
+          type: integer
+          writeOnly: true
+          description: Business Context ID
+        devDeadline:
+          type: string
+          format: date
+          nullable: true
+          description: Development environments completion deadline
+      required:
+        - businessContextId
+        - executionDeadline
+        - name
+        - ownerGroupId
+        - ownerUserId
+        - remediations
+    ActionPlanFile:
+      type: object
+      description: Serializer for ActionPlanFile model
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 128
+      required:
+        - id
+        - name
+    ActionPlanUniqueVirtualVulnerability:
+      type: object
+      properties:
+        cve:
+          type: string
+        summary:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          nullable: true
+        cvssBase:
+          type: number
+          format: float
+      required:
+        - cve
+        - cvssBase
+    ActionPlanUniqueVirtualVulnerabilityRequest:
+      type: object
+      properties:
+        cve:
+          type: string
+          minLength: 1
+        summary:
+          type: string
+          nullable: true
+          minLength: 1
+        severity:
+          type: string
+          nullable: true
+          minLength: 1
+        cvssBase:
+          type: number
+          format: float
+      required:
+        - cve
+        - cvssBase
+    ActionPlanUniqueVulnerability:
+      type: object
+      properties:
+        cve:
+          type: string
+          maxLength: 16
+        summary:
+          type: string
+          nullable: true
+        severity:
+          type: string
+          nullable: true
+          maxLength: 50
+        cvssBase:
+          type: number
+          format: float
+      required:
+        - cve
+        - cvssBase
+    ActionPlanUniqueVulnerabilityRequest:
+      type: object
+      properties:
+        cve:
+          type: string
+          minLength: 1
+          maxLength: 16
+        summary:
+          type: string
+          nullable: true
+          minLength: 1
+        severity:
+          type: string
+          nullable: true
+          minLength: 1
+          maxLength: 50
+        cvssBase:
+          type: number
+          format: float
+      required:
+        - cve
+        - cvssBase
     AdminUser:
       type: object
       description: 'TODO: This is only used in admin endpoints. It should be generalized
@@ -3120,6 +3871,8 @@ components:
           readOnly: true
         photo:
           type: string
+        isOtpEnabled:
+          type: boolean
         isSsoOnly:
           type: boolean
         isServiceAccount:
@@ -3150,9 +3903,11 @@ components:
           type: boolean
         apiKeyName:
           type: string
+          nullable: true
         apiKeyGenerationDate:
           type: string
           format: date-time
+          nullable: true
         isInstallationAdmin:
           type: boolean
           readOnly: true
@@ -3190,6 +3945,7 @@ components:
         - isActive
         - isInstallationAdmin
         - isLoggedIn
+        - isOtpEnabled
         - isServiceAccount
         - isSsoOnly
         - lastName
@@ -3620,6 +4376,7 @@ components:
           type: integer
         agent:
           type: integer
+          description: Agent ID
           nullable: true
       required:
         - administrativeState
@@ -4979,6 +5736,23 @@ components:
         - ipAddress
         - portTransportProtocolList
         - userInput
+    CurrentTargetsReachableDevices:
+      type: object
+      properties:
+        userInput:
+          type: string
+          description: User input
+        ipAddress:
+          type: string
+          description: IP Address resulted from user input
+        lastScanned:
+          type: string
+          format: date-time
+          nullable: true
+          description: Last time when a device was scanned
+      required:
+        - ipAddress
+        - userInput
     Device:
       type: object
       properties:
@@ -5498,6 +6272,27 @@ components:
         - page
         - totalCount
         - totalPages
+    PaginatedActionPlanEntryList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActionPlanEntry'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
     PaginatedApplicationDetailsList:
       type: object
       properties:
@@ -5598,6 +6393,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CurrentTargetsPorts'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedCurrentTargetsReachableDevicesList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrentTargetsReachableDevices'
       required:
         - items
         - page
@@ -6648,6 +7464,8 @@ components:
       properties:
         isLoggedIn:
           type: boolean
+        isOtpEnabled:
+          type: boolean
         id:
           type: integer
           description: The user ID
@@ -6739,6 +7557,7 @@ components:
         - isFeedbackSurveyCompleted
         - isInstallationAdmin
         - isLoggedIn
+        - isOtpEnabled
         - lastName
         - photo
         - refresh
@@ -6768,6 +7587,10 @@ components:
           type: string
           minLength: 1
           description: Microsoft authentication token
+        otpToken:
+          type: string
+          minLength: 1
+          description: OTP Token, if available
     Stat:
       type: object
       properties:

@@ -350,6 +350,17 @@ public interface CodaClient {
 		throws ApiException;
 
 	/**
+	 * Deletes a {@link ScanSurfaceEntry scan surface entry}.
+	 *
+	 * @param entry        the {@link ScanSurfaceEntry} to delete
+	 * @param deleteAssets delete associated devices and applications
+	 * @param accountId    Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @throws ApiException ...
+	 */
+	void deleteScanSurfaceEntry(ScanSurfaceEntry entry, boolean deleteAssets,
+		Integer accountId) throws ApiException;
+
+	/**
 	 * Rescans all user inputs from Scan Surface.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
