@@ -42,6 +42,7 @@ import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupData;
 import net.codacloud.model.RegistrationSignupDataRequest;
+import net.codacloud.model.Scan;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import net.codacloud.model.ScanUuidScannerId;
@@ -345,9 +346,24 @@ public interface CodaClient {
 	 * @return a {@link List list} of {@link ScanUuidScannerId scan UUIDs}
 	 * @throws ApiException ...
 	 */
-	List<ScanUuidScannerId> updateScanSurface(
+	default List<ScanUuidScannerId> updateScanSurface(
 		final ExtendMessageRequest message, final Integer accountId)
-		throws ApiException;
+		throws ApiException {
+		return updateScanSurface(message, true, accountId);
+	}
+
+	/**
+	 * Updates the scan surface with new data (extend scan surface modal). <strong>This is an idempotent operation!</strong>
+	 *
+	 * @param message         a {@link ExtendMessageRequest message} of targets and scanners
+	 * @param isNoScanRequest {@code true} to turn off automatic scan
+	 * @param accountId       Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a {@link List list} of {@link ScanUuidScannerId scan UUIDs}
+	 * @throws ApiException ...
+	 */
+	List<ScanUuidScannerId> updateScanSurface(
+		final ExtendMessageRequest message, final boolean isNoScanRequest,
+		final Integer accountId) throws ApiException;
 
 	/**
 	 * Deletes a {@link ScanSurfaceEntry scan surface entry}.
@@ -398,7 +414,7 @@ public interface CodaClient {
 	 * @return the {@link ScanStatus scan status}
 	 * @throws ApiException ...
 	 */
-	ScanStatus getScanStatus(String scanId, Integer accountId)
+	Scan getScanStatus(String scanId, Integer accountId)
 		throws ApiException;
 
 	/**

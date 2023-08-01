@@ -57,6 +57,7 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
+import net.codacloud.model.Scan;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import net.codacloud.model.ScanUuidScannerId;
@@ -156,7 +157,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 			return new ScanSurfaceBatcher().createBatches(filteredTargets)
 				.stream().map(batch -> batch.scanners(scanners)).map(batch -> {
 					try {
-						return updateScanSurface(batch, accountId);
+						return updateScanSurface(batch, true, accountId);
 					} catch (final ApiException e) {
 						throw new RuntimeException(e);
 					}
@@ -170,9 +171,9 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 	@Override
 	public List<ScanUuidScannerId> updateScanSurface(
-		final ExtendMessageRequest message, final Integer accountId)
-		throws ApiException {
-		return consoleApi.consoleScanSurfaceCreate(message, accountId);
+		final ExtendMessageRequest message, final boolean isNoScanRequest,
+		final Integer accountId) throws ApiException {
+		return consoleApi.consoleScanSurfaceCreate(message, isNoScanRequest, accountId);
 	}
 
 	@Override
@@ -206,7 +207,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public ScanStatus getScanStatus(final String scanId,
+	public Scan getScanStatus(final String scanId,
 		final Integer accountId) throws ApiException {
 		return consoleApi.consoleScansRetrieve(scanId, accountId);
 	}

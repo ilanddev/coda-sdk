@@ -44,6 +44,7 @@ import net.codacloud.model.RegistrationCreateRequest;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
 import net.codacloud.model.RegistrationSignupDataRequest;
+import net.codacloud.model.Scan;
 import net.codacloud.model.ScanStatus;
 import net.codacloud.model.ScanSurfaceEntry;
 import net.codacloud.model.ScanUuidScannerId;
@@ -258,9 +259,9 @@ final class CachingCodaClient implements CodaClient {
 
 	@Override
 	public List<ScanUuidScannerId> updateScanSurface(
-		final ExtendMessageRequest message, final Integer accountId)
-		throws ApiException {
-		return delegatee.updateScanSurface(message, accountId);
+		final ExtendMessageRequest message, final boolean isNoScanRequest,
+		final Integer accountId) throws ApiException {
+		return delegatee.updateScanSurface(message, isNoScanRequest, accountId);
 	}
 
 	@Override
@@ -289,7 +290,7 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public ScanStatus getScanStatus(final String scanId,
+	public Scan getScanStatus(final String scanId,
 		final Integer accountId) throws ApiException {
 		return delegatee.getScanStatus(scanId, accountId);
 	}

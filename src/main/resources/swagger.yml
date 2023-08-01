@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Footprint OpenAPI Schema
-  version: 7.17.35
+  version: 7.18.19
   description: 📦 This is the basic description for Footprint backend endpoints. If
     more accounts are available, you can select which one to retrieve data from by
     adding a `FootprintTenantId` HTTP header, setting its value to the ID of the tenant
@@ -655,21 +655,21 @@ paths:
   /console/actionPlan/:
     get:
       operationId: actionPlanRetrieve
-      description: Lists all Action Plan entries that match GET parameters
+      description: Get all Action Plan entries that match GET parameters
       parameters:
         - in: query
-          name: businessContextIds
+          name: business_context_ids
           schema:
             type: string
           description: List of business context IDs based on which the entities are
             filtered
         - in: query
-          name: closedStates
+          name: closed_states
           schema:
             type: string
           description: List of sub-states to be displayed - applicable for Closed type
         - in: query
-          name: devicesIds
+          name: devices_ids
           schema:
             type: string
           description: List of devices IDs based on which the entities are filtered
@@ -681,32 +681,37 @@ paths:
               - json
               - pdf
         - in: query
-          name: ownerGroupIds
+          name: owner_group_ids
           schema:
             type: string
-          description: List of owner group IDs based on which the entities are filtered
+          description: List of owner group IDs based on which the entities are filtered.The
+            ID 0 is correspondent to unassigned (N/A) groups.
         - in: query
-          name: ownerUserIds
+          name: owner_user_ids
           schema:
             type: string
-          description: List of owner user IDs based on which the entities are filtered
+          description: List of owner user IDs based on which the entities are filtered.The
+            ID 0 is correspondent to unassigned (N/A) users.
         - in: query
           name: page
           schema:
             type: integer
           description: Page to request
         - in: query
-          name: pageSize
+          name: page_size
           schema:
             type: integer
           description: The size of each page
         - in: query
-          name: textFilter
+          name: page_type
           schema:
             type: string
-          description: Text based on which the entities are filtered
+            enum:
+              - ACTIONS_REPORT
+              - MY_WORKFLOW
+          description: The type of page containing multiple states to be requested
         - in: query
-          name: type
+          name: state
           schema:
             type: string
             enum:
@@ -715,15 +720,24 @@ paths:
               - EXECUTION
               - FIX_PENDING_CONFIRMATION
               - PLANNING
-            default: PLANNING
           description: The status of the requested entities
-          required: true
         - in: query
-          name: withinDeadlineOnly
+          name: technical_context_ids
+          schema:
+            type: string
+          description: List of business context IDs based on which the entities are
+            filtered
+        - in: query
+          name: text_filter
+          schema:
+            type: string
+          description: Text based on which the entities are filtered
+        - in: query
+          name: within_deadline_only
           schema:
             type: boolean
           description: Whether the result should contain only entries that have not
-            exceeded their deadline or not
+            exceeded their deadline
         - in: header
           name: FootprintTenantId
           schema:
@@ -745,7 +759,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedActionPlanEntryList'
           description: ''
-      summary: Lists all Action Plan entries that match GET parameters
+      summary: Get all Action Plan entries that match GET parameters
     post:
       operationId: actionPlanCreate
       description: Creates an Action Plan
@@ -791,6 +805,8 @@ paths:
                 additionalProperties: { }
                 description: Unspecified response body
           description: ''
+        '400':
+          description: Name is too long or other body parameters are wrongly configured
       summary: Creates an Action Plan
     delete:
       operationId: actionPlanDelete
@@ -837,36 +853,23 @@ paths:
                 description: Unspecified response body
           description: ''
       summary: Deletes a list of Action Plan entries
-  /console/actionPlan/devices/:
-    get:
-      operationId: actionPlanDevicesRetrieve
-      description: Lists all devices that appear in Action Plan entries.
-      tags:
-        - console
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ActionPlanDevices'
-          description: ''
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      summary: Lists all devices that appear in Action Plan entries.
   /console/actionPlan/entries/:
     get:
       operationId: actionPlanEntriesRetrieve
-      description: Lists all Action Plan entries
+      description: Lists all Action Plan entries in Planning state
+      parameters:
+        - in: query
+          name: businessContextId
+          schema:
+            type: integer
+          description: The ID of the Business Context that the Action Plan entries have
+            been created from
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
       tags:
         - console
       security:
@@ -879,16 +882,9 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ActionPlanEntries'
+                  $ref: '#/components/schemas/ActionPlanLightEntry'
           description: ''
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      summary: Lists all Action Plan entries
+      summary: Lists all Action Plan entries in Planning state
   /console/agent/:
     get:
       operationId: consoleAgentRetrieve
@@ -2027,6 +2023,43 @@ paths:
         '200':
           description: No response body
       summary: Get computer system info if agent source
+  /console/elements/device/{deviceId}/updateTags/:
+    post:
+      operationId: consoleElementsDeviceUpdateTagsCreate
+      description: Update a device's tags
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/DeviceTagsRequest'
+        required: true
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceTags'
+          description: ''
+      summary: Update a device's tags
   /console/elements/device/{deviceId}/users/:
     get:
       operationId: consoleElementsDeviceUsersList
@@ -2061,7 +2094,7 @@ paths:
   /console/elements/device/{deviceId}/vulnerabilities/:
     get:
       operationId: consoleElementsDeviceVulnerabilitiesList
-      description: Return vulnerabilities on a device
+      description: Return vulnerabilities on a device.
       parameters:
         - in: path
           name: deviceId
@@ -2088,7 +2121,38 @@ paths:
                 items:
                   $ref: '#/components/schemas/Vulnerability'
           description: ''
-      summary: Return vulnerabilities on a device
+      summary: Return vulnerabilities on a device.
+  /console/elements/device/{deviceId}/zapScans/:
+    get:
+      operationId: consoleElementsDeviceZapScansList
+      description: Returns a list of WebApps (id, name) that have ZAP Reports generated.
+      parameters:
+        - in: path
+          name: deviceId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceZapScans'
+          description: ''
+      summary: Returns a list of WebApps (id, name) that have ZAP Reports generated.
   /console/elements/devices/:
     get:
       operationId: consoleElementsDevicesRetrieve
@@ -2413,6 +2477,18 @@ paths:
             type: string
           description: Label of the device you want the report for
         - in: query
+          name: is_exploitable
+          schema:
+            type: boolean
+          description: Whether the result should contain only exploitable entries or
+            not
+        - in: query
+          name: is_weaponized
+          schema:
+            type: boolean
+          description: Whether the result should contain only weaponized entries or
+            not
+        - in: query
           name: page
           schema:
             type: integer
@@ -2595,6 +2671,11 @@ paths:
             type: string
           description: Business Contexts IDs list you want the RR for
         - in: query
+          name: custom_tags
+          schema:
+            type: string
+          description: The custom tags you want the RR for
+        - in: query
           name: device
           schema:
             type: string
@@ -2688,6 +2769,19 @@ paths:
       operationId: consoleScanSurfaceCreate
       description: 🎯 Endpoint that updates the scan surface with new data (extend
         scan surface modal)
+      parameters:
+        - in: query
+          name: isNoScanRequest
+          schema:
+            type: boolean
+          description: Whether to skip starting a new scan after adding items to the
+            surface
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
       tags:
         - console
       requestBody:
@@ -2721,15 +2815,9 @@ paths:
         '402':
           description: Returned if user attempts scan in trial mode after trial limits
             expired
-      parameters:
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
       summary: 🎯 Endpoint that updates the scan surface with new data (extend scan
         surface modal)
+  # added by Tag
   /console/scanSurface/{entryId}/:
     delete:
       operationId: consoleScanSurfaceEntryDestroy
@@ -3056,9 +3144,105 @@ paths:
             back on `original_tenant_id` from the auth endpoint
       summary: Allows uploading a file that defines tags to be automatically added
         on devices
+  /console/scans/:
+    get:
+      operationId: consoleScansList
+      description: ViewSet for managing scans options
+      parameters:
+        - in: query
+          name: endDate
+          schema:
+            type: string
+          description: Freetext search for the end timestamp
+        - in: query
+          name: filter
+          schema:
+            type: string
+          description: Freetext text filter
+        - in: query
+          name: isExtendScan
+          schema:
+            type: boolean
+          description: Whether or not the scan is an extend scan
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to request
+        - in: query
+          name: scanner
+          schema:
+            type: string
+          description: Scanner name filter
+        - in: query
+          name: scannerId
+          schema:
+            type: integer
+          description: Scanner ID filter
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on a page
+        - in: query
+          name: sortColumn
+          schema:
+            type: string
+            enum:
+              - endDate
+              - scanUuid
+              - scanner
+              - startDate
+              - status
+          description: Sorting column
+        - in: query
+          name: sortDirection
+          schema:
+            type: string
+            enum:
+              - ascending
+              - descending
+          description: Sorting direction
+        - in: query
+          name: startDate
+          schema:
+            type: string
+          description: Freetext search for the start timestamp
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - created
+              - done
+              - interrupted
+              - requested
+              - running
+              - stopped
+          description: Scan status filter
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedScanList'
+          description: ''
+      summary: ViewSet for managing scans options
   /console/scans/{scanUuid}/:
     get:
       operationId: consoleScansRetrieve
+      description: ViewSet for managing scans options
       parameters:
         - in: path
           name: scanUuid
@@ -3081,9 +3265,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanStatus'
+                $ref: '#/components/schemas/Scan'
           description: ''
-      summary: ''
+      summary: ViewSet for managing scans options
   /console/scheduler/:
     get:
       operationId: consoleSchedulerList
@@ -3431,7 +3615,7 @@ components:
         deviceState:
           enum:
             - AVAILABLE
-            - DECOMISSIONED
+            - DECOMMISSIONED
           type: string
         fixedVulnerabilities:
           type: integer
@@ -3466,7 +3650,7 @@ components:
         deviceState:
           enum:
             - AVAILABLE
-            - DECOMISSIONED
+            - DECOMMISSIONED
           type: string
         fixedVulnerabilities:
           type: integer
@@ -3480,35 +3664,9 @@ components:
         - ip
         - riskLevel
         - totalVulnerabilities
-    ActionPlanDevices:
-      type: object
-      description: Action Plan Devices
-      properties:
-        deviceId:
-          type: integer
-          description: Device ID
-        deviceName:
-          type: string
-          description: Device Name
-      required:
-        - deviceId
-        - deviceName
-    ActionPlanEntries:
-      type: object
-      description: Action Plan Entries List
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        name:
-          type: string
-          description: Action Plan Entry display name
-          maxLength: 255
-      required:
-        - id
-        - name
     ActionPlanEntry:
       type: object
+      description: The main serializer used for Action Plan entries
       properties:
         id:
           type: integer
@@ -3527,10 +3685,6 @@ components:
           type: string
           readOnly: true
           description: Action Plan Entry current state
-        remediations:
-          type: array
-          items:
-            $ref: '#/components/schemas/ActionPlanEntryRemediation'
         uploadedFiles:
           type: array
           items:
@@ -3609,6 +3763,9 @@ components:
           type: string
           readOnly: true
           nullable: true
+        businessContextId:
+          type: integer
+          description: Business Context ID
         createdBy:
           type: string
           readOnly: true
@@ -3632,10 +3789,18 @@ components:
           format: date
           nullable: true
           description: Development environments completion deadline
+        oldestVulnerability:
+          type: string
+          readOnly: true
+          nullable: true
+        mitigationRisk:
+          type: integer
+          readOnly: true
       required:
         - acceptRiskDeadline
         - acceptRiskReason
         - approvalState
+        - businessContextId
         - closedState
         - createdAt
         - createdBy
@@ -3646,13 +3811,14 @@ components:
         - lastStateUpdatedAt
         - mitigation
         - mitigationDescription
+        - mitigationRisk
         - name
+        - oldestVulnerability
         - ownerGroup
         - ownerGroupId
         - ownerUser
         - ownerUserId
         - planId
-        - remediations
         - state
         - treatedReason
         - uploadedFiles
@@ -3709,6 +3875,7 @@ components:
         - remediationId
     ActionPlanEntryRequest:
       type: object
+      description: The main serializer used for Action Plan entries
       properties:
         name:
           type: string
@@ -3719,6 +3886,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ActionPlanEntryRemediationRequest'
+          writeOnly: true
         executionDeadline:
           type: string
           format: date
@@ -3738,7 +3906,6 @@ components:
           description: Owner Group ID
         businessContextId:
           type: integer
-          writeOnly: true
           description: Business Context ID
         devDeadline:
           type: string
@@ -3765,6 +3932,51 @@ components:
       required:
         - id
         - name
+    ActionPlanLightEntry:
+      type: object
+      description: Action Plan Entries List
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Action Plan Entry display name
+          maxLength: 255
+        ownerUserId:
+          type: integer
+          nullable: true
+          description: Owner User ID
+          readOnly: true
+        planId:
+          type: string
+          description: Action Plan ID
+          maxLength: 64
+        executionDeadline:
+          type: string
+          format: date
+          description: Production environments competition deadline
+        uatTestingDeadline:
+          type: string
+          format: date
+          nullable: true
+          description: User Acceptance Testing deadline
+        devDeadline:
+          type: string
+          format: date
+          nullable: true
+          description: Development environments completion deadline
+        impliedDeadline:
+          type: string
+          format: date
+          nullable: true
+          description: Automatically calculated deadline based on criticality
+      required:
+        - executionDeadline
+        - id
+        - name
+        - ownerUserId
+        - planId
     ActionPlanUniqueVirtualVulnerability:
       type: object
       properties:
@@ -3843,6 +4055,43 @@ components:
       required:
         - cve
         - cvssBase
+    ActiveTaskStatus:
+      type: object
+      properties:
+        isRunning:
+          type: boolean
+        progress:
+          type: integer
+          readOnly: true
+        id:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        message:
+          type: string
+          readOnly: true
+        startDate:
+          type: string
+          format: date-time
+          readOnly: true
+        scanner:
+          allOf:
+            - $ref: '#/components/schemas/TaskScanner'
+          readOnly: true
+        meta:
+          type: object
+          additionalProperties: { }
+          readOnly: true
+      required:
+        - description
+        - id
+        - message
+        - meta
+        - progress
+        - scanner
+        - startDate
     AdminUser:
       type: object
       description: 'TODO: This is only used in admin endpoints. It should be generalized
@@ -3891,6 +4140,16 @@ components:
           readOnly: true
         asyncEmails:
           type: boolean
+        newVulnsEmails:
+          type: array
+          items:
+            enum:
+              - none
+              - low
+              - medium
+              - high
+              - critical
+            type: string
         syncEmails:
           type: boolean
         syncPeriod:
@@ -3950,6 +4209,7 @@ components:
         - isSsoOnly
         - lastName
         - manager
+        - newVulnsEmails
         - photo
         - position
         - roleLimitations
@@ -4926,9 +5186,9 @@ components:
         uniqueVulnsCount:
           type: integer
           description: Number of unique vulnerabilities in the report
-        exploitableVulnsCount:
+        weaponizedVulnsCount:
           type: integer
-          description: Number of exploitable vulnerabilities in the report
+          description: Number of weaponized vulnerabilities in the report
         totalDevicesCount:
           type: integer
           description: Number of total devices in the report
@@ -4959,7 +5219,6 @@ components:
       required:
         - averageDowntime
         - criticalLevel
-        - exploitableVulnsCount
         - externalAssetsCount
         - generationDate
         - internalAssetsCount
@@ -4975,6 +5234,7 @@ components:
         - totalDevicesCount
         - totalVulnsCount
         - uniqueVulnsCount
+        - weaponizedVulnsCount
         - webappsCount
     CVRMostVulnServer:
       type: object
@@ -5134,13 +5394,13 @@ components:
           type: string
         isCritical:
           type: boolean
-        isExploitable:
+        isWeaponized:
           type: boolean
       required:
         - cve
         - description
         - isCritical
-        - isExploitable
+        - isWeaponized
     CVRRemTrackVuln:
       type: object
       properties:
@@ -5584,9 +5844,9 @@ components:
         solution:
           type: string
           nullable: true
-        weaponized:
+        isWeaponized:
           type: boolean
-        exploitable:
+        isExploitable:
           type: boolean
         campaign:
           type: integer
@@ -5644,13 +5904,13 @@ components:
         - deviceLabel
         - dnsNames
         - exploitScore
-        - exploitable
         - id
         - index
         - ip
+        - isExploitable
+        - isWeaponized
         - userExposure
         - vulnerabilityState
-        - weaponized
         - zoneExposure
     ContextualRiskReportStatus:
       type: object
@@ -6009,6 +6269,33 @@ components:
         - installedUpdates
         - lastBootupDate
         - os
+    DeviceTags:
+      type: object
+      properties:
+        tag:
+          type: string
+          description: Tag for device
+        excludeBusinessContexts:
+          type: boolean
+          description: Whether a business context should be generated or not for this
+            respective tag
+      required:
+        - excludeBusinessContexts
+        - tag
+    DeviceTagsRequest:
+      type: object
+      properties:
+        tag:
+          type: string
+          minLength: 1
+          description: Tag for device
+        excludeBusinessContexts:
+          type: boolean
+          description: Whether a business context should be generated or not for this
+            respective tag
+      required:
+        - excludeBusinessContexts
+        - tag
     DeviceUser:
       type: object
       properties:
@@ -6028,6 +6315,24 @@ components:
         - disabled
         - name
         - passwordExpires
+    DeviceZapScans:
+      type: object
+      properties:
+        state:
+          enum:
+            - has_zap_reports
+            - not_scanned_yet
+            - no_web_applications_available
+            - no_suitable_ports
+          type: string
+        webApplications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ZAPScannerReport'
+          nullable: true
+      required:
+        - state
+        - webApplications
     DockerStat:
       type: object
       properties:
@@ -6524,6 +6829,27 @@ components:
         - page
         - totalCount
         - totalPages
+    PaginatedScanList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scan'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
     PaginatedScanSurfaceEntryList:
       type: object
       properties:
@@ -6897,6 +7223,13 @@ components:
             - continuous
           type: string
           description: Billing plan type
+        billingDay:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          description: Billing day. If billing plan type is weekly, the range is reduced
+            to 1-7.
       required:
         - friendlyType
         - groups
@@ -6996,6 +7329,11 @@ components:
             - continuous
           type: string
           description: Billing plan type
+        billingDay:
+          type: integer
+          maximum: 28
+          minimum: 1
+          description: Billing day
       required:
         - description
         - label
@@ -7070,6 +7408,12 @@ components:
             - continuous
           type: string
           description: Billing plan type
+        billingDay:
+          type: integer
+          maximum: 28
+          minimum: 1
+          nullable: true
+          description: Billing day
     RegistrationHistory:
       type: object
       description: Serializer for registration state change history entries
@@ -7248,9 +7592,14 @@ components:
         - isWeaponized
         - riskIndicator
         - title
-    ScanStatus:
+    Scan:
       type: object
+      description: Scan Serializer
       properties:
+        scanUuid:
+          type: string
+          description: Scan unique identifier
+          maxLength: 36
         status:
           enum:
             - created
@@ -7260,9 +7609,43 @@ components:
             - interrupted
             - done
           type: string
-          description: Scan status based on scan id
+          description: Scan status
+        startDatetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Scan start date
+        endDatetime:
+          type: string
+          format: date-time
+          nullable: true
+          description: Scan end date
+        scannerId:
+          type: integer
+          readOnly: true
+        scannerName:
+          type: string
+          readOnly: true
       required:
-        - status
+        - scanUuid
+        - scannerId
+        - scannerName
+    ScanStatus:
+      type: object
+      properties:
+        areaScanJobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveTaskStatus'
+          description: Extend scan area jobs
+        runningJobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActiveTaskStatus'
+          description: Other scan jobs
+      required:
+        - areaScanJobs
+        - runningJobs
     ScanSurfaceCurrentTarget:
       type: object
       properties:
@@ -7559,6 +7942,7 @@ components:
         - isLoggedIn
         - isOtpEnabled
         - lastName
+        - newVulnsEmails
         - photo
         - refresh
         - registrationId
@@ -7740,6 +8124,19 @@ components:
       required:
         - executesEverySec
         - priority
+    TaskScanner:
+      type: object
+      properties:
+        scannerId:
+          type: integer
+        taskId:
+          type: integer
+        hostname:
+          type: string
+      required:
+        - hostname
+        - scannerId
+        - taskId
     TechnicalContext:
       type: object
       properties:
@@ -8274,11 +8671,13 @@ components:
           type: boolean
         hideZapScans:
           type: boolean
-        showMacAgentDownload:
-          type: boolean
         hideSurveys:
           type: boolean
         hideActionPlan:
+          type: boolean
+        hideRemediationsList:
+          type: boolean
+        enforceActionPlan:
           type: boolean
         allowedWhitelabelDomains:
           type: string
@@ -8288,6 +8687,17 @@ components:
         - appLogo
         - supportEmail
         - supportName
+    ZAPScannerReport:
+      type: object
+      description: List of Web Applications that have one or many ZAP Report associated.
+      properties:
+        applicationId:
+          type: integer
+        applicationName:
+          type: string
+      required:
+        - applicationId
+        - applicationName
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
