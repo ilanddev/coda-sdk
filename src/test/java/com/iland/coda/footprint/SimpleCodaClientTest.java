@@ -137,10 +137,10 @@ class SimpleCodaClientTest {
 		final List<Integer> scannerIds = Arrays.asList(scannerId);
 
 		// force multiple batches to check the behavior of `updateScanSurface`
-		//ScanSurfaceBatcher.MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1;
+		ScanSurfaceBatcher.MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1;
 		final List<ScanUuidScannerId> scanIds =
 			client.updateScanSurface(targets, scannerIds, accountId);
-		assertEquals(1, scanIds.size(), "multiple scan IDs generated");
+		assertEquals(3, scanIds.size());
 		final int expectedSize = targetsSize * scannerIds.size();
 		final Set<ScanSurfaceEntry> scanSurface =
 			client.getScanSurface(accountId);
