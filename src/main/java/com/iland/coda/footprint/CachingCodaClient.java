@@ -151,12 +151,12 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	/**
-     * Returns the registrations for a given category. If the default category
-     * is supplied then the results may be from the cache. <strong>Only the
-     * default category is cached to simplify cache validation!</strong> The
-     * results should be wrapped in an immutable collection before returning
-     * outside this class.
-     */
+	 * Returns the registrations for a given category. If the default category
+	 * is supplied then the results may be from the cache. <strong>Only the
+	 * default category is cached to simplify cache validation!</strong> The
+	 * results should be wrapped in an immutable collection before returning
+	 * outside this class.
+	 */
 	private Set<RegistrationLight> getRegistrations(final String category)
 		throws ApiException {
 		if (category == null || DEFAULT_CATEGORY.equals(category)) {
@@ -250,11 +250,12 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public List<ScanUuidScannerId> updateScanSurface(
-		final List<String> targets, final List<Integer> scanners,
+	public List<ScanUuidScannerId> updateScanSurface(final List<String> targets,
+		final List<Integer> scanners, final boolean isNoScanRequest,
 		final Integer accountId) throws ApiException {
 		// TODO: invalidate scan surface cache
-		return delegatee.updateScanSurface(targets, scanners, accountId);
+		return delegatee.updateScanSurface(targets, scanners, isNoScanRequest,
+			accountId);
 	}
 
 	@Override
@@ -290,8 +291,8 @@ final class CachingCodaClient implements CodaClient {
 	}
 
 	@Override
-	public Scan getScanStatus(final String scanId,
-		final Integer accountId) throws ApiException {
+	public Scan getScanStatus(final String scanId, final Integer accountId)
+		throws ApiException {
 		return delegatee.getScanStatus(scanId, accountId);
 	}
 

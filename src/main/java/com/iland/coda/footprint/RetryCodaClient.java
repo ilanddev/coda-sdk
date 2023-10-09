@@ -171,13 +171,14 @@ final class RetryCodaClient implements CodaClient {
 
 	@Override
 	public List<ScanUuidScannerId> updateScanSurface(final List<String> targets,
-		final List<Integer> scanners, final Integer accountId)
-		throws ApiException {
+		final List<Integer> scanners, final boolean isNoScanRequest,
+		final Integer accountId) throws ApiException {
 		try {
 			return new ScanSurfaceBatcher().createBatches(targets).stream()
 				.map(batch -> batch.scanners(scanners)).map(message -> {
 					try {
-						return updateScanSurface(message, accountId);
+						return updateScanSurface(message, isNoScanRequest,
+							accountId);
 					} catch (ApiException e) {
 						throw new RuntimeException(e);
 					}
@@ -227,8 +228,8 @@ final class RetryCodaClient implements CodaClient {
 	}
 
 	@Override
-	public Scan getScanStatus(final String scanId,
-		final Integer accountId) throws ApiException {
+	public Scan getScanStatus(final String scanId, final Integer accountId)
+		throws ApiException {
 		return retryIfNecessary(
 			() -> delegatee.getScanStatus(scanId, accountId));
 	}
