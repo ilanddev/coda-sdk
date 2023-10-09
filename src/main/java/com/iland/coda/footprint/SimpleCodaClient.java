@@ -146,8 +146,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 	@Override
 	public List<ScanUuidScannerId> updateScanSurface(final List<String> targets,
-		final List<Integer> scanners, final Integer accountId)
-		throws ApiException {
+		final List<Integer> scanners, final boolean isNoScanRequest,
+		final Integer accountId) throws ApiException {
 
 		final List<String> filteredTargets = NetworkUtils.toStream(targets)
 			.filter(not(NetworkUtils::isRFC1918IpAddress))
@@ -157,7 +157,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 			return new ScanSurfaceBatcher().createBatches(filteredTargets)
 				.stream().map(batch -> batch.scanners(scanners)).map(batch -> {
 					try {
-						return updateScanSurface(batch, true, accountId);
+						return updateScanSurface(batch, isNoScanRequest,
+							accountId);
 					} catch (final ApiException e) {
 						throw new RuntimeException(e);
 					}
@@ -173,7 +174,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	public List<ScanUuidScannerId> updateScanSurface(
 		final ExtendMessageRequest message, final boolean isNoScanRequest,
 		final Integer accountId) throws ApiException {
-		return consoleApi.consoleScanSurfaceCreate(message, isNoScanRequest, accountId);
+		return consoleApi.consoleScanSurfaceCreate(message, isNoScanRequest,
+			accountId);
 	}
 
 	@Override
@@ -207,8 +209,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	}
 
 	@Override
-	public Scan getScanStatus(final String scanId,
-		final Integer accountId) throws ApiException {
+	public Scan getScanStatus(final String scanId, final Integer accountId)
+		throws ApiException {
 		return consoleApi.consoleScansRetrieve(scanId, accountId);
 	}
 

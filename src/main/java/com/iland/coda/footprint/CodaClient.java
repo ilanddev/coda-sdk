@@ -58,6 +58,9 @@ import org.slf4j.LoggerFactory;
  */
 public interface CodaClient {
 
+	boolean DEFAULT_IS_NO_SCAN = true;
+
+
 	enum ReportType {
 		HISTORIC("historic"),
 		SNAPSHOT("snapshot");
@@ -321,8 +324,9 @@ public interface CodaClient {
 	/**
 	 * An alias of {@link CodaClient#updateScanSurface(List, List, Integer)}.
 	 */
-	default void triggerScan(List<String> targets, List<Integer> scanners,
-		Integer accountId) throws ApiException {
+	default void triggerScan(final List<String> targets,
+		final List<Integer> scanners, final Integer accountId)
+		throws ApiException {
 		updateScanSurface(targets, scanners, accountId);
 	}
 
@@ -335,8 +339,25 @@ public interface CodaClient {
 	 * @return a {@link List} of {@link ScanUuidScannerId scan UUIDs}
 	 * @throws ApiException ...
 	 */
+	default List<ScanUuidScannerId> updateScanSurface(
+		final List<String> targets, final List<Integer> scanners,
+		final Integer accountId) throws ApiException {
+		return updateScanSurface(targets, scanners, DEFAULT_IS_NO_SCAN,
+			accountId);
+	}
+
+	/**
+	 * Updates the scan surface with new data (extend scan surface modal). <strong>This is an idempotent operation!</strong>
+	 *
+	 * @param targets   a {@link List} of targets, e.g. hostname, IP address, or CIDR notation
+	 * @param scanners  There's no documentation on this value. The scanners to use for the scan?
+	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a {@link List} of {@link ScanUuidScannerId scan UUIDs}
+	 * @throws ApiException ...
+	 */
 	List<ScanUuidScannerId> updateScanSurface(List<String> targets,
-		List<Integer> scanners, Integer accountId) throws ApiException;
+		List<Integer> scanners, boolean isNoScanRequest, Integer accountId)
+		throws ApiException;
 
 	/**
 	 * Updates the scan surface with new data (extend scan surface modal). <strong>This is an idempotent operation!</strong>
@@ -349,7 +370,7 @@ public interface CodaClient {
 	default List<ScanUuidScannerId> updateScanSurface(
 		final ExtendMessageRequest message, final Integer accountId)
 		throws ApiException {
-		return updateScanSurface(message, true, accountId);
+		return updateScanSurface(message, DEFAULT_IS_NO_SCAN, accountId);
 	}
 
 	/**
@@ -361,9 +382,8 @@ public interface CodaClient {
 	 * @return a {@link List list} of {@link ScanUuidScannerId scan UUIDs}
 	 * @throws ApiException ...
 	 */
-	List<ScanUuidScannerId> updateScanSurface(
-		final ExtendMessageRequest message, final boolean isNoScanRequest,
-		final Integer accountId) throws ApiException;
+	List<ScanUuidScannerId> updateScanSurface(ExtendMessageRequest message,
+		boolean isNoScanRequest, Integer accountId) throws ApiException;
 
 	/**
 	 * Deletes a {@link ScanSurfaceEntry scan surface entry}.
@@ -380,10 +400,10 @@ public interface CodaClient {
 	 * Rescans all user inputs from Scan Surface.
 	 *
 	 * @param accountId Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
-	 * @return the {@link RescanScannerScanUuid scan UUID}
+	 * @return a {@link List list} of {@link ScanUuidScannerId scan results}
 	 * @throws ApiException ...
 	 */
-	List<ScanUuidScannerId> rescan(final Integer accountId) throws ApiException;
+	List<ScanUuidScannerId> rescan(Integer accountId) throws ApiException;
 
 	/**
 	 * Rescans all user inputs from Scan Surface for requested Agentless Scanner.
@@ -414,8 +434,7 @@ public interface CodaClient {
 	 * @return the {@link ScanStatus scan status}
 	 * @throws ApiException ...
 	 */
-	Scan getScanStatus(String scanId, Integer accountId)
-		throws ApiException;
+	Scan getScanStatus(String scanId, Integer accountId) throws ApiException;
 
 	/**
 	 * Retrieve the collated {@link ScanSurfaceEntry scan surface entries} for all scanners for the given {@link Integer accountId}.
@@ -483,7 +502,7 @@ public interface CodaClient {
 	 * @return an {@link Optional} containing the latest (i.e. newest) {@link CVR report}
 	 * @throws ApiException ...
 	 */
-	default Optional<CVR> getLatestReport(Integer accountId)
+	default Optional<CVR> getLatestReport(final Integer accountId)
 		throws ApiException {
 		final Map<LocalDateTime, CodaClient.LazyCVR> reports =
 			getSnapshotReports(accountId);
@@ -511,8 +530,8 @@ public interface CodaClient {
 	 * @return a map of {@link LazyCVR lazily-loadable reports} keyed by date, e.g. "2022-05-16 21:33:29"
 	 * @throws ApiException ...
 	 */
-	default Map<LocalDateTime, LazyCVR> getSnapshotReports(Integer accountId)
-		throws ApiException {
+	default Map<LocalDateTime, LazyCVR> getSnapshotReports(
+		final Integer accountId) throws ApiException {
 		return getReports(ReportType.SNAPSHOT, accountId);
 	}
 
@@ -568,9 +587,9 @@ public interface CodaClient {
 	 * @return the {@link RegistrationCreateRequest created registration}
 	 * @throws ApiException ...
 	 */
-	RegistrationCreateRequest createFullyManagedRegistration(final String label,
-		final String description, final RegistrationSignupDataRequest request,
-		final List<Integer> associatedMspUserIds) throws ApiException;
+	RegistrationCreateRequest createFullyManagedRegistration(String label,
+		String description, RegistrationSignupDataRequest request,
+		List<Integer> associatedMspUserIds) throws ApiException;
 
 	/**
 	 * Returns a {@link List} of IDs for active users with the <code>"Global Admin"</code> role.
@@ -611,8 +630,8 @@ public interface CodaClient {
 	 * @return the disabled {@link Task scheduled task}
 	 * @throws ApiException ...
 	 */
-	default Task disableScheduledTask(String taskId, Integer accountId)
-		throws ApiException {
+	default Task disableScheduledTask(final String taskId,
+		final Integer accountId) throws ApiException {
 		return updateSchedule(taskId, "disable", accountId);
 	}
 
@@ -624,8 +643,8 @@ public interface CodaClient {
 	 * @return the enabled {@link Task scheduled task}
 	 * @throws ApiException ...
 	 */
-	default Task enableScheduledTask(String taskId, Integer accountId)
-		throws ApiException {
+	default Task enableScheduledTask(final String taskId,
+		final Integer accountId) throws ApiException {
 		return updateSchedule(taskId, "enable", accountId);
 	}
 
@@ -637,8 +656,8 @@ public interface CodaClient {
 	 * @return the reset {@link Task scheduled task}
 	 * @throws ApiException ...
 	 */
-	default Task resetScheduledTask(String taskId, Integer accountId)
-		throws ApiException {
+	default Task resetScheduledTask(final String taskId,
+		final Integer accountId) throws ApiException {
 		return updateSchedule(taskId, "reset", accountId);
 	}
 
@@ -650,8 +669,8 @@ public interface CodaClient {
 	 * @return the started {@link Task scheduled task}
 	 * @throws ApiException ...
 	 */
-	default Task startScheduledTask(String taskId, Integer accountId)
-		throws ApiException {
+	default Task startScheduledTask(final String taskId,
+		final Integer accountId) throws ApiException {
 		return updateSchedule(taskId, "start", accountId);
 	}
 
@@ -663,7 +682,7 @@ public interface CodaClient {
 	 * @return the stopped {@link Task scheduled task}
 	 * @throws ApiException ...
 	 */
-	default Task stopScheduledTask(String taskId, Integer accountId)
+	default Task stopScheduledTask(final String taskId, final Integer accountId)
 		throws ApiException {
 		return updateSchedule(taskId, "stop", accountId);
 	}
