@@ -102,6 +102,11 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <!-- RELEASE_VERSION -->
                 <version>5.4.0</version>
+                <configuration>
+                    <configOptions>
+                        <dateLibrary>java8</dateLibrary>
+                    </configOptions>
+                </configuration>
                 <!-- /RELEASE_VERSION -->
                 <executions>
                     <execution>
