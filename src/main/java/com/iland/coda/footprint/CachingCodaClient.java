@@ -71,25 +71,28 @@ final class CachingCodaClient implements CodaClient {
 	private final CodaClient delegatee;
 
 	private final LoadingCache<String, Set<RegistrationLight>>
-		registrationsCache =
-		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.DAYS).removalListener(
-				CachingCodaClient.<String, Set<RegistrationLight>>createRemovalListener(
-					"Registration cache"))
-			.build(new CacheLoader<String, Set<RegistrationLight>>() {
-				@Override
-				public Set<RegistrationLight> load(final String category)
-					throws Exception {
-					return delegatee.listRegistrations(
-						Objects.equals(category, DEFAULT_CATEGORY) ?
-							null :
-							category);
-				}
-			});
+		registrationsCache = CacheBuilder.newBuilder()
+		.concurrencyLevel(CONCURRENCY_LEVEL)
+		.expireAfterWrite(1, TimeUnit.DAYS)
+		.removalListener(
+			CachingCodaClient.<String, Set<RegistrationLight>>createRemovalListener(
+				"Registration cache"))
+		.build(new CacheLoader<String, Set<RegistrationLight>>() {
+			@Override
+			public Set<RegistrationLight> load(final String category)
+				throws Exception {
+				return delegatee.listRegistrations(
+					Objects.equals(category, DEFAULT_CATEGORY) ?
+						null :
+						category);
+			}
+		});
 
 	private final LoadingCache<Integer, Set<Account>> accountCache =
-		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.DAYS).removalListener(
+		CacheBuilder.newBuilder()
+			.concurrencyLevel(CONCURRENCY_LEVEL)
+			.expireAfterWrite(1, TimeUnit.DAYS)
+			.removalListener(
 				CachingCodaClient.<Integer, Set<Account>>createRemovalListener(
 					"Account cache"))
 			.build(new CacheLoader<Integer, Set<Account>>() {
@@ -104,24 +107,27 @@ final class CachingCodaClient implements CodaClient {
 			});
 
 	private final LoadingCache<Integer, List<AgentlessScannerSrz>>
-		scannerCache =
-		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.HOURS).removalListener(
-				CachingCodaClient.<Integer, List<AgentlessScannerSrz>>createRemovalListener(
-					"Scanner cache"))
-			.build(new CacheLoader<Integer, List<AgentlessScannerSrz>>() {
-				@Override
-				public List<AgentlessScannerSrz> load(final Integer accountId)
-					throws Exception {
-					return delegatee.getScanners(
-						Objects.equals(accountId, DEFAULT_ACCOUNT_ID) ?
-							null :
-							accountId);
-				}
-			});
+		scannerCache = CacheBuilder.newBuilder()
+		.concurrencyLevel(CONCURRENCY_LEVEL)
+		.expireAfterWrite(1, TimeUnit.HOURS)
+		.removalListener(
+			CachingCodaClient.<Integer, List<AgentlessScannerSrz>>createRemovalListener(
+				"Scanner cache"))
+		.build(new CacheLoader<Integer, List<AgentlessScannerSrz>>() {
+			@Override
+			public List<AgentlessScannerSrz> load(final Integer accountId)
+				throws Exception {
+				return delegatee.getScanners(
+					Objects.equals(accountId, DEFAULT_ACCOUNT_ID) ?
+						null :
+						accountId);
+			}
+		});
 	private final LoadingCache<String, List<AdminUser>> userCache =
-		CacheBuilder.newBuilder().concurrencyLevel(CONCURRENCY_LEVEL)
-			.expireAfterWrite(1, TimeUnit.HOURS).removalListener(
+		CacheBuilder.newBuilder()
+			.concurrencyLevel(CONCURRENCY_LEVEL)
+			.expireAfterWrite(1, TimeUnit.HOURS)
+			.removalListener(
 				CachingCodaClient.<String, List<AdminUser>>createRemovalListener(
 					"User cache"))
 			.build(new CacheLoader<String, List<AdminUser>>() {
@@ -208,8 +214,10 @@ final class CachingCodaClient implements CodaClient {
 
 		final Set<RegistrationLight> registrations =
 			getRegistrations(DEFAULT_CATEGORY);
-		registrations.stream().filter(r -> registrationId.equals(r.getId()))
-			.findFirst().ifPresent(r -> {
+		registrations.stream()
+			.filter(r -> registrationId.equals(r.getId()))
+			.findFirst()
+			.ifPresent(r -> {
 				registrations.remove(r);
 				registrations.add(toLight(updatedRegistration));
 			});
@@ -229,7 +237,8 @@ final class CachingCodaClient implements CodaClient {
 			getRegistrations(DEFAULT_CATEGORY);
 		registrations.stream()
 			.filter(r -> Objects.equals(r.getId(), registration.getId()))
-			.findFirst().ifPresent(registrations::remove);
+			.findFirst()
+			.ifPresent(registrations::remove);
 	}
 
 	@Override
@@ -298,9 +307,8 @@ final class CachingCodaClient implements CodaClient {
 
 	@Override
 	public List<ScanSurfaceEntry> getScanSurface(final Integer scannerId,
-		final Integer accountId) throws ApiException {
-		// TODO: cache this
-		return delegatee.getScanSurface(scannerId, accountId);
+		final String textFilter, final Integer accountId) throws ApiException {
+		return delegatee.getScanSurface(scannerId, textFilter, accountId);
 	}
 
 	@Override
@@ -318,8 +326,10 @@ final class CachingCodaClient implements CodaClient {
 
 	@Override
 	public List<String> getReportTimestamps(final ReportType reportType,
-		final Integer accountId) throws ApiException {
-		return delegatee.getReportTimestamps(reportType, accountId);
+		final Boolean isXlsxDownload, final Integer accountId)
+		throws ApiException {
+		return delegatee.getReportTimestamps(reportType, isXlsxDownload,
+			accountId);
 	}
 
 	@Override

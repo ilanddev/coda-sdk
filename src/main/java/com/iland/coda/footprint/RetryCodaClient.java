@@ -174,15 +174,19 @@ final class RetryCodaClient implements CodaClient {
 		final List<Integer> scanners, final boolean isNoScanRequest,
 		final Integer accountId) throws ApiException {
 		try {
-			return new ScanSurfaceBatcher().createBatches(targets).stream()
-				.map(batch -> batch.scanners(scanners)).map(message -> {
+			return new ScanSurfaceBatcher().createBatches(targets)
+				.stream()
+				.map(batch -> batch.scanners(scanners))
+				.map(message -> {
 					try {
 						return updateScanSurface(message, isNoScanRequest,
 							accountId);
 					} catch (ApiException e) {
 						throw new RuntimeException(e);
 					}
-				}).flatMap(List::stream).collect(Collectors.toList());
+				})
+				.flatMap(List::stream)
+				.collect(Collectors.toList());
 		} catch (final RuntimeException e) {
 			throwIfInstanceOf(e.getCause(), ApiException.class);
 			throw e;
@@ -236,9 +240,9 @@ final class RetryCodaClient implements CodaClient {
 
 	@Override
 	public List<ScanSurfaceEntry> getScanSurface(final Integer scannerId,
-		final Integer accountId) throws ApiException {
+		final String textFilter, final Integer accountId) throws ApiException {
 		return retryIfNecessary(
-			() -> delegatee.getScanSurface(scannerId, accountId));
+			() -> delegatee.getScanSurface(scannerId, textFilter, accountId));
 	}
 
 	@Override
@@ -248,8 +252,8 @@ final class RetryCodaClient implements CodaClient {
 			final SimpleCodaClient simpleCodaClient =
 				(SimpleCodaClient) delegatee;
 
-			return getReportTimestamps(reportType, accountId).stream().collect(
-				Collectors.toMap(GenerationDate::parse,
+			return getReportTimestamps(reportType, accountId).stream()
+				.collect(Collectors.toMap(GenerationDate::parse,
 					timestamp -> () -> retryIfNecessary(
 						() -> simpleCodaClient.getReport(timestamp, reportType,
 							accountId)), throwDuplicateKeyException(),
@@ -268,8 +272,8 @@ final class RetryCodaClient implements CodaClient {
 			final SimpleCodaClient simpleCodaClient =
 				(SimpleCodaClient) delegatee;
 
-			return getReportTimestamps(reportType, accountId).stream().collect(
-				Collectors.toMap(GenerationDate::parse,
+			return getReportTimestamps(reportType, accountId).stream()
+				.collect(Collectors.toMap(GenerationDate::parse,
 					timestamp -> () -> retryIfNecessary(
 						() -> simpleCodaClient.getCvrJson(timestamp, reportType,
 							accountId))));
@@ -281,9 +285,11 @@ final class RetryCodaClient implements CodaClient {
 
 	@Override
 	public List<String> getReportTimestamps(final ReportType reportType,
-		final Integer accountId) throws ApiException {
+		final Boolean isXlsxDownload, final Integer accountId)
+		throws ApiException {
 		return retryIfNecessary(
-			() -> delegatee.getReportTimestamps(reportType, accountId));
+			() -> delegatee.getReportTimestamps(reportType, isXlsxDownload,
+				accountId));
 	}
 
 	@Override
