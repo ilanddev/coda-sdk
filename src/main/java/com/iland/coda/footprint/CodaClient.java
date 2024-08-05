@@ -155,7 +155,8 @@ public interface CodaClient {
 		final String label) throws ApiException {
 		return listRegistrations().stream()
 			.sorted(Comparator.comparingLong(RegistrationLight::getId))
-			.filter(r -> label.startsWith(r.getLabel())).findFirst();
+			.filter(r -> label.startsWith(r.getLabel()))
+			.findFirst();
 	}
 
 	/**
@@ -186,8 +187,8 @@ public interface CodaClient {
 	 * @throws ApiException ...
 	 */
 	default Integer labelToAccountId(final String label) throws ApiException {
-		return findAccountWithName(label).map(Account::getId).orElseThrow(
-			() -> new ApiException(
+		return findAccountWithName(label).map(Account::getId)
+			.orElseThrow(() -> new ApiException(
 				String.format("no account exists for name '%s'", label)));
 	}
 
@@ -201,8 +202,8 @@ public interface CodaClient {
 	default Integer registrationToAccountId(
 		final RegistrationLight registration) throws ApiException {
 		final String label = registration.getLabel();
-		return findAccountWithName(label).map(Account::getId).orElseThrow(
-			() -> new ApiException(
+		return findAccountWithName(label).map(Account::getId)
+			.orElseThrow(() -> new ApiException(
 				String.format("no account exists for name '%s'", label)));
 	}
 
@@ -242,8 +243,10 @@ public interface CodaClient {
 		logger().info("{}: Registering account '{}'", label, description);
 
 		final RegistrationSignupDataRequest request =
-			new RegistrationSignupDataRequest().firstName("").lastName("")
-				.email("").companyWebsite("");
+			new RegistrationSignupDataRequest().firstName("")
+				.lastName("")
+				.email("")
+				.companyWebsite("");
 		final List<Integer> activeGlobalAdminIds = getActiveGlobalAdminIds();
 		final RegistrationCreateRequest newRegistration =
 			createFullyManagedRegistration(label, description, request,
@@ -291,7 +294,8 @@ public interface CodaClient {
 	default AgentlessScannerSrz getDefaultCloudScanner(final Integer accountId)
 		throws ApiException {
 		return getScanners(accountId).stream()
-			.filter(AgentlessScannerSrz::getIsDefaultCloudScanner).findFirst()
+			.filter(AgentlessScannerSrz::getIsDefaultCloudScanner)
+			.findFirst()
 			.orElseThrow(
 				() -> new ApiException("default cloud scanner is missing"));
 	}
@@ -305,10 +309,11 @@ public interface CodaClient {
 	 */
 	default Map<String, Integer> getScannerIdByLabel(final Integer accountId)
 		throws ApiException {
-		return getScanners(accountId).stream().collect(
-			toMap(AgentlessScannerSrz::getLabel, AgentlessScannerSrz::getId,
-				/* in the event of a duplicate key use the newer scanner */
-				Math::max));
+		return getScanners(accountId).stream()
+			.collect(
+				toMap(AgentlessScannerSrz::getLabel, AgentlessScannerSrz::getId,
+					/* in the event of a duplicate key use the newer scanner */
+					Math::max));
 	}
 
 	/**
@@ -446,14 +451,17 @@ public interface CodaClient {
 	default Set<ScanSurfaceEntry> getScanSurface(final Integer accountId)
 		throws ApiException {
 		try {
-			return getScannerIdByLabel(accountId).values().stream()
+			return getScannerIdByLabel(accountId).values()
+				.stream()
 				.map(scannerId -> {
 					try {
 						return getScanSurface(scannerId, accountId);
 					} catch (ApiException e) {
 						throw new RuntimeException(e);
 					}
-				}).flatMap(Collection::stream).collect(Collectors.toSet());
+				})
+				.flatMap(Collection::stream)
+				.collect(Collectors.toSet());
 		} catch (RuntimeException e) {
 			throwIfInstanceOf(e.getCause(), ApiException.class);
 			throw e;
@@ -492,8 +500,22 @@ public interface CodaClient {
 	 * @return a {@link List list} of {@link ScanSurfaceEntry entries}
 	 * @throws ApiException ...
 	 */
-	List<ScanSurfaceEntry> getScanSurface(Integer scannerId, Integer accountId)
-		throws ApiException;
+	default List<ScanSurfaceEntry> getScanSurface(Integer scannerId,
+		Integer accountId) throws ApiException {
+		return getScanSurface(scannerId, null, accountId);
+	}
+
+	/**
+	 * Retrieve {@link List list} of user inputs and the resulting assets.
+	 *
+	 * @param scannerId  Optional scanner ID filter. If not set or invalid, falls back on all scanners
+	 * @param textFilter Optional page you want to request
+	 * @param accountId  Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return a {@link List list} of {@link ScanSurfaceEntry entries}
+	 * @throws ApiException ...
+	 */
+	List<ScanSurfaceEntry> getScanSurface(Integer scannerId, String textFilter,
+		Integer accountId) throws ApiException;
 
 	/**
 	 * Retrieve an {@link Optional} containing the latest (i.e. newest) {@link CVR report}.
@@ -508,9 +530,12 @@ public interface CodaClient {
 			getSnapshotReports(accountId);
 
 		try {
-			return reports.keySet().stream().max(
-					Comparator.comparing(ldt -> ldt.toEpochSecond(ZoneOffset.UTC)))
-				.map(reports::get).map(lazyCvr -> {
+			return reports.keySet()
+				.stream()
+				.max(Comparator.comparing(
+					ldt -> ldt.toEpochSecond(ZoneOffset.UTC)))
+				.map(reports::get)
+				.map(lazyCvr -> {
 					try {
 						return lazyCvr.retrieve();
 					} catch (ApiException e) {
@@ -565,8 +590,22 @@ public interface CodaClient {
 	 * @return available report dates
 	 * @throws ApiException ...
 	 */
-	List<String> getReportTimestamps(ReportType reportType, Integer accountId)
-		throws ApiException;
+	default List<String> getReportTimestamps(ReportType reportType,
+		Integer accountId) throws ApiException {
+		return getReportTimestamps(reportType, null, accountId);
+	}
+
+	/**
+	 * Returns available report dates.
+	 *
+	 * @param reportType     the {@link ReportType}
+	 * @param isXlsxDownload Whether the report downloads the Technical Report (optional)
+	 * @param accountId      Account ID you want to receive request for. If not provided, falls back on <code>original_account_id</code> from the auth endpoint.
+	 * @return available report dates
+	 * @throws ApiException ...
+	 */
+	List<String> getReportTimestamps(ReportType reportType,
+		Boolean isXlsxDownload, Integer accountId) throws ApiException;
 
 	/**
 	 * Retrieve a {@link File pdf} containing the cyber risk report.
@@ -598,9 +637,11 @@ public interface CodaClient {
 	 * @throws ApiException ...
 	 */
 	default List<Integer> getActiveGlobalAdminIds() throws ApiException {
-		return listUsers().stream().filter(
-				u -> u.getIsActive() && Objects.equals("Global Admin", u.getRole()))
-			.map(AdminUser::getId).collect(Collectors.toList());
+		return listUsers().stream()
+			.filter(u -> u.getIsActive() && Objects.equals("Global Admin",
+				u.getRole()))
+			.map(AdminUser::getId)
+			.collect(Collectors.toList());
 	}
 
 	/**

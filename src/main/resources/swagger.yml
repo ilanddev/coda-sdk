@@ -243,10 +243,8 @@ paths:
       summary: Provides a lighter, summary listing of registrations
   /admin/reports/usageReport/{year}/{month}/:
     get:
-      operationId: adminReportsUsageReportRetrieve
-      description: |-
-        Returns an usage report for a certain period, if it exists.
-        If not, returns the list of periods with available reports.
+      operationId: usageReport
+      description: Returns the usage report for the specified year and month
       parameters:
         - in: query
           name: filter
@@ -287,7 +285,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedUsageReportList'
           description: ''
-      summary: Returns an usage report for a certain period, if it exists.
+      summary: Returns the usage report for the specified year and month
   /admin/scanners/:
     get:
       operationId: adminScannersList
@@ -711,6 +709,16 @@ paths:
               - MY_WORKFLOW
           description: The type of page containing multiple states to be requested
         - in: query
+          name: pluginFamilies
+          schema:
+            type: string
+          description: List of Plugin Families based on which the entities are filtered
+        - in: query
+          name: pluginNames
+          schema:
+            type: string
+          description: List of Plugin Names based on which the entities are filtered
+        - in: query
           name: state
           schema:
             type: string
@@ -720,6 +728,7 @@ paths:
               - EXECUTION
               - FIX_PENDING_CONFIRMATION
               - PLANNING
+              - REOPEN
           description: The status of the requested entities
         - in: query
           name: technical_context_ids
@@ -912,7 +921,7 @@ paths:
   /console/elements/application/{applicationId}/:
     get:
       operationId: consoleElementsApplicationRetrieve
-      description: Return generic data about an application
+      description: Returns generic data about an application
       parameters:
         - in: path
           name: applicationId
@@ -937,7 +946,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApplicationDetails'
           description: ''
-      summary: Return generic data about an application
+      summary: Returns generic data about an application
     delete:
       operationId: consoleElementsApplicationDestroy
       description: |-
@@ -966,14 +975,34 @@ paths:
       summary: Delete an existing application from database and all daemons, webapps,
   /console/elements/application/{applicationId}/attackavenues/:
     get:
-      operationId: consoleElementsApplicationAttackavenuesList
-      description: Displays advanced scanner findings
+      operationId: appVirtualVulnerabilitiesRetrieve
+      description: Displays the Virtual Vulnerabilities for an Application
       parameters:
         - in: path
           name: applicationId
           schema:
             type: integer
           required: true
+        - in: query
+          name: hideInformationalEntries
+          schema:
+            type: boolean
+          description: Whether to hide entries with CVSS Base 0
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on a page
+        - in: query
+          name: states
+          schema:
+            type: string
+          description: List of states to be returned
         - in: header
           name: FootprintTenantId
           schema:
@@ -990,51 +1019,9 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VirtualVulnerability'
+                $ref: '#/components/schemas/PaginatedVirtualVulnerabilityList'
           description: ''
-      summary: Displays advanced scanner findings
-    post:
-      operationId: consoleElementsApplicationAttackavenuesCreate
-      description: Updates the state of an advanced scanner finding
-      parameters:
-        - in: path
-          name: applicationId
-          schema:
-            type: integer
-          required: true
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/VulnerabilityChangeRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/VulnerabilityChangeRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/VulnerabilityChangeRequest'
-        required: true
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VirtualVulnerability'
-          description: ''
-      summary: Updates the state of an advanced scanner finding
+      summary: Displays the Virtual Vulnerabilities for an Application
   /console/elements/application/{applicationId}/hierarchy/:
     get:
       operationId: consoleElementsApplicationHierarchyRetrieve
@@ -1066,14 +1053,19 @@ paths:
       summary: Returns the application hierarchy
   /console/elements/application/{applicationId}/vulnerabilities/:
     get:
-      operationId: consoleElementsApplicationVulnerabilitiesRetrieve
-      description: Return vulnerabilities on a application
+      operationId: appVulnerabilitiesRetrieve
+      description: Return vulnerabilities on an application
       parameters:
         - in: path
           name: applicationId
           schema:
             type: integer
           required: true
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to request
         - in: header
           name: FootprintTenantId
           schema:
@@ -1090,9 +1082,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedVulnerabilityList'
+                $ref: '#/components/schemas/PaginatedVulnerabilityElementList'
           description: ''
-      summary: Return vulnerabilities on a application
+      summary: Return vulnerabilities on an application
     post:
       operationId: consoleElementsApplicationVulnerabilitiesCreate
       description: Updates the state of a vulnerability finding
@@ -1130,16 +1122,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Vulnerability'
+                $ref: '#/components/schemas/VulnerabilityElement'
           description: ''
       summary: Updates the state of a vulnerability finding
   /console/elements/applications/:
     get:
       operationId: consoleElementsApplicationsRetrieve
-      description: |-
-        Application listing endpoints
-
-        Lists the applications with optional filtering parameters
+      description: Lists the applications with optional filtering parameters
       parameters:
         - in: query
           name: filter
@@ -1152,18 +1141,13 @@ paths:
             type: integer
           description: Page to request
         - in: query
-          name: risk_level
+          name: riskLevel
           schema:
             type: string
-            enum:
-              - all
-              - critical
-              - nonvisible
-              - secure
-              - vulnerable
-          description: Risk level filter
+          description: 'Comma-separated list of risk levels to be retrieved. Valid values:
+          secure, unknown, vulnerable, critical'
         - in: query
-          name: scan_type
+          name: scanType
           schema:
             type: string
             enum:
@@ -1190,6 +1174,8 @@ paths:
           schema:
             type: string
             enum:
+              - discoveredOn
+              - lastSeen
               - name
           description: Sorting column
         - in: query
@@ -1200,6 +1186,15 @@ paths:
               - ascending
               - descending
           description: Sorting direction
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - all
+              - offline
+              - online
+          description: Status filter
         - in: header
           name: FootprintTenantId
           schema:
@@ -1218,27 +1213,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedApplicationInListingList'
           description: ''
-      summary: Application listing endpoints
+      summary: Lists the applications with optional filtering parameters
   /console/elements/contexts/business/:
     get:
       operationId: consoleElementsContextsBusinessRetrieve
       description: Returns listing of available business contexts
       parameters:
         - in: query
+          name: filter
+          schema:
+            type: string
+          description: Text filter
+        - in: query
+          name: hideAutoGenerated
+          schema:
+            type: boolean
+          description: Whether to hide auto-generated contexts
+        - in: query
           name: page
           schema:
             type: integer
         - in: query
-          name: risk_level
+          name: riskLevel
           schema:
             type: string
-            enum:
-              - all
-              - critical
-              - nonvisible
-              - secure
-              - vulnerable
-          description: Risk level filter
+          description: 'Comma-separated list of risk levels to be retrieved. Valid values:
+          secure, unknown, vulnerable, critical'
         - in: header
           name: FootprintTenantId
           schema:
@@ -1261,7 +1261,10 @@ paths:
   /console/elements/contexts/business/{contextId}/:
     get:
       operationId: consoleElementsContextsBusinessRetrieve2
-      description: Returns details of a certain context
+      description: |-
+        Returns details of a certain context
+
+        NOTE: Class moved by @laurbtzt
       parameters:
         - in: path
           name: contextId
@@ -1290,6 +1293,7 @@ paths:
   /console/elements/contexts/business/{contextId}/setOwnerGroup/:
     patch:
       operationId: consoleElementsContextsBusinessSetOwnerGroupPartialUpdate
+      description: ViewSet for Business Context Owner
       parameters:
         - in: path
           name: contextId
@@ -1321,10 +1325,11 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
-      summary: ''
+      summary: ViewSet for Business Context Owner
   /console/elements/contexts/business/{contextId}/setOwnerUser/:
     patch:
       operationId: consoleElementsContextsBusinessSetOwnerUserPartialUpdate
+      description: ViewSet for Business Context Owner
       parameters:
         - in: path
           name: contextId
@@ -1356,27 +1361,32 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
-      summary: ''
+      summary: ViewSet for Business Context Owner
   /console/elements/contexts/technical/:
     get:
       operationId: consoleElementsContextsTechnicalRetrieve
       description: Returns list of available technical contexts
       parameters:
         - in: query
+          name: filter
+          schema:
+            type: string
+          description: Text filter
+        - in: query
+          name: hideAutoGenerated
+          schema:
+            type: boolean
+          description: Whether to hide auto-generated contexts
+        - in: query
           name: page
           schema:
             type: integer
         - in: query
-          name: risk_level
+          name: riskLevel
           schema:
             type: string
-            enum:
-              - all
-              - critical
-              - nonvisible
-              - secure
-              - vulnerable
-          description: Risk level filter
+          description: 'Comma-separated list of risk levels to be retrieved. Valid values:
+          secure, unknown, vulnerable, critical'
         - in: header
           name: FootprintTenantId
           schema:
@@ -1427,9 +1437,13 @@ paths:
       summary: Returns details of a certain Technical Context
   /console/elements/contexts/technical/{contextId}/applications/:
     get:
-      operationId: consoleElementsContextsTechnicalApplicationsRetrieve
+      operationId: tcApplicationsRetrieve
       description: Returns a certain page of applications for a Technical Context
       parameters:
+        - in: query
+          name: businessContextId
+          schema:
+            type: integer
         - in: path
           name: contextId
           schema:
@@ -1460,9 +1474,13 @@ paths:
       summary: Returns a certain page of applications for a Technical Context
   /console/elements/contexts/technical/{contextId}/devices/:
     get:
-      operationId: technicalContextDevices
+      operationId: tcDevicesRetrieve
       description: Returns a certain page of devices for a technical context
       parameters:
+        - in: query
+          name: businessContextId
+          schema:
+            type: integer
         - in: path
           name: contextId
           schema:
@@ -1488,12 +1506,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedTechnicalContextDeviceSrzList'
+                $ref: '#/components/schemas/PaginatedTechnicalContextDeviceList'
           description: ''
       summary: Returns a certain page of devices for a technical context
   /console/elements/contexts/technical/{contextId}/setOwnerGroup/:
     patch:
       operationId: consoleElementsContextsTechnicalSetOwnerGroupPartialUpdate
+      description: ViewSet for the Technical Context Owner
       parameters:
         - in: path
           name: contextId
@@ -1525,10 +1544,11 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
-      summary: ''
+      summary: ViewSet for the Technical Context Owner
   /console/elements/contexts/technical/{contextId}/setOwnerUser/:
     patch:
       operationId: consoleElementsContextsTechnicalSetOwnerUserPartialUpdate
+      description: ViewSet for the Technical Context Owner
       parameters:
         - in: path
           name: contextId
@@ -1560,11 +1580,11 @@ paths:
           description: Returned if context_id is not found
         '500':
           description: Returned if a server error occurs
-      summary: ''
+      summary: ViewSet for the Technical Context Owner
   /console/elements/device/{deviceId}/applications/:
     get:
       operationId: consoleElementsDeviceApplicationsRetrieve
-      description: Return applications on a device
+      description: Returns the list of applications for a device
       parameters:
         - in: path
           name: deviceId
@@ -1589,17 +1609,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedApplicationDetailsList'
           description: ''
-      summary: Return applications on a device
+      summary: Returns the list of applications for a device
   /console/elements/device/{deviceId}/attackavenues/:
     get:
-      operationId: consoleElementsDeviceAttackavenuesList
-      description: Lists available attack avenues on a device
+      operationId: deviceVirtualVulnerabilitiesRetrieve
+      description: View for managing Attack Avenues for applications on a device
       parameters:
         - in: path
           name: deviceId
           schema:
             type: integer
           required: true
+        - in: query
+          name: hideInformationalEntries
+          schema:
+            type: boolean
+          description: Whether to hide entries with CVSS Base 0
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to request
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on a page
+        - in: query
+          name: states
+          schema:
+            type: string
+          description: List of states to be returned
         - in: header
           name: FootprintTenantId
           schema:
@@ -1616,16 +1656,14 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VirtualVulnerability'
+                $ref: '#/components/schemas/PaginatedVirtualVulnerabilityList'
           description: ''
-      summary: Lists available attack avenues on a device
+      summary: View for managing Attack Avenues for applications on a device
   /console/elements/device/{deviceId}/dnsEntries/:
     get:
       operationId: consoleElementsDeviceDnsEntriesList
-      description: Returns DNS entries of a device, if it is scanned by an agentless
-        scanner.
+      description: View for managing the DNS entries for a device when scanned by
+        an agentless scanner
       parameters:
         - in: path
           name: deviceId
@@ -1653,13 +1691,14 @@ paths:
                   $ref: '#/components/schemas/DeviceDNSEntries'
           description: ''
         '501':
-          description: Returned if trying to retrieve DNS entries on agent-based devices.
-            This is not supported yet.
-      summary: Returns DNS entries of a device, if it is scanned by an agentless scanner.
+          description: Returned when attempting to retrieve DNS entries on agent-based
+            devices. Feature not supported yet.
+      summary: View for managing the DNS entries for a device when scanned by an agentless
+        scanner
   /console/elements/device/{deviceId}/drivers/:
     get:
       operationId: consoleElementsDeviceDriversList
-      description: Return drivers on a device
+      description: View for managing the list of drivers for a device
       parameters:
         - in: path
           name: deviceId
@@ -1686,11 +1725,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceDrivers'
           description: ''
-      summary: Return drivers on a device
+      summary: View for managing the list of drivers for a device
   /console/elements/device/{deviceId}/hierarchy/:
     get:
       operationId: consoleElementsDeviceHierarchyRetrieve
-      description: Returns the device's hierarchy
+      description: View for managing a device's hierarchy
       parameters:
         - in: path
           name: deviceId
@@ -1715,11 +1754,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/HierarchyResponse'
           description: ''
-      summary: Returns the device's hierarchy
+      summary: View for managing a device's hierarchy
   /console/elements/device/{deviceId}/installedUpdates/:
     get:
       operationId: consoleElementsDeviceInstalledUpdatesRetrieve
-      description: Return patches on a device
+      description: View for managing a device's installed updates and patches
       parameters:
         - in: path
           name: deviceId
@@ -1744,11 +1783,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceInstalledUpdates'
           description: ''
-      summary: Return patches on a device
+      summary: View for managing a device's installed updates and patches
   /console/elements/device/{deviceId}/jobs/:
     get:
       operationId: consoleElementsDeviceJobsList
-      description: Return jobs on a device
+      description: View for managing information about the jobs running on a device
       parameters:
         - in: path
           name: deviceId
@@ -1775,11 +1814,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceJobs'
           description: ''
-      summary: Return jobs on a device
+      summary: View for managing information about the jobs running on a device
   /console/elements/device/{deviceId}/networkConnections/:
     get:
       operationId: consoleElementsDeviceNetworkConnectionsRetrieve
-      description: Return network connections list on a device
+      description: View for returning the list of Network Connections for a Device
       parameters:
         - in: path
           name: deviceId
@@ -1800,11 +1839,11 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: Return network connections list on a device
+      summary: View for returning the list of Network Connections for a Device
   /console/elements/device/{deviceId}/networkDevices/:
     get:
       operationId: consoleElementsDeviceNetworkDevicesRetrieve
-      description: Return network devices on a device
+      description: View for managing a device's network information
       parameters:
         - in: path
           name: deviceId
@@ -1825,11 +1864,11 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: Return network devices on a device
+      summary: View for managing a device's network information
   /console/elements/device/{deviceId}/networkEdge/:
     get:
-      operationId: consoleElementsDeviceNetworkEdgeRetrieve
-      description: Return available network edge results for a device
+      operationId: consoleElementsDeviceNetworkEdgeList
+      description: View for returning a device's available Network Edge scan results
       parameters:
         - in: path
           name: deviceId
@@ -1849,12 +1888,18 @@ paths:
         - ApiKeyAuth: [ ]
       responses:
         '200':
-          description: No response body
-      summary: Return available network edge results for a device
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SecurityCheckList'
+          description: ''
+      summary: View for returning a device's available Network Edge scan results
   /console/elements/device/{deviceId}/networkEdge/{testId}/:
     get:
-      operationId: consoleElementsDeviceNetworkEdgeRetrieve2
-      description: Return a certain network edge result for a device
+      operationId: consoleElementsDeviceNetworkEdgeRetrieve
+      description: View for returning a certain network edge result for a device
       parameters:
         - in: path
           name: deviceId
@@ -1879,15 +1924,16 @@ paths:
         - ApiKeyAuth: [ ]
       responses:
         '200':
-          description: No response body
-      summary: Return a certain network edge result for a device
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SecurityCheckDetail'
+          description: ''
+      summary: View for returning a certain network edge result for a device
   /console/elements/device/{deviceId}/os/:
     get:
       operationId: consoleElementsDeviceOsRetrieve
-      description: |-
-        💻 Device Operating System view
-
-        Returns info on a certain device's operating system
+      description: View for managing information on a certain device's operating system
       parameters:
         - in: path
           name: deviceId
@@ -1912,13 +1958,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceOS'
           description: ''
-      summary: 💻 Device Operating System view
+      summary: View for managing information on a certain device's operating system
   /console/elements/device/{deviceId}/overview/:
     get:
       operationId: consoleElementsDeviceOverviewRetrieve
-      description: |-
-        Return general info of the device, if the device is
-        discovered from an agent
+      description: View for returning general information of a device discovered by
+        an agent;
       parameters:
         - in: path
           name: deviceId
@@ -1943,11 +1988,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceOverview'
           description: ''
-      summary: Return general info of the device, if the device is
+      summary: View for returning general information of a device discovered by an
+        agent;
   /console/elements/device/{deviceId}/patches/:
     get:
-      operationId: consoleElementsDevicePatchesRetrieve
-      description: Return patches on a device
+      operationId: consoleElementsDevicePatchesList
+      description: View for managing patches for a device
       parameters:
         - in: path
           name: deviceId
@@ -1970,13 +2016,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeviceInstalledUpdates'
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeviceInstalledUpdates'
           description: ''
-      summary: Return patches on a device
+      summary: View for managing patches for a device
   /console/elements/device/{deviceId}/processes/:
     get:
       operationId: consoleElementsDeviceProcessesRetrieve
-      description: Return process list on a device
+      description: View for managing the list of processes for a device
       parameters:
         - in: path
           name: deviceId
@@ -1997,11 +2045,11 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: Return process list on a device
+      summary: View for managing the list of processes for a device
   /console/elements/device/{deviceId}/system/:
     get:
       operationId: consoleElementsDeviceSystemRetrieve
-      description: Get computer system info if agent source
+      description: View for returning the system information provided by an agent
       parameters:
         - in: path
           name: deviceId
@@ -2022,7 +2070,7 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: Get computer system info if agent source
+      summary: View for returning the system information provided by an agent
   /console/elements/device/{deviceId}/updateTags/:
     post:
       operationId: consoleElementsDeviceUpdateTagsCreate
@@ -2063,7 +2111,7 @@ paths:
   /console/elements/device/{deviceId}/users/:
     get:
       operationId: consoleElementsDeviceUsersList
-      description: Return users on a device
+      description: View for providing information on device users
       parameters:
         - in: path
           name: deviceId
@@ -2090,17 +2138,22 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceUser'
           description: ''
-      summary: Return users on a device
+      summary: View for providing information on device users
   /console/elements/device/{deviceId}/vulnerabilities/:
     get:
-      operationId: consoleElementsDeviceVulnerabilitiesList
-      description: Return vulnerabilities on a device.
+      operationId: deviceVulnerabilitiesRetrieve
+      description: View for managing device vulnerabilities
       parameters:
         - in: path
           name: deviceId
           schema:
             type: integer
           required: true
+        - in: query
+          name: page
+          schema:
+            type: integer
+          description: Page to request
         - in: header
           name: FootprintTenantId
           schema:
@@ -2117,11 +2170,9 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Vulnerability'
+                $ref: '#/components/schemas/PaginatedVulnerabilityElementList'
           description: ''
-      summary: Return vulnerabilities on a device.
+      summary: View for managing device vulnerabilities
   /console/elements/device/{deviceId}/zapScans/:
     get:
       operationId: consoleElementsDeviceZapScansList
@@ -2159,15 +2210,6 @@ paths:
       description: Returns list of discovered devices
       parameters:
         - in: query
-          name: deviceApps
-          schema:
-            type: string
-            enum:
-              - all
-              - withApps
-              - withoutApps
-          description: Filter based on the existence of applications on it
-        - in: query
           name: filter
           schema:
             type: string
@@ -2181,25 +2223,20 @@ paths:
           schema:
             type: integer
         - in: query
-          name: reachabilityStatus
+          name: respondsToICMPPing
           schema:
             type: string
             enum:
-              - all
-              - reachable
-              - unreachable
-          description: Filter devices that respond to Ping scan
+              - 'no'
+              - notApplicable
+              - 'yes'
+          description: Filter based on the status of the device
         - in: query
           name: riskLevel
           schema:
             type: string
-            enum:
-              - all
-              - critical
-              - nonvisible
-              - secure
-              - vulnerable
-          description: Risk level filter
+          description: 'Comma-separated list of risk levels to be retrieved. Valid values:
+          secure, unknown, vulnerable, critical'
         - in: query
           name: scanType
           schema:
@@ -2213,8 +2250,8 @@ paths:
           name: scannerId
           schema:
             type: integer
-          description: Optional scanner ID filter. If not set or invalid, falls back
-            on all scanners
+          description: Optional scanner ID filter. Falls back on all scanners if not
+            set or invalid
         - in: query
           name: scope
           schema:
@@ -2230,6 +2267,7 @@ paths:
             type: string
             enum:
               - discoveredOn
+              - ip
               - lastScanned
               - name
           description: Sorting column
@@ -2251,6 +2289,11 @@ paths:
               - all
               - nessusimport
           description: Source filter
+        - in: query
+          name: tags
+          schema:
+            type: string
+          description: Custom tags filter
         - in: header
           name: FootprintTenantId
           schema:
@@ -2270,71 +2313,92 @@ paths:
                 $ref: '#/components/schemas/PaginatedDeviceList'
           description: ''
       summary: Returns list of discovered devices
-  /console/notifications/:
-    get:
-      operationId: consoleNotificationsRetrieve
-      description: Returns the list of available notifications (alerts) on the platform
-      parameters:
-        - in: query
-          name: level
-          schema:
-            type: string
-            enum:
-              - critical
-              - informational
-              - warnings
-          description: Risk level filter
-        - in: query
-          name: message
-          schema:
-            type: string
-          description: Free text filter based on alert message
-        - in: query
-          name: module
-          schema:
-            type: string
-            enum:
-              - Agents
-              - Availability
-              - Configuration
-              - InternalScanner
-              - Platform
-              - Vulnerability
-          description: Comma-separated module filter values
-        - in: query
-          name: page
-          schema:
-            type: integer
-          description: Page you want to request
-        - in: query
-          name: size
-          schema:
-            type: integer
-          description: Number of items you want on a page
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedNotificationList'
-          description: ''
-      summary: Returns the list of available notifications (alerts) on the platform
+  # disabled by Tag
+  #  /console/notifications/:
+  #    get:
+  #      operationId: listNotifications
+  #      description: Returns the list of available notifications (alerts) on the platform
+  #      parameters:
+  #        - in: query
+  #          name: isSystemTenant
+  #          schema:
+  #            type: boolean
+  #          description: Whether or not should retrieve alerts from system tenant
+  #        - in: query
+  #          name: level
+  #          schema:
+  #            type: string
+  #            enum:
+  #              - critical
+  #              - informational
+  #              - warnings
+  #          description: Risk level filter
+  #        - in: query
+  #          name: message
+  #          schema:
+  #            type: string
+  #          description: Free text filter based on alert message
+  #        - in: query
+  #          name: module
+  #          schema:
+  #            type: array
+  #            items:
+  #              type:
+  #                - Vulnerability
+  #                - Configuration
+  #                - Availability
+  #                - Platform
+  #                - Agents
+  #                - InternalScanner
+  #                - Email
+  #              enum:
+  #                - Agents
+  #                - Availability
+  #                - Configuration
+  #                - Email
+  #                - InternalScanner
+  #                - Platform
+  #                - Vulnerability
+  #          description: Comma-separated module filter values
+  #        - in: query
+  #          name: page
+  #          schema:
+  #            type: integer
+  #          description: Page you want to request
+  #        - in: query
+  #          name: size
+  #          schema:
+  #            type: integer
+  #          description: Number of items you want on a page
+  #        - in: header
+  #          name: FootprintTenantId
+  #          schema:
+  #            type: integer
+  #          description: Tenant ID you want to receive request for. If not provided, falls
+  #            back on `original_tenant_id` from the auth endpoint
+  #      tags:
+  #        - console
+  #      security:
+  #        - jwtAuth: [ ]
+  #        - ApiKeyAuth: [ ]
+  #      responses:
+  #        '200':
+  #          content:
+  #            application/json:
+  #              schema:
+  #                $ref: '#/components/schemas/PaginatedNotificationList'
+  #          description: ''
+  #      summary: Returns the list of available notifications (alerts) on the platform
   /console/report/{reportType}/:
     get:
       operationId: allCvrDatesRetrieve
       description: Returns available report dates
       parameters:
+        - in: query
+          name: is_xlsx_download
+          schema:
+            type: boolean
+          description: Whether the report downloads the Technical Report
         - in: path
           name: reportType
           schema:
@@ -2371,6 +2435,11 @@ paths:
       description: Returns the available CVR report, or the requested CVR report if
         type and date are provided
       parameters:
+        - in: query
+          name: is_technical_report_only
+          schema:
+            type: boolean
+          description: Whether the report should contain Technical Report data only
         - in: path
           name: reportDate
           schema:
@@ -2446,6 +2515,10 @@ paths:
           name: page
           schema:
             type: integer
+        - in: query
+          name: xlsx_request
+          schema:
+            type: boolean
         - in: header
           name: FootprintTenantId
           schema:
@@ -2462,7 +2535,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedVulnerabilityList'
+                $ref: '#/components/schemas/PaginatedInReviewReportList'
           description: ''
       summary: Provides a listing of vulnerabilities that have been added to action
         plan
@@ -2472,18 +2545,23 @@ paths:
       description: Retrieves the contextual risk report
       parameters:
         - in: query
+          name: cveFilter
+          schema:
+            type: string
+          description: The vulnerability ID you want the report for
+        - in: query
           name: deviceLabel
           schema:
             type: string
           description: Label of the device you want the report for
         - in: query
-          name: is_exploitable
+          name: isExploitable
           schema:
             type: boolean
           description: Whether the result should contain only exploitable entries or
             not
         - in: query
-          name: is_weaponized
+          name: isWeaponized
           schema:
             type: boolean
           description: Whether the result should contain only weaponized entries or
@@ -2493,6 +2571,11 @@ paths:
           schema:
             type: integer
           description: Page you want to request
+        - in: query
+          name: riskLevel
+          schema:
+            type: string
+          description: The vulnerability risk level you want the report for
         - in: query
           name: size
           schema:
@@ -2695,22 +2778,22 @@ paths:
           name: page
           schema:
             type: integer
-          description: Page you want to request
+          description: Page to request
         - in: query
           name: risk_level
           schema:
             type: string
             enum:
               - critical
-              - nonvisible
               - secure
+              - unknown
               - vulnerable
           description: Risk level filter
         - in: query
           name: size
           schema:
             type: integer
-          description: Number of elements on page
+          description: Number of elements on a page
         - in: header
           name: FootprintTenantId
           schema:
@@ -2746,6 +2829,11 @@ paths:
             type: integer
           description: Optional scanner ID filter. If not set or invalid, falls back
             on all scanners
+        - in: query
+          name: textFilter
+          schema:
+            type: string
+          description: Page you want to request
         - in: header
           name: FootprintTenantId
           schema:
@@ -2803,7 +2891,8 @@ paths:
                   $ref: '#/components/schemas/ScanUuidScannerId'
               examples:
                 ExampleScanUUID:
-                  value: '[{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
+                  value:
+                    - '[{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
                     1}]'
                   summary: Example for scan uuid
           description: ''
@@ -2817,6 +2906,76 @@ paths:
             expired
       summary: 🎯 Endpoint that updates the scan surface with new data (extend scan
         surface modal)
+    patch:
+      operationId: scanSurfaceBulkRescan
+      description: Responsible for bulk rescanning
+      parameters:
+        - in: query
+          name: userInputsIds
+          schema:
+            type: string
+          description: User Inputs to be rescanned
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScanSurfaceEntryRequest'
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScanUuidScannerId'
+              examples:
+                ExampleScanUUID:
+                  value:
+                    - '[{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
+                    1}]'
+                  summary: Example for scan uuid
+          description: ''
+      summary: Responsible for bulk rescanning
+    delete:
+      operationId: scanSurfaceBulkDelete
+      description: Endpoint that manages all scan surface related actions
+      parameters:
+        - in: query
+          name: deleteAssets
+          schema:
+            type: boolean
+          description: Whether or not to delete associated devices
+        - in: query
+          name: userInputsIds
+          schema:
+            type: string
+          description: User Inputs to be deleted
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for. If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '204':
+          description: No response body
+      summary: Endpoint that manages all scan surface related actions
   # added by Tag
   /console/scanSurface/{entryId}/:
     delete:
@@ -2897,6 +3056,11 @@ paths:
           schema:
             type: integer
           description: Page you want to request
+        - in: query
+          name: scannerId
+          schema:
+            type: integer
+          description: Scanner id filter
         - in: header
           name: FootprintTenantId
           schema:
@@ -2926,6 +3090,11 @@ paths:
           schema:
             type: integer
           description: Page you want to request
+        - in: query
+          name: scannerId
+          schema:
+            type: integer
+          description: Scanner id filter
         - in: header
           name: FootprintTenantId
           schema:
@@ -2948,7 +3117,8 @@ paths:
   /console/scanSurface/rescan/:
     patch:
       operationId: consoleScanSurfaceRescanPartialUpdate
-      description: 🎯 Endpoint that rescans all user inputs from Scan Surface for each
+      description: |-
+        🎯 Endpoint that rescans all user inputs from Scan Surface for each
         active Agentless Scanner.
       tags:
         - console
@@ -2970,7 +3140,8 @@ paths:
                   $ref: '#/components/schemas/ScanUuidScannerId'
               examples:
                 ExampleScanUUID:
-                  value: '[{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
+                  value:
+                    - '[{"scanUuid": "4a75b36b-d9cc-1615-048e-3c38fb0873c7", "scannerId":
                     1}]'
                   summary: Example for scan uuid
           description: ''
@@ -2986,12 +3157,12 @@ paths:
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for each
-        active Agentless Scanner.
   /console/scanSurface/rescan/{scannerId}/:
     patch:
       operationId: consoleScanSurfaceRescanPartialUpdate2
-      description: 🎯 Endpoint that rescans all user inputs from Scan Surface for requested
-        Agentless Scanner.
+      description: |-
+        🎯 Endpoint that rescans all user inputs from Scan Surface for
+        requested Agentless Scanner.
       parameters:
         - in: path
           name: scannerId
@@ -3036,13 +3207,15 @@ paths:
           description: The requested scanner is already running an extend scan
         '406':
           description: User attempts to rescan user inputs from an inactive scanner
-      summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for requested
-        Agentless Scanner.
+      summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for
   /console/scanSurface/scanners/:
     get:
       operationId: consoleScanSurfaceScannersList
-      description: Get list of available scanners. This includes the default Cloud
-        Scanner, as well as internal scanners
+      description: |-
+        Get list of available scanners.
+
+        This includes the internal scanners and the default Cloud Scanner
+        only if "enable_cross_sell_mode" feature flag is not set.
       tags:
         - console
       security:
@@ -3064,8 +3237,7 @@ paths:
             type: integer
           description: Tenant ID you want to receive request for. If not provided, falls
             back on `original_tenant_id` from the auth endpoint
-      summary: Get list of available scanners. This includes the default Cloud Scanner,
-        as well as internal scanners
+      summary: Get list of available scanners.
   /console/scanSurface/userInputs/{userInputId}/rescan/:
     patch:
       operationId: consoleScanSurfaceUserInputsRescanPartialUpdate
@@ -3444,9 +3616,9 @@ paths:
         - ApiKeyAuth: [ ]
       responses:
         '200':
-          description: Auto contexts generation enabled or disabled
+          description: Updated successfully
         '400':
-          description: Wrong key in body or invalid value for field
+          description: Wrong key or invalid value provided
       parameters:
         - in: header
           name: FootprintTenantId
@@ -3529,6 +3701,22 @@ components:
           format: date-time
           nullable: true
           description: Timestamp of the last login into this account
+        billingPlanType:
+          enum:
+            - continuous
+            - weekly
+            - monthly
+          type: string
+          default: continuous
+          description: |-
+            Billing plan type
+
+            * `continuous` - continuous
+            * `weekly` - weekly
+            * `monthly` - monthly
+        billingDay:
+          type: integer
+          description: Billing day
         managedType:
           enum:
             - self_managed
@@ -3536,10 +3724,13 @@ components:
             - fully_managed
             - no_tenant
           type: string
-          readOnly: true
           description: Manage type of the account
+          readOnly: true
         isPrimaryAccount:
           type: boolean
+          description: |-
+            Checks whether the current tenant matches the logged in user's one from
+            the context. If not provided, we assume it isn't
           readOnly: true
         isTrialMode:
           type: boolean
@@ -3568,17 +3759,51 @@ components:
             mode
         domainsRemaining:
           type: integer
-          readOnly: true
           description: Number of domain scans remaining (only in trial mode)
         name:
           type: string
           description: Name of the account
+        isOnboardingMode:
+          type: boolean
+          description: Restrict features for tenant in onboarding mode
+        initialScanType:
+          enum:
+            - agentless
+            - agent_based
+            - hybrid
+            - null
+          type: string
+          nullable: true
+          description: |-
+            The initial scanning type set on tenant
+
+            * `agentless` - Agentless
+            * `agent_based` - Agent Based
+            * `hybrid` - Hybrid
+        scanType:
+          enum:
+            - agentless
+            - agent_based
+            - hybrid
+          type: string
+          description: |-
+            Tenant Scanning Type
+
+            * `agentless` - Agentless
+            * `agent_based` - Agent Based
+            * `hybrid` - Hybrid
+        showPmfSurvey:
+          type: boolean
+          description: Whether or not to display the pmf survey
+          readOnly: true
       required:
         - clearDatabaseRemaining
         - domainsRemaining
         - id
+        - initialScanType
         - isCustomBrandingApplied
         - isMspAccessible
+        - isOnboardingMode
         - isPrimaryAccount
         - isTrialExpired
         - isTrialMode
@@ -3586,6 +3811,8 @@ components:
         - name
         - photo
         - registrationId
+        - scanType
+        - showPmfSurvey
         - trialDaysRemaining
     AccountSwitchRequest:
       type: object
@@ -3598,6 +3825,7 @@ components:
         - id
     ActionPlanDeviceAffected:
       type: object
+      description: Serializer for listed devices in Action Plan entry remediations
       properties:
         deviceId:
           type: integer
@@ -3612,11 +3840,19 @@ components:
             - unknown
             - secure
           type: string
+          description: |-
+            * `critical` - critical
+            * `vulnerable` - vulnerable
+            * `unknown` - unknown
+            * `secure` - secure
         deviceState:
           enum:
             - AVAILABLE
             - DECOMMISSIONED
           type: string
+          description: |-
+            * `AVAILABLE` - AVAILABLE
+            * `DECOMMISSIONED` - DECOMMISSIONED
         fixedVulnerabilities:
           type: integer
         totalVulnerabilities:
@@ -3631,6 +3867,7 @@ components:
         - totalVulnerabilities
     ActionPlanDeviceAffectedRequest:
       type: object
+      description: Serializer for listed devices in Action Plan entry remediations
       properties:
         deviceId:
           type: integer
@@ -3647,11 +3884,19 @@ components:
             - unknown
             - secure
           type: string
+          description: |-
+            * `critical` - critical
+            * `vulnerable` - vulnerable
+            * `unknown` - unknown
+            * `secure` - secure
         deviceState:
           enum:
             - AVAILABLE
             - DECOMMISSIONED
           type: string
+          description: |-
+            * `AVAILABLE` - AVAILABLE
+            * `DECOMMISSIONED` - DECOMMISSIONED
         fixedVulnerabilities:
           type: integer
         totalVulnerabilities:
@@ -3678,13 +3923,22 @@ components:
         state:
           enum:
             - PLANNING
+            - REOPEN
             - EXECUTION
             - APPROVAL
             - FIX_PENDING_CONFIRMATION
             - CLOSED
           type: string
           readOnly: true
-          description: Action Plan Entry current state
+          description: |-
+            Action Plan Entry current state
+
+            * `PLANNING` - planning
+            * `REOPEN` - reopen
+            * `EXECUTION` - execution
+            * `APPROVAL` - approval
+            * `FIX_PENDING_CONFIRMATION` - fixPendingConfirmation
+            * `CLOSED` - closed
         uploadedFiles:
           type: array
           items:
@@ -3696,6 +3950,9 @@ components:
             - ACCEPT_RISK
             - null
           type: string
+          description: |-
+            * `FALSE_POSITIVE` - FALSE_POSITIVE
+            * `ACCEPT_RISK` - ACCEPT_RISK
           readOnly: true
           nullable: true
         closedState:
@@ -3705,11 +3962,16 @@ components:
             - FIXED_CONFIRMED
             - null
           type: string
+          description: |-
+            * `FALSE_POSITIVE` - FALSE_POSITIVE
+            * `ACCEPTED_RISK` - ACCEPTED_RISK
+            * `FIXED_CONFIRMED` - FIXED_CONFIRMED
           readOnly: true
           nullable: true
         falsePositiveReason:
           type: string
           readOnly: true
+          nullable: true
           description: Action Plan Entry false positive reason
         treatedReason:
           enum:
@@ -3717,16 +3979,21 @@ components:
             - OVERRIDE_FIX_CONFIRMED
             - null
           type: string
+          description: |-
+            * `DECOMMISSIONED` - DECOMMISSIONED
+            * `OVERRIDE_FIX_CONFIRMED` - OVERRIDE_FIX_CONFIRMED
           readOnly: true
           nullable: true
         acceptRiskReason:
           type: string
           readOnly: true
+          nullable: true
           description: Accepted Risk Action Plan Entry reason
         acceptRiskDeadline:
           type: string
           format: date
           readOnly: true
+          nullable: true
           description: Accepted Risk Action Plan Entry deadline
         executionDeadline:
           type: string
@@ -3795,11 +4062,25 @@ components:
           nullable: true
         mitigationRisk:
           type: integer
+          nullable: true
+          readOnly: true
+        averageCrs:
+          type: number
+          format: double
+          readOnly: true
+        maxCrs:
+          type: number
+          format: double
+          readOnly: true
+        mitigatedCrs:
+          type: number
+          format: double
           readOnly: true
       required:
         - acceptRiskDeadline
         - acceptRiskReason
         - approvalState
+        - averageCrs
         - businessContextId
         - closedState
         - createdAt
@@ -3809,6 +4090,8 @@ components:
         - id
         - impliedDeadline
         - lastStateUpdatedAt
+        - maxCrs
+        - mitigatedCrs
         - mitigation
         - mitigationDescription
         - mitigationRisk
@@ -3824,6 +4107,7 @@ components:
         - uploadedFiles
     ActionPlanEntryRemediation:
       type: object
+      description: Serializer for listed remediations in Action Plan entries
       properties:
         id:
           type: integer
@@ -3859,6 +4143,7 @@ components:
         - uniqueVulnerabilities
     ActionPlanEntryRemediationRequest:
       type: object
+      description: Serializer for listed remediations in Action Plan entries
       properties:
         devicesAffectedIds:
           type: array
@@ -3979,6 +4264,8 @@ components:
         - planId
     ActionPlanUniqueVirtualVulnerability:
       type: object
+      description: Serializer for listed virtual vulnerabilities in Action Plan entry
+        remediations
       properties:
         cve:
           type: string
@@ -3990,12 +4277,14 @@ components:
           nullable: true
         cvssBase:
           type: number
-          format: float
+          format: double
       required:
         - cve
         - cvssBase
     ActionPlanUniqueVirtualVulnerabilityRequest:
       type: object
+      description: Serializer for listed virtual vulnerabilities in Action Plan entry
+        remediations
       properties:
         cve:
           type: string
@@ -4010,12 +4299,13 @@ components:
           minLength: 1
         cvssBase:
           type: number
-          format: float
+          format: double
       required:
         - cve
         - cvssBase
     ActionPlanUniqueVulnerability:
       type: object
+      description: Serializer for listed vulnerabilities in Action Plan entry remediations
       properties:
         cve:
           type: string
@@ -4023,18 +4313,31 @@ components:
         summary:
           type: string
           nullable: true
-        severity:
+        cvssBaseSeverity:
+          enum:
+            - NONE
+            - LOW
+            - MEDIUM
+            - HIGH
+            - CRITICAL
+            - null
           type: string
+          description: |-
+            * `NONE` - NONE
+            * `LOW` - LOW
+            * `MEDIUM` - MEDIUM
+            * `HIGH` - HIGH
+            * `CRITICAL` - CRITICAL
           nullable: true
-          maxLength: 50
         cvssBase:
           type: number
-          format: float
+          format: double
       required:
         - cve
         - cvssBase
     ActionPlanUniqueVulnerabilityRequest:
       type: object
+      description: Serializer for listed vulnerabilities in Action Plan entry remediations
       properties:
         cve:
           type: string
@@ -4044,14 +4347,25 @@ components:
           type: string
           nullable: true
           minLength: 1
-        severity:
+        cvssBaseSeverity:
+          enum:
+            - NONE
+            - LOW
+            - MEDIUM
+            - HIGH
+            - CRITICAL
+            - null
           type: string
+          description: |-
+            * `NONE` - NONE
+            * `LOW` - LOW
+            * `MEDIUM` - MEDIUM
+            * `HIGH` - HIGH
+            * `CRITICAL` - CRITICAL
           nullable: true
-          minLength: 1
-          maxLength: 50
         cvssBase:
           type: number
-          format: float
+          format: double
       required:
         - cve
         - cvssBase
@@ -4064,7 +4378,7 @@ components:
           type: integer
           readOnly: true
         id:
-          type: string
+          type: integer
           readOnly: true
         description:
           type: string
@@ -4138,6 +4452,9 @@ components:
         clearDatabaseRemaining:
           type: integer
           readOnly: true
+        lastLogin:
+          type: string
+          nullable: true
         asyncEmails:
           type: boolean
         newVulnsEmails:
@@ -4150,13 +4467,25 @@ components:
               - high
               - critical
             type: string
+            description: |-
+              * `none` - none
+              * `low` - low
+              * `medium` - medium
+              * `high` - high
+              * `critical` - critical
         syncEmails:
           type: boolean
-        syncPeriod:
+        syncEmailsPeriod:
           type: string
         usageReportEmails:
           type: boolean
         weeklyCvrEnabled:
+          type: boolean
+        remediationReportEmailsEnable:
+          type: boolean
+        technicalReportEmailsEnable:
+          type: boolean
+        contextualRiskReportEmailsEnable:
           type: boolean
         internalScannerOfflineEmails:
           type: boolean
@@ -4195,6 +4524,7 @@ components:
         - apiKeyName
         - asyncEmails
         - clearDatabaseRemaining
+        - contextualRiskReportEmailsEnable
         - domainsRemaining
         - email
         - firstName
@@ -4207,20 +4537,27 @@ components:
         - isOtpEnabled
         - isServiceAccount
         - isSsoOnly
+        - lastLogin
         - lastName
         - manager
         - newVulnsEmails
         - photo
         - position
+        - remediationReportEmailsEnable
         - roleLimitations
         - rolePermissions
         - syncEmails
-        - syncPeriod
+        - syncEmailsPeriod
+        - technicalReportEmailsEnable
         - trialDaysRemaining
         - usageReportEmails
         - weeklyCvrEnabled
     AgentApplicationInformationOrigin:
       type: object
+      description: |-
+        Agent Application serializer;
+
+        NOTE: Class moved by @alexandrabalaci
       properties:
         id:
           type: integer
@@ -4235,19 +4572,30 @@ components:
             - executables
             - windows_packages
           type: string
+          description: |-
+            * `registries` - Registries
+            * `store_apps` - Store Apps
+            * `processes` - Processes
+            * `drivers` - Drivers
+            * `optional_features` - Optional Features
+            * `executables` - Executables
+            * `windows_packages` - Windows Packages
         lastModified:
           type: string
           format: date-time
         information:
-          type: string
+          type: object
+          additionalProperties: { }
         agentApplication:
           type: integer
       required:
         - agentApplication
         - id
+        - information
         - originModule
     AgentCommandData:
       type: object
+      description: Commands data serializer user by the agent
       properties:
         id:
           type: integer
@@ -4295,6 +4643,7 @@ components:
         - respondedOn
     AgentListing:
       type: object
+      description: Serializers used to list all agents
       properties:
         id:
           type: integer
@@ -4323,7 +4672,11 @@ components:
             - local
             - ad
           type: string
-          description: Type of agent install
+          description: |-
+            Type of agent install
+
+            * `local` - local
+            * `ad` - ad
         installationScope:
           type: string
           description: Install scope of the agent
@@ -4382,8 +4735,14 @@ components:
           enum:
             - WIN
             - MAC
+            - LNX
           type: string
-          description: OS Family
+          description: |-
+            OS Family
+
+            * `WIN` - WINDOWS
+            * `MAC` - MACOS
+            * `LNX` - LINUX
       required:
         - adScope
         - agentCommandData
@@ -4440,17 +4799,24 @@ components:
         label:
           type: string
           nullable: true
+          description: Scanner's label
           maxLength: 1000
         administrativeState:
           enum:
             - Starting
             - Active
             - Stopped
-            - Deleted
             - Offline
             - Shut Down
             - Incompatible hardware
           type: string
+          description: |-
+            * `Starting` - Starting
+            * `Active` - Active
+            * `Stopped` - Stopped
+            * `Offline` - Offline
+            * `Shut Down` - Shut Down
+            * `Incompatible hardware` - Incompatible hardware
           readOnly: true
         state:
           type: string
@@ -4470,17 +4836,26 @@ components:
             - Online
             - Offline
           type: string
+          description: |-
+            * `Online` - Online
+            * `Offline` - Offline
           readOnly: true
         administrativeState:
           enum:
             - Starting
             - Active
             - Stopped
-            - Deleted
             - Offline
             - Shut Down
             - Incompatible hardware
           type: string
+          description: |-
+            * `Starting` - Starting
+            * `Active` - Active
+            * `Stopped` - Stopped
+            * `Offline` - Offline
+            * `Shut Down` - Shut Down
+            * `Incompatible hardware` - Incompatible hardware
           readOnly: true
         schedulerConfig:
           allOf:
@@ -4490,6 +4865,10 @@ components:
           type: integer
           readOnly: true
           description: Number of user inputs scanned by this scanner.
+        numberOfIpsFromAllScopes:
+          type: integer
+          readOnly: true
+          description: Number of IPs from all scopes of user's inputs.
         numberOfIpsScanned:
           type: integer
           readOnly: true
@@ -4497,6 +4876,9 @@ components:
         privateIp:
           type: string
           nullable: true
+          readOnly: true
+        tenantName:
+          type: string
           readOnly: true
         credentials:
           type: array
@@ -4520,6 +4902,7 @@ components:
         label:
           type: string
           nullable: true
+          description: Scanner's label
           maxLength: 1000
         uptime:
           type: integer
@@ -4564,6 +4947,9 @@ components:
             - agent_based
             - standalone
           type: string
+          description: |-
+            * `agent_based` - agent_based
+            * `standalone` - standalone
         installDate:
           type: string
           format: date-time
@@ -4623,11 +5009,20 @@ components:
             - stopping
             - certMismatch
           type: string
+          description: |-
+            * `started` - started
+            * `starting` - starting
+            * `stopped` - stopped
+            * `stopping` - stopping
+            * `certMismatch` - certMismatch
         type:
           enum:
             - internal
             - external
           type: string
+          description: |-
+            * `internal` - internal
+            * `external` - external
         extendScanRunning:
           type: boolean
         isShared:
@@ -4643,12 +5038,14 @@ components:
         - credentials
         - hostname
         - id
+        - numberOfIpsFromAllScopes
         - numberOfIpsScanned
         - numberOfUserInputs
         - privateIp
         - schedulerConfig
         - state
         - tenant
+        - tenantName
     AgentlessSchedulerConfig:
       type: object
       properties:
@@ -4666,6 +5063,10 @@ components:
         - noScanWindowStopInterval
     ApplicationDetails:
       type: object
+      description: |-
+        Serializer for Application Details;
+
+        NOTE: Class moved by @alexandrabalaci
       properties:
         id:
           type: integer
@@ -4684,6 +5085,11 @@ components:
             - 1
             - 3
           type: integer
+          description: |-
+            * `0` - 0
+            * `2` - 2
+            * `1` - 1
+            * `3` - 3
           readOnly: true
         isOnline:
           type: boolean
@@ -4703,6 +5109,7 @@ components:
             - __format__
             - __ge__
             - __getattribute__
+            - __getstate__
             - __gt__
             - __hash__
             - __init__
@@ -4721,138 +5128,39 @@ components:
             - __subclasshook__
             - __weakref__
           type: string
-        discoveredOn:
-          type: string
-          format: date-time
-        lastSeen:
-          type: string
-          format: date-time
-        ip:
-          type: string
-        cpe:
-          type: string
-        url:
-          type: string
-        version:
-          type: string
-        protocol:
-          type: string
-        port:
-          type: integer
-        hostname:
-          type: string
-          readOnly: true
-        isAttackAvenuesAvailable:
-          type: boolean
-          readOnly: true
-        isDiscoveredByAgent:
-          type: boolean
-          readOnly: true
-        userEdited:
-          type: boolean
-          readOnly: true
-        portInfo:
-          type: object
-          additionalProperties: { }
-          readOnly: true
-        osName:
-          type: string
-          readOnly: true
-        numberOfCves:
-          type: integer
-          readOnly: true
-        numberOfAttackAvenues:
-          type: integer
-          readOnly: true
-        informationOrigin:
-          allOf:
-            - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
-          readOnly: true
-        crss:
-          type: number
-          format: float
-          readOnly: true
-      required:
-        - applicationType
-        - cpe
-        - crss
-        - discoveredOn
-        - hostname
-        - id
-        - informationOrigin
-        - ip
-        - isAttackAvenuesAvailable
-        - isDiscoveredByAgent
-        - isOnline
-        - lastSeen
-        - name
-        - numberOfAttackAvenues
-        - numberOfCves
-        - osName
-        - port
-        - portInfo
-        - protocol
-        - riskLevel
-        - url
-        - userEdited
-        - version
-    ApplicationInListing:
-      type: object
-      properties:
-        id:
-          type: integer
-        icon:
-          type: string
-          default: ''
-        name:
-          type: string
-        type:
-          type: string
-          default: Application
-        riskLevel:
-          enum:
-            - 0
-            - 2
-            - 1
-            - 3
-          type: integer
-          readOnly: true
-        isOnline:
-          type: boolean
-        applicationType:
-          enum:
-            - DAEMON
-            - OS
-            - PACKAGE
-            - RUNTIME
-            - WEBAPP
-            - __class__
-            - __delattr__
-            - __dict__
-            - __dir__
-            - __doc__
-            - __eq__
-            - __format__
-            - __ge__
-            - __getattribute__
-            - __gt__
-            - __hash__
-            - __init__
-            - __init_subclass__
-            - __le__
-            - __lt__
-            - __module__
-            - __ne__
-            - __new__
-            - __reduce__
-            - __reduce_ex__
-            - __repr__
-            - __setattr__
-            - __sizeof__
-            - __str__
-            - __subclasshook__
-            - __weakref__
-          type: string
+          description: |-
+            * `DAEMON` - DAEMON
+            * `OS` - OS
+            * `PACKAGE` - PACKAGE
+            * `RUNTIME` - RUNTIME
+            * `WEBAPP` - WEBAPP
+            * `__class__` - __class__
+            * `__delattr__` - __delattr__
+            * `__dict__` - __dict__
+            * `__dir__` - __dir__
+            * `__doc__` - __doc__
+            * `__eq__` - __eq__
+            * `__format__` - __format__
+            * `__ge__` - __ge__
+            * `__getattribute__` - __getattribute__
+            * `__getstate__` - __getstate__
+            * `__gt__` - __gt__
+            * `__hash__` - __hash__
+            * `__init__` - __init__
+            * `__init_subclass__` - __init_subclass__
+            * `__le__` - __le__
+            * `__lt__` - __lt__
+            * `__module__` - __module__
+            * `__ne__` - __ne__
+            * `__new__` - __new__
+            * `__reduce__` - __reduce__
+            * `__reduce_ex__` - __reduce_ex__
+            * `__repr__` - __repr__
+            * `__setattr__` - __setattr__
+            * `__sizeof__` - __sizeof__
+            * `__str__` - __str__
+            * `__subclasshook__` - __subclasshook__
+            * `__weakref__` - __weakref__
         discoveredOn:
           type: string
           format: date-time
@@ -4877,7 +5185,190 @@ components:
         hostname:
           type: string
           readOnly: true
-        isAttackAvenuesAvailable:
+        isScanned:
+          type: boolean
+          readOnly: true
+        isDiscoveredByAgent:
+          type: boolean
+          readOnly: true
+        userEdited:
+          type: boolean
+          readOnly: true
+        portInfo:
+          type: object
+          additionalProperties: { }
+          readOnly: true
+        transportProtocol:
+          type: string
+          nullable: true
+        osName:
+          type: string
+          readOnly: true
+        numberOfCves:
+          type: integer
+          readOnly: true
+        numberOfAttackAvenues:
+          type: integer
+          readOnly: true
+        informationOrigin:
+          allOf:
+            - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
+          readOnly: true
+        crss:
+          type: number
+          format: double
+          readOnly: true
+      required:
+        - applicationType
+        - cpe
+        - crss
+        - discoveredOn
+        - hostname
+        - id
+        - informationOrigin
+        - ip
+        - isDiscoveredByAgent
+        - isOnline
+        - isScanned
+        - lastScanned
+        - lastSeen
+        - name
+        - numberOfAttackAvenues
+        - numberOfCves
+        - osName
+        - port
+        - portInfo
+        - protocol
+        - riskLevel
+        - transportProtocol
+        - url
+        - userEdited
+        - version
+    ApplicationInListing:
+      type: object
+      description: Application In Listing Serializer
+      properties:
+        id:
+          type: integer
+        icon:
+          type: string
+          default: ''
+        name:
+          type: string
+        type:
+          type: string
+          default: Application
+        riskLevel:
+          enum:
+            - 0
+            - 2
+            - 1
+            - 3
+          type: integer
+          description: |-
+            * `0` - 0
+            * `2` - 2
+            * `1` - 1
+            * `3` - 3
+          readOnly: true
+        isOnline:
+          type: boolean
+        applicationType:
+          enum:
+            - DAEMON
+            - OS
+            - PACKAGE
+            - RUNTIME
+            - WEBAPP
+            - __class__
+            - __delattr__
+            - __dict__
+            - __dir__
+            - __doc__
+            - __eq__
+            - __format__
+            - __ge__
+            - __getattribute__
+            - __getstate__
+            - __gt__
+            - __hash__
+            - __init__
+            - __init_subclass__
+            - __le__
+            - __lt__
+            - __module__
+            - __ne__
+            - __new__
+            - __reduce__
+            - __reduce_ex__
+            - __repr__
+            - __setattr__
+            - __sizeof__
+            - __str__
+            - __subclasshook__
+            - __weakref__
+          type: string
+          description: |-
+            * `DAEMON` - DAEMON
+            * `OS` - OS
+            * `PACKAGE` - PACKAGE
+            * `RUNTIME` - RUNTIME
+            * `WEBAPP` - WEBAPP
+            * `__class__` - __class__
+            * `__delattr__` - __delattr__
+            * `__dict__` - __dict__
+            * `__dir__` - __dir__
+            * `__doc__` - __doc__
+            * `__eq__` - __eq__
+            * `__format__` - __format__
+            * `__ge__` - __ge__
+            * `__getattribute__` - __getattribute__
+            * `__getstate__` - __getstate__
+            * `__gt__` - __gt__
+            * `__hash__` - __hash__
+            * `__init__` - __init__
+            * `__init_subclass__` - __init_subclass__
+            * `__le__` - __le__
+            * `__lt__` - __lt__
+            * `__module__` - __module__
+            * `__ne__` - __ne__
+            * `__new__` - __new__
+            * `__reduce__` - __reduce__
+            * `__reduce_ex__` - __reduce_ex__
+            * `__repr__` - __repr__
+            * `__setattr__` - __setattr__
+            * `__sizeof__` - __sizeof__
+            * `__str__` - __str__
+            * `__subclasshook__` - __subclasshook__
+            * `__weakref__` - __weakref__
+        discoveredOn:
+          type: string
+          format: date-time
+        lastSeen:
+          type: string
+          format: date-time
+        lastScanned:
+          type: string
+          format: date-time
+        ip:
+          type: string
+        cpe:
+          type: string
+        url:
+          type: string
+        version:
+          type: string
+        protocol:
+          type: string
+        transportProtocol:
+          type: string
+          nullable: true
+        port:
+          type: integer
+        hostname:
+          type: string
+          readOnly: true
+        isScanned:
           type: boolean
           readOnly: true
         isDiscoveredByAgent:
@@ -4897,17 +5388,29 @@ components:
           allOf:
             - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
           readOnly: true
+        applicationCrs:
+          type: number
+          format: double
+          readOnly: true
+        riskLevelByCrs:
+          type: string
+          readOnly: true
+        crsColor:
+          type: string
+          readOnly: true
       required:
+        - applicationCrs
         - applicationType
         - cpe
+        - crsColor
         - discoveredOn
         - hostname
         - id
         - informationOrigin
         - ip
-        - isAttackAvenuesAvailable
         - isDiscoveredByAgent
         - isOnline
+        - isScanned
         - lastScanned
         - lastSeen
         - name
@@ -4916,9 +5419,28 @@ components:
         - portInfo
         - protocol
         - riskLevel
+        - riskLevelByCrs
+        - transportProtocol
         - url
         - userEdited
         - version
+    AttackVector:
+      type: object
+      description: Serializer for Attack Vector
+      properties:
+        attackVector:
+          type: string
+          nullable: true
+        attackComplexity:
+          type: string
+          nullable: true
+        userInteraction:
+          type: string
+          nullable: true
+      required:
+        - attackComplexity
+        - attackVector
+        - userInteraction
     BrandingResponse:
       type: object
       properties:
@@ -4951,12 +5473,6 @@ components:
           items:
             $ref: '#/components/schemas/CVRContext'
           description: Business contexts report
-        # added by Tag
-        technicalReport:
-          type: array
-          items:
-            $ref: '#/components/schemas/CVRMostVulnServer'
-          description: Technical contexts report
         securityInsights:
           allOf:
             - $ref: '#/components/schemas/CVRSecurityInsights'
@@ -4966,6 +5482,11 @@ components:
           items:
             $ref: '#/components/schemas/CVRRemTrackVuln'
           description: Remediation Tracking overview
+        technicalReport:
+          type: array
+          items:
+            $ref: '#/components/schemas/CVRMostVulnServer'
+          description: Most vulnerable CVRs
       required:
         - businessReport
         - executiveSummary
@@ -4973,6 +5494,7 @@ components:
         - perimeter
         - remediationTracking
         - securityInsights
+        - technicalReport
     CVRContext:
       type: object
       properties:
@@ -4999,7 +5521,7 @@ components:
         alerts:
           type: array
           items:
-            $ref: '#/components/schemas/CVRContextLevels'
+            $ref: '#/components/schemas/Notification'
           description: Alerts on the context
       required:
         - alerts
@@ -5014,27 +5536,27 @@ components:
       properties:
         critical:
           type: number
-          format: float
+          format: double
         vulnerable:
           type: number
-          format: float
-        nonvisible:
+          format: double
+        unknown:
           type: number
-          format: float
+          format: double
         secure:
           type: number
-          format: float
+          format: double
       required:
         - critical
-        - nonvisible
         - secure
+        - unknown
         - vulnerable
     CVRContextStats:
       type: object
       properties:
         uptime:
           type: number
-          format: float
+          format: double
         applications:
           type: integer
         applicationsUp:
@@ -5114,7 +5636,11 @@ components:
             - critical
             - vulnerable
           type: string
-          description: FAIA criticality level
+          description: |-
+            FAIA criticality level
+
+            * `critical` - critical
+            * `vulnerable` - vulnerable
       required:
         - isLevelPassed
         - levelPassDate
@@ -5128,9 +5654,9 @@ components:
         vulnerable:
           type: integer
           description: Total vulnerable items
-        nonvisible:
+        unknown:
           type: integer
-          description: Total nonvisible items
+          description: Total unknown items
         vulnerableInternal:
           type: integer
           description: Total vulnerable internal items
@@ -5146,8 +5672,8 @@ components:
       required:
         - external
         - internal
-        - nonvisible
         - total
+        - unknown
         - vulnerable
         - vulnerableExternal
         - vulnerableInternal
@@ -5197,11 +5723,11 @@ components:
           description: Number of webapps in the report
         criticalLevel:
           type: number
-          format: float
+          format: double
           description: Criticality level of the data in the report
         averageDowntime:
           type: number
-          format: float
+          format: double
           description: Average downtime over the period in the report
         mspName:
           type: string
@@ -5216,19 +5742,38 @@ components:
         mspLogo:
           type: string
           description: Base64-encoded logo of the MSP
+        reportLastRun:
+          type: string
+          description: Date of last run of the report
+        latestDataRefresh:
+          type: string
+        scannedAssetsCount:
+          type: integer
+        dateFormat:
+          type: string
+        assetsWithFindingsCount:
+          type: integer
+        agentsCount:
+          type: integer
       required:
+        - agentsCount
+        - assetsWithFindingsCount
         - averageDowntime
         - criticalLevel
+        - dateFormat
         - externalAssetsCount
         - generationDate
         - internalAssetsCount
+        - latestDataRefresh
         - mspContact
         - mspEmail
         - mspLogo
         - mspName
         - reportAuthor
         - reportDataFrom
+        - reportLastRun
         - reportVersion
+        - scannedAssetsCount
         - tenant
         - tenantLogo
         - totalDevicesCount
@@ -5253,7 +5798,7 @@ components:
           $ref: '#/components/schemas/CVRPerimeterVulnsCount'
         sumCvssScores:
           type: number
-          format: float
+          format: double
           description: Sum of all CVSS scores on the device
         vulnerabilities:
           type: array
@@ -5273,19 +5818,19 @@ components:
       properties:
         money:
           type: number
-          format: float
+          format: double
           description: Financial exposure of the organization
         time:
           type: number
-          format: float
+          format: double
           description: Time exposure of the organization
         notoriety:
           type: number
-          format: float
+          format: double
           description: Notoriety/brand exposure of the organization
         legal:
           type: number
-          format: float
+          format: double
           description: Legal exposure of the organization
       required:
         - legal
@@ -5336,12 +5881,17 @@ components:
           allOf:
             - $ref: '#/components/schemas/CVRPerimeterVulnsCount'
           description: Distribution of vulnerabilities on the device based on criticality
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceTags'
       required:
         - applications
         - discoveredOn
         - hostnames
         - id
         - ip
+        - tags
         - vulnerabilitiesCount
     CVRPerimeterVulnsCount:
       type: object
@@ -5408,7 +5958,7 @@ components:
           type: string
         score:
           type: number
-          format: float
+          format: double
         state:
           type: string
       required:
@@ -5420,15 +5970,15 @@ components:
       properties:
         daysToFix:
           type: number
-          format: float
+          format: double
           description: Estimated days required to fix most critical issues
         minManDays:
           type: number
-          format: float
+          format: double
           description: Minimum man-days required to fix most critical issues
         maxManDays:
           type: number
-          format: float
+          format: double
           description: Maximum man-days required to fix most critical issues
         fixDate:
           type: string
@@ -5463,14 +6013,20 @@ components:
         status:
           enum:
             - secure
-            - nonvisible
+            - unknown
             - vulnerable
             - critical
           type: string
-          description: Scenario criticality
+          description: |-
+            Scenario criticality
+
+            * `secure` - secure
+            * `unknown` - unknown
+            * `vulnerable` - vulnerable
+            * `critical` - critical
         percentage:
           type: number
-          format: float
+          format: double
           description: Weight of the CVR scenario in the related exposure
       required:
         - name
@@ -5523,23 +6079,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CVRVulnerability'
+        weaponizedVulnerabilitiesCount:
+          type: integer
         mostCommonVulnerabilities:
           type: array
           items:
             $ref: '#/components/schemas/CVRVulnerability'
+        mostCommonVulnerabilitiesCount:
+          type: integer
+        topVulnerabilitiesCount:
+          type: integer
         topVulnerableApplications:
           type: array
           items:
             $ref: '#/components/schemas/CVRVulnerableApp'
       required:
         - mostCommonVulnerabilities
+        - mostCommonVulnerabilitiesCount
         - mostCommonVulnerable_CPEs
         - mostImportantVulnerability
         - mostVulnerableServer
         - topVulnerabilities
+        - topVulnerabilitiesCount
         - topVulnerableApplications
         - topVulnerableHosts
         - weaponizedVulnerabilities
+        - weaponizedVulnerabilitiesCount
     CVRTopApp:
       type: object
       properties:
@@ -5585,19 +6150,13 @@ components:
           type: string
         cvssScore:
           type: number
-          format: float
+          format: double
         cvssImpact:
           type: number
-          format: float
+          format: double
         cvssExploit:
           type: number
-          format: float
-        datePublished:
-          type: string
-          format: date-time
-        dateModified:
-          type: string
-          format: date-time
+          format: double
         attackVector:
           $ref: '#/components/schemas/CVRVulnerabilityAttackVector'
         integrityImpact:
@@ -5610,7 +6169,30 @@ components:
           items:
             type: string
             format: uri
+        port:
+          type: string
+        remediation:
+          type: string
+        vulnerabilityDetectionResult:
+          type: string
+        published:
+          type: string
+        datePublished:
+          type: string
+        discovered:
+          type: string
+        lastSeen:
+          type: string
+        lastStateChanged:
+          type: string
+        dateModified:
+          type: string
+        attackComplexity:
+          type: string
+        isPublicExploitAvailable:
+          type: string
       required:
+        - attackComplexity
         - attackVector
         - cve
         - cvssExploit
@@ -5618,23 +6200,33 @@ components:
         - cvssScore
         - dateModified
         - datePublished
+        - discovered
         - discoveredOn
         - exploitUrls
         - integrityImpact
+        - isPublicExploitAvailable
+        - lastSeen
+        - lastStateChanged
+        - published
+        - remediation
         - summary
+        - vulnerabilityDetectionResult
     CVRVulnerabilityAttackVector:
       type: object
       properties:
+        attackVector:
+          type: string
+        attackComplexity:
+          type: string
+        userInteraction:
+          type: string
         accessVector:
           type: string
-        accessComplexity:
-          type: string
-        authenticationRequired:
-          type: string
       required:
-        - accessComplexity
         - accessVector
-        - authenticationRequired
+        - attackComplexity
+        - attackVector
+        - userInteraction
     CVRVulnerableApp:
       type: object
       properties:
@@ -5648,9 +6240,13 @@ components:
           type: integer
         sumCvssScores:
           type: number
-          format: float
+          format: double
+        maxCvssScore:
+          type: number
+          format: double
       required:
         - ip
+        - maxCvssScore
         - name
         - port
         - sumCvssScores
@@ -5667,6 +6263,7 @@ components:
         - cpe
     Context:
       type: object
+      description: Serializer for context
       properties:
         id:
           type: integer
@@ -5685,13 +6282,23 @@ components:
             - 2
             - 3
           type: integer
-          description: Security state of the context
+          description: |-
+            Security state of the context
+
+            * `0` - 0
+            * `1` - 1
+            * `2` - 2
+            * `3` - 3
         type:
           enum:
             - bs
             - ts
           type: string
-          description: Type of the context - bs = business, ts = technical
+          description: |-
+            Type of the context - bs = business, ts = technical
+
+            * `bs` - bs
+            * `ts` - ts
         icon:
           type: string
           description: Base64-encoded icon of the context, if provided
@@ -5709,6 +6316,7 @@ components:
         - type
     ContextInfo:
       type: object
+      description: Serializer for context info
       properties:
         levels:
           allOf:
@@ -5726,6 +6334,9 @@ components:
         applicationsUp:
           type: integer
           description: Number of applications detected as online in the context
+        devicesCount:
+          type: integer
+          description: Number of devices in the context
         accessibleBy:
           type: string
           description: The Accessibility posture of the context
@@ -5738,46 +6349,30 @@ components:
         - applicationsUp
         - assetZone
         - businessImpact
+        - devicesCount
         - levels
         - uptime
     ContextLevels:
       type: object
+      description: Serializer for context security levels
       properties:
         critical:
           type: integer
         vulnerable:
           type: integer
-        nonvisible:
+        unknown:
           type: integer
         secure:
           type: integer
       required:
         - critical
-        - nonvisible
         - secure
+        - unknown
         - vulnerable
     ContextualRiskReportEntry:
       type: object
+      description: Contextual Risk Report Entry Serializer
       properties:
-        id:
-          type: integer
-          readOnly: true
-        dnsNames:
-          type: array
-          items:
-            type: string
-          readOnly: true
-        vulnerabilityState:
-          enum:
-            - discovered
-            - addedToActionPlan
-            - fixPendingConfirmation
-            - fixNotConfirmed
-            - fixConfirmed
-            - falsePositive
-            - acceptRisk
-          type: string
-          readOnly: true
         index:
           type: integer
           readOnly: true
@@ -5809,24 +6404,26 @@ components:
           type: string
           nullable: true
           maxLength: 300
-        cvssV2BaseScore:
-          type: number
-          format: float
-          nullable: true
-        cvssV3BaseScore:
-          type: number
-          format: float
-          nullable: true
-        cvssNormalized:
-          type: number
-          format: float
-          nullable: true
+        # disabled by Tag
+        #        cvssV3BaseScore:
+        #          oneOf:
+        #            - type: number
+        #              format: double
+        #            - type: string
+        #          readOnly: true
+        # disabled by Tag
+        #        cvssNormalized:
+        #          oneOf:
+        #            - type: number
+        #              format: double
+        #            - type: string
+        #          readOnly: true
         cvssNormalizedSeverity:
           type: string
           maxLength: 20
         cvssAv:
           type: number
-          format: float
+          format: double
           nullable: true
         attackVector:
           type: string
@@ -5852,14 +6449,9 @@ components:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
-        clientSystem:
+        businessContextName:
           type: string
           maxLength: 300
-        clientSystemId:
-          type: integer
-          maximum: 2147483647
-          minimum: -2147483648
-          nullable: true
         assetZone:
           type: string
           maxLength: 300
@@ -5884,32 +6476,103 @@ components:
           minimum: -2147483648
         crsProbability:
           type: number
-          format: float
+          format: double
         crss:
           type: number
-          format: float
+          format: double
+        applicationCrs:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          description: Application CRS for a certain Business Context
+        deviceCrs:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          description: Device CRS for a certain Business Context
+        deviceSeverity:
+          type: string
+          readOnly: true
+        technicalContextCrs:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          description: Technical Contexts CRS
+        businessContextCrs:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          description: Business Contexts CRS
+        dnsNames:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        vulnerabilityState:
+          enum:
+            - discovered
+            - addedToActionPlan
+            - fixPendingConfirmation
+            - fixNotConfirmed
+            - fixConfirmed
+            - falsePositive
+            - acceptRisk
+            - reopen
+          type: string
+          description: |-
+            Convert camel case vulnerability state into phrase (words separated by spaces).
+
+            discovered -> discovered
+            addedToActionPlan -> added to action plan
+          readOnly: true
         crssSeverity:
           type: string
-          maxLength: 20
+          readOnly: true
+        crssColor:
+          type: string
+          readOnly: true
+        businessContextId:
+          type: string
+          readOnly: true
+        technicalContextId:
+          type: string
+          readOnly: true
+        virtualVulnerabilityElementId:
+          type: string
+          readOnly: true
+        vulnerabilityElementId:
+          type: string
+          readOnly: true
       required:
         - accessibleBy
         - applicationName
         - assetZone
+        - businessContextId
+        - businessContextName
         - businessImpact
-        - clientSystem
         - crsProbability
         - crss
+        - crssColor
         - crssSeverity
+        - cvssV3BaseScore
+        - cvssNormalized
         - cvssNormalizedSeverity
         - deviceLabel
+        - deviceSeverity
         - dnsNames
         - exploitScore
-        - id
         - index
         - ip
         - isExploitable
         - isWeaponized
+        - technicalContextId
         - userExposure
+        - virtualVulnerabilityElementId
+        - vulnerabilityElementId
         - vulnerabilityState
         - zoneExposure
     ContextualRiskReportStatus:
@@ -5944,6 +6607,15 @@ components:
         - tc
     CurrentTargetCountStats:
       type: object
+      description: Info about count
+      properties:
+        count:
+          type: integer
+      required:
+        - count
+    CurrentTargetCountStatsRequest:
+      type: object
+      description: Info about count
       properties:
         count:
           type: integer
@@ -5951,11 +6623,23 @@ components:
         - count
     CurrentTargetResults:
       type: object
+      description: Contains applications and devices
       properties:
         applications:
           $ref: '#/components/schemas/CurrentTargetCountStats'
         devices:
           $ref: '#/components/schemas/CurrentTargetCountStats'
+      required:
+        - applications
+        - devices
+    CurrentTargetResultsRequest:
+      type: object
+      description: Contains applications and devices
+      properties:
+        applications:
+          $ref: '#/components/schemas/CurrentTargetCountStatsRequest'
+        devices:
+          $ref: '#/components/schemas/CurrentTargetCountStatsRequest'
       required:
         - applications
         - devices
@@ -5971,6 +6655,9 @@ components:
             - udp
             - tcp
           type: string
+          description: |-
+            * `udp` - udp
+            * `tcp` - tcp
       required:
         - port
         - transportProtocol
@@ -6015,13 +6702,18 @@ components:
         - userInput
     Device:
       type: object
+      description: Serializer for device management
       properties:
         type:
           enum:
             - AgentDevice
             - Server
           type: string
-          description: Type of the device
+          description: |-
+            Type of the device
+
+            * `AgentDevice` - AgentDevice
+            * `Server` - Server
         id:
           type: integer
           description: ID of the device
@@ -6034,7 +6726,7 @@ components:
         provider:
           type: string
           description: Cloud provider of the device
-        isAttackAvenuesAvailable:
+        isScanned:
           type: boolean
           description: Whether device has attack avenues available
         isOnline:
@@ -6047,13 +6739,20 @@ components:
             - 2
             - 3
           type: integer
-          description: Device risk level
+          description: |-
+            Device risk level
+
+            * `0` - 0
+            * `1` - 1
+            * `2` - 2
+            * `3` - 3
         ip:
           type: string
           description: IP address of the device
         name:
           type: string
           description: Name of the device
+          maxLength: 100
         originalName:
           type: string
           description: Original name of the device (from scan)
@@ -6102,6 +6801,11 @@ components:
         businessImpact:
           type: integer
           description: Business impact of the device
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceTags'
+          description: Tags set on the device
         isAdvancedScanPossible:
           type: boolean
           description: 'Whether an Advanced scan is possible on this device: the task
@@ -6109,7 +6813,7 @@ components:
         isZapScanPossible:
           type: boolean
           description: 'Whether a ZAP scan is possible on this device: the task should
-            be enabled and at least one web application up and running'
+            be enabled and at least one web application must be up and running'
       required:
         - agentId
         - agentStatus
@@ -6124,9 +6828,9 @@ components:
         - id
         - ip
         - isAdvancedScanPossible
-        - isAttackAvenuesAvailable
         - isNetworkEdgeScanDisabled
         - isOnline
+        - isScanned
         - isZapScanPossible
         - lastSeen
         - name
@@ -6136,9 +6840,12 @@ components:
         - protocols
         - provider
         - riskLevel
+        - tags
         - type
     DeviceDNSEntries:
       type: object
+      description: Serializer for managing DNS entries for a device when scanned by
+        an agentless scanner
       properties:
         name:
           type: string
@@ -6156,6 +6863,7 @@ components:
         - type
     DeviceDrivers:
       type: object
+      description: Serializer for managing Device Drivers
       properties:
         displayName:
           type: string
@@ -6178,6 +6886,7 @@ components:
         - status
     DeviceInstalledUpdates:
       type: object
+      description: Serializer for managing Installed Updates on a device
       properties:
         kb:
           type: string
@@ -6195,7 +6904,9 @@ components:
         affects:
           type: string
         resources:
-          type: string
+          type: array
+          items:
+            type: string
         releaseDate:
           type: string
       required:
@@ -6209,6 +6920,7 @@ components:
         - title
     DeviceJobs:
       type: object
+      description: Serializer for managing the jobs running on a device
       properties:
         hidden:
           type: string
@@ -6228,6 +6940,7 @@ components:
         - state
     DeviceOS:
       type: object
+      description: Serializer for managing device operating system information
       properties:
         isOutdated:
           type: boolean
@@ -6236,19 +6949,24 @@ components:
           type: boolean
           nullable: true
           description: Whether Spring4Shell scanning is available
+        osType:
+          type: string
+          description: Type of Operating System
       required:
         - isOutdated
         - isSpring4shellAvailable
+        - osType
     DeviceOverview:
       type: object
+      description: Serializer for managing Device Overview
       properties:
         os:
           type: string
-          description: Operating system on the device
+          description: Operating system of the device
         installDate:
           type: string
           format: date-time
-          description: Date the device last installed updates
+          description: Date of last installed updates on the device
         lastBootupDate:
           type: string
           format: date-time
@@ -6263,27 +6981,37 @@ components:
           items:
             $ref: '#/components/schemas/DeviceInstalledUpdates'
           description: Number of updates installed on the device
+        securityProducts:
+          type: string
+          description: Antivirus software installed on the device
+        firewallProfiles:
+          type: string
+          description: Firewall profiles installed on the device
       required:
         - applications
+        - firewallProfiles
         - installDate
         - installedUpdates
         - lastBootupDate
         - os
+        - securityProducts
     DeviceTags:
       type: object
+      description: The serializer for one device tag entry
       properties:
         tag:
           type: string
           description: Tag for device
         excludeBusinessContexts:
           type: boolean
-          description: Whether a business context should be generated or not for this
-            respective tag
+          description: Whether or not a business context should be generated for this
+            particular tag
       required:
         - excludeBusinessContexts
         - tag
     DeviceTagsRequest:
       type: object
+      description: The serializer for one device tag entry
       properties:
         tag:
           type: string
@@ -6291,13 +7019,14 @@ components:
           description: Tag for device
         excludeBusinessContexts:
           type: boolean
-          description: Whether a business context should be generated or not for this
-            respective tag
+          description: Whether or not a business context should be generated for this
+            particular tag
       required:
         - excludeBusinessContexts
         - tag
     DeviceUser:
       type: object
+      description: Serializer for managing the user of a device
       properties:
         accountType:
           type: string
@@ -6317,6 +7046,7 @@ components:
         - passwordExpires
     DeviceZapScans:
       type: object
+      description: Serializer for ZAP scan results
       properties:
         state:
           enum:
@@ -6325,6 +7055,11 @@ components:
             - no_web_applications_available
             - no_suitable_ports
           type: string
+          description: |-
+            * `has_zap_reports` - has_zap_reports
+            * `not_scanned_yet` - not_scanned_yet
+            * `no_web_applications_available` - no_web_applications_available
+            * `no_suitable_ports` - no_suitable_ports
         webApplications:
           type: array
           items:
@@ -6335,6 +7070,7 @@ components:
         - webApplications
     DockerStat:
       type: object
+      description: Serializer for docker container info from one machine
       properties:
         id:
           type: string
@@ -6355,6 +7091,7 @@ components:
         - status
     E2EResult:
       type: object
+      description: Serializer for end-to-end results from the last run
       properties:
         status:
           enum:
@@ -6362,6 +7099,10 @@ components:
             - success
             - failure
           type: string
+          description: |-
+            * `pending` - pending
+            * `success` - success
+            * `failure` - failure
       required:
         - status
     ExtendMessageRequest:
@@ -6404,7 +7145,10 @@ components:
           enum:
             - App
           type: string
-          description: Category/type of the element
+          description: |-
+            Category/type of the element
+
+            * `App` - App
         children:
           type: array
           items:
@@ -6450,7 +7194,10 @@ components:
           enum:
             - Organization
           type: string
-          description: Category/type of the element
+          description: |-
+            Category/type of the element
+
+            * `Organization` - Organization
         children:
           allOf:
             - $ref: '#/components/schemas/HierarchyServerElement'
@@ -6479,7 +7226,10 @@ components:
           enum:
             - Server
           type: string
-          description: Category/type of the element
+          description: |-
+            Category/type of the element
+
+            * `Server` - Server
         children:
           allOf:
             - $ref: '#/components/schemas/HierarchyNode'
@@ -6491,6 +7241,26 @@ components:
         - id
         - name
         - type
+    InReviewReport:
+      type: object
+      description: Serializer for in-review report data, including vulnerability element
+        details, device information, and report state
+      properties:
+        vulnerabilityElement:
+          allOf:
+            - $ref: '#/components/schemas/VulnerabilityElement'
+          description: Vulnerability Element
+        deviceInfo:
+          allOf:
+            - $ref: '#/components/schemas/Device'
+          description: Name and ip of device
+        state:
+          type: string
+          description: State of report
+      required:
+        - deviceInfo
+        - state
+        - vulnerabilityElement
     Notification:
       type: object
       description: Serializer for the Notification item
@@ -6524,8 +7294,18 @@ components:
             - Platform
             - Agents
             - InternalScanner
+            - Email
           type: string
-          description: Module which the alert refers to
+          description: |-
+            Module which the alert refers to
+
+            * `Vulnerability` - Vulnerability
+            * `Configuration` - Configuration
+            * `Availability` - Availability
+            * `Platform` - Platform
+            * `Agents` - Agents
+            * `InternalScanner` - InternalScanner
+            * `Email` - Email
         type:
           enum:
             - New
@@ -6536,7 +7316,16 @@ components:
             - Down
             - Success
           type: string
-          description: Alert type
+          description: |-
+            Alert type
+
+            * `New` - New
+            * `Fixed` - Fixed
+            * `Change` - Change
+            * `Error` - Error
+            * `Up` - Up
+            * `Down` - Down
+            * `Success` - Success
         timestamp:
           type: string
           format: date-time
@@ -6745,6 +7534,27 @@ components:
         - page
         - totalCount
         - totalPages
+    PaginatedInReviewReportList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/InReviewReport'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
     PaginatedNotificationList:
       type: object
       properties:
@@ -6871,7 +7681,7 @@ components:
         - page
         - totalCount
         - totalPages
-    PaginatedTechnicalContextDeviceSrzList:
+    PaginatedTechnicalContextDeviceList:
       type: object
       properties:
         page:
@@ -6886,7 +7696,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/TechnicalContextDeviceSrz'
+            $ref: '#/components/schemas/TechnicalContextDevice'
       required:
         - items
         - page
@@ -6908,6 +7718,48 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UsageReport'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedVirtualVulnerabilityList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VirtualVulnerability'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
+    PaginatedVulnerabilityElementList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VulnerabilityElement'
       required:
         - items
         - page
@@ -6936,16 +7788,39 @@ components:
         - totalPages
     PatchedBCOwnerGroupRequest:
       type: object
+      description: Serializer for Business Context Owner Group
       properties:
         ownerGroupId:
           type: integer
           nullable: true
     PatchedBCOwnerUserRequest:
       type: object
+      description: Serializer for Business Context Owner User
       properties:
         ownerUserId:
           type: integer
           nullable: true
+    PatchedScanSurfaceEntryRequest:
+      type: object
+      description: Contains id, user, scan date, input, scanners
+      properties:
+        id:
+          type: integer
+          description: ID of the scan entry
+        user:
+          $ref: '#/components/schemas/ScanSurfaceUserRequest'
+        scanDate:
+          type: string
+          format: date-time
+          description: Date when the scan was performed
+        input:
+          type: string
+          minLength: 1
+          description: Input that was scanned
+        scanners:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanSurfaceScannerEntryRequest'
     PatchedScanSurfaceRescanRequest:
       type: object
       properties:
@@ -6954,11 +7829,16 @@ components:
           description: Whether the request completed successfully or not
     PatchedScanSurfaceUserInputRequestRequest:
       type: object
+      description: Includes list of user input tags and credentials id
       properties:
         userInputTags:
           type: array
           items: { }
           description: List of dictionaries having the following keys
+        credentialsId:
+          type: integer
+          nullable: true
+          description: The id of the edited credentials
     PatchedScannerEditRequest:
       type: object
       properties:
@@ -6975,25 +7855,49 @@ components:
           minLength: 1
     PatchedTCOwnerGroupRequest:
       type: object
+      description: Serializer for Technical Context Owner Group
       properties:
         ownerGroupId:
           type: integer
           nullable: true
     PatchedTCOwnerUserRequest:
       type: object
+      description: Serializer for Technical Context Owner User
       properties:
         ownerUserId:
           type: integer
           nullable: true
     PatchedTenantInfoEditRequest:
       type: object
-      description: Serializer for Tenant Info edit.
+      description: Tenant settings serializer
       properties:
         isAutoContextsGenerationEnabled:
           type: boolean
-          description: Auto contexts generation enabled or disabled
+        isOnboardingMode:
+          type: boolean
+          description: Restrict features for tenant in onboarding mode
+        scanType:
+          enum:
+            - agentless
+            - agent_based
+            - hybrid
+          type: string
+          description: |-
+            Tenant Scanning Type
+
+            * `agentless` - Agentless
+            * `agent_based` - Agent Based
+            * `hybrid` - Hybrid
+        isBuyNowClicked:
+          type: boolean
+          description: Whether the user has clicked the Buy Now button in trial mode
+        isRequestDemoClicked:
+          type: boolean
+          description: Whether the user has clicked the Request Demo button in trial
+            mode
     RRDeviceEntry:
       type: object
+      description: Serializer for remediation report device entry
       properties:
         id:
           type: integer
@@ -7007,11 +7911,17 @@ components:
         riskLevel:
           enum:
             - secure
-            - nonvisible
+            - unknown
             - vulnerable
             - critical
           type: string
-          description: Risk level of the device
+          description: |-
+            Risk level of the device
+
+            * `secure` - secure
+            * `unknown` - unknown
+            * `vulnerable` - vulnerable
+            * `critical` - critical
         totalVulnerabilities:
           type: integer
           description: Total number of vulns on the device
@@ -7029,6 +7939,7 @@ components:
         - vulnsPotentiallyFixed
     RRVulnEntry:
       type: object
+      description: Serializer for remediation report vuln entry
       properties:
         cpe:
           type: string
@@ -7041,12 +7952,16 @@ components:
           description: Summary string
         crss:
           type: number
-          format: float
+          format: double
           description: CRSS value
-        cvssBase:
-          type: number
-          format: float
-          description: CVSS Base value
+        # disabled by Tag
+        #        cvssBase:
+        #          oneOf:
+        #            - type: number
+        #              format: double
+        #            - type: string
+        #          readOnly: true
+        #          description: CVSS Base value
         isWeaponized:
           type: boolean
           description: Whether the vuln is weaponized
@@ -7055,7 +7970,7 @@ components:
           description: Port of the application that is exposed
         riskFactor:
           type: number
-          format: float
+          format: double
           description: Risk factor of the vuln and app
         severity:
           enum:
@@ -7065,7 +7980,14 @@ components:
             - HIGH
             - CRITICAL
           type: string
-          description: Severity level of the vuln
+          description: |-
+            Severity level of the vuln
+
+            * `NONE` - NONE
+            * `LOW` - LOW
+            * `MEDIUM` - MEDIUM
+            * `HIGH` - HIGH
+            * `CRITICAL` - CRITICAL
         attackVector:
           enum:
             - NONE
@@ -7073,7 +7995,13 @@ components:
             - REMOTE
             - NETWORK
           type: string
-          description: Attack vector of the vuln
+          description: |-
+            Attack vector of the vuln
+
+            * `NONE` - NONE
+            * `LOCAL` - LOCAL
+            * `REMOTE` - REMOTE
+            * `NETWORK` - NETWORK
         pluginDescription:
           type: string
           description: Plugin description
@@ -7099,6 +8027,11 @@ components:
         id:
           type: integer
           readOnly: true
+        tenantId:
+          type: integer
+          nullable: true
+          readOnly: true
+          description: The ID of the tenant that is linked to the current registration
         label:
           type: string
           readOnly: true
@@ -7138,9 +8071,20 @@ components:
             - msp_checkup_invited
             - msp_signup_invited
           type: string
+          description: |-
+            * `not_available` - not_available
+            * `user_signup` - user_signup
+            * `msp_created` - msp_created
+            * `msp_checkup_invited` - msp_checkup_invited
+            * `msp_signup_invited` - msp_signup_invited
           readOnly: true
         friendlyType:
           type: string
+          description: |-
+            💼 A friendly version of the type attribute
+
+            Returns:
+                str: A user-facing description of the type variable
           readOnly: true
         signupData:
           allOf:
@@ -7160,14 +8104,17 @@ components:
         meta:
           type: object
           additionalProperties: { }
+          description: |-
+            Returns meta information as dict. If you need the raw Python class, initialize
+            it yourself with the registration object.
           readOnly: true
         groups:
           type: array
           items:
             type: integer
-          readOnly: true
           description: Associated MSP user groups. Users in those groups can edit
             the registration
+          readOnly: true
         history:
           type: array
           items:
@@ -7175,11 +8122,13 @@ components:
           description: History of the registration's states
         photo:
           type: string
+          description: 📷 Retrieves tenant photo if set.
           readOnly: true
         managers:
           type: array
           items:
             type: integer
+          description: Returns the list of MSP users that have access to this registration
           readOnly: true
         users:
           type: array
@@ -7199,7 +8148,6 @@ components:
             - co_managed
             - fully_managed
           type: string
-          readOnly: true
           description: "Manage type is derived from the users that have\n        access\
             \ to an account.\n    * \U0001F7E7 `Fully Managed` - represents an account\
             \ that is only accessible by MSP users\n    * \U0001F7E9 `Co Managed`\
@@ -7207,10 +8155,16 @@ components:
             \ users as well as MSP users\n    * \U0001F7E6 `Self Managed` - represents\
             \ an account that is accessible only by regular Footprint users assigned\n\
             \        to that account\n    "
+          readOnly: true
         isEditableByLoggedInUser:
           type: boolean
           readOnly: true
           description: Whether the logged in user has access to edit the registration
+        canEditScanningConfig:
+          type: boolean
+          description: Whether the user can edit scanning configurations like plan
+            type or scanning day.
+          readOnly: true
         maxBillableAssets:
           type: integer
           maximum: 2147483647
@@ -7218,11 +8172,16 @@ components:
           description: Maximum amount of billable assets
         billingPlanType:
           enum:
-            - monthly
-            - weekly
             - continuous
+            - weekly
+            - monthly
           type: string
-          description: Billing plan type
+          description: |-
+            Billing plan type
+
+            * `continuous` - Continuous
+            * `weekly` - Weekly
+            * `monthly` - Monthly
         billingDay:
           type: integer
           maximum: 2147483647
@@ -7230,7 +8189,31 @@ components:
           nullable: true
           description: Billing day. If billing plan type is weekly, the range is reduced
             to 1-7.
+        isBillingDayLastOfMonth:
+          type: boolean
+          description: Whether or not we bill on the last day of the month
+        billingModel:
+          enum:
+            - per_device
+            - per_user
+          type: string
+          description: |-
+            Billing model for tenant. Changes method on how we calculate indicators in Usage Report
+
+            * `per_device` - Per Device
+            * `per_user` - Per User
+        billingUserEstimateValue:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Estimated number of users
+        billingDeviceEstimateValue:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Estimated number of devices
       required:
+        - canEditScanningConfig
         - friendlyType
         - groups
         - history
@@ -7244,11 +8227,13 @@ components:
         - photo
         - state
         - statistics
+        - tenantId
         - token
         - type
         - users
     RegistrationAssetsCountType:
       type: object
+      description: Count for agentless and agentbased devices
       properties:
         agentless:
           type: integer
@@ -7282,7 +8267,8 @@ components:
             type: integer
           nullable: true
           description: |-
-            List of MSP user ids that should be associated with this registration.
+            List of MSP user ids'
+                                                                ' that should be associated with this registration.
                         If None, it will be ignored
         managerId:
           type: integer
@@ -7297,7 +8283,13 @@ components:
             - fully_managed
             - no_tenant
           type: string
-          description: Type of management for the registration
+          description: |-
+            Type of management for the registration
+
+            * `self_managed` - self_managed
+            * `co_managed` - co_managed
+            * `fully_managed` - fully_managed
+            * `no_tenant` - no_tenant
         associatedMspGroupIds:
           type: array
           items:
@@ -7328,12 +8320,32 @@ components:
             - weekly
             - continuous
           type: string
-          description: Billing plan type
+          description: |-
+            Billing plan type
+
+            * `monthly` - monthly
+            * `weekly` - weekly
+            * `continuous` - continuous
         billingDay:
           type: integer
           maximum: 28
           minimum: 1
           description: Billing day
+        isBillingDayLastOfMonth:
+          type: boolean
+          default: false
+        billingModel:
+          enum:
+            - per_device
+            - per_user
+          type: string
+          description: |-
+            * `per_device` - Per Device
+            * `per_user` - Per User
+        billingUserEstimateValue:
+          type: integer
+        billingDeviceEstimateValue:
+          type: integer
       required:
         - description
         - label
@@ -7361,7 +8373,8 @@ components:
             type: integer
           nullable: true
           description: |-
-            List of MSP user ids that should be associated with this registration.
+            List of MSP user ids'
+                                                                ' that should be associated with this registration.
                         If None, it will be ignored
         managerId:
           type: integer
@@ -7376,7 +8389,13 @@ components:
             - fully_managed
             - no_tenant
           type: string
-          description: Type of management for the registration
+          description: |-
+            Type of management for the registration
+
+            * `self_managed` - self_managed
+            * `co_managed` - co_managed
+            * `fully_managed` - fully_managed
+            * `no_tenant` - no_tenant
         associatedMspGroupIds:
           type: array
           items:
@@ -7403,17 +8422,37 @@ components:
           description: Max number of billable assets
         billingPlanType:
           enum:
-            - monthly
-            - weekly
             - continuous
+            - weekly
+            - monthly
           type: string
-          description: Billing plan type
+          description: |-
+            Billing plan type
+
+            * `continuous` - continuous
+            * `weekly` - weekly
+            * `monthly` - monthly
         billingDay:
           type: integer
           maximum: 28
           minimum: 1
           nullable: true
           description: Billing day
+        isBillingDayLastOfMonth:
+          type: boolean
+          default: false
+        billingModel:
+          enum:
+            - per_device
+            - per_user
+          type: string
+          description: |-
+            * `per_device` - Per Device
+            * `per_user` - Per User
+        billingUserEstimateValue:
+          type: integer
+        billingDeviceEstimateValue:
+          type: integer
     RegistrationHistory:
       type: object
       description: Serializer for registration state change history entries
@@ -7474,6 +8513,7 @@ components:
         - state
     RegistrationOnlineOfflineCount:
       type: object
+      description: Counts the number of offline and online agents
       properties:
         online:
           type: integer
@@ -7539,6 +8579,8 @@ components:
             or not
     RegistrationStatistics:
       type: object
+      description: Statistics that include assets/agents/internal scanner/webapps
+        count and security levels
       properties:
         assetsCount:
           $ref: '#/components/schemas/RegistrationAssetsCountType'
@@ -7550,7 +8592,7 @@ components:
           type: integer
         securityLevel:
           type: number
-          format: float
+          format: double
       required:
         - agentsCount
         - assetsCount
@@ -7559,6 +8601,7 @@ components:
         - webappsCount
     RemediationReport:
       type: object
+      description: Serializer for remediation report
       properties:
         id:
           type: integer
@@ -7577,7 +8620,7 @@ components:
           description: Whether there is any weaponized vuln in the finding
         riskIndicator:
           type: number
-          format: float
+          format: double
           description: Risk indicator score
         devicesAffected:
           type: array
@@ -7604,12 +8647,12 @@ components:
           enum:
             - created
             - requested
-            - stopped
             - running
+            - stopped
             - interrupted
             - done
           type: string
-          description: Scan status
+          readOnly: true
         startDatetime:
           type: string
           format: date-time
@@ -7626,10 +8669,17 @@ components:
         scannerName:
           type: string
           readOnly: true
+        userInputs:
+          type: array
+          items:
+            type: string
+          readOnly: true
       required:
         - scanUuid
         - scannerId
         - scannerName
+        - status
+        - userInputs
     ScanStatus:
       type: object
       properties:
@@ -7648,6 +8698,8 @@ components:
         - runningJobs
     ScanSurfaceCurrentTarget:
       type: object
+      description: Contains id, ip, organization, description, hostnames, range, results
+        and range/target status
       properties:
         id:
           type: integer
@@ -7693,8 +8745,63 @@ components:
         - organization
         - range
         - results
+    ScanSurfaceCurrentTargetRequest:
+      type: object
+      description: Contains id, ip, organization, description, hostnames, range, results
+        and range/target status
+      properties:
+        id:
+          type: integer
+          description: ID of the current target
+        ip:
+          type: string
+          minLength: 1
+          description: IP Address of the target
+        organization:
+          type: string
+          minLength: 1
+          description: Discovered organization match
+        description:
+          type: string
+          minLength: 1
+          description: Description of the target
+        hostnames:
+          type: array
+          items:
+            type: string
+            minLength: 1
+          description: List of associated hostnames
+        range:
+          type: string
+          minLength: 1
+          description: Matching IP range
+        isRangeScanned:
+          type: boolean
+          description: Whether the IP range is scanned during periodic scans
+        isTargetStopped:
+          type: boolean
+          description: Whether the target IP is scanned during periodic scans
+        isTargetPaused:
+          type: boolean
+          description: Whether the target IP is banned from periodic scans
+        results:
+          allOf:
+            - $ref: '#/components/schemas/CurrentTargetResultsRequest'
+          description: Overview of discovered assets
+      required:
+        - description
+        - hostnames
+        - id
+        - ip
+        - isRangeScanned
+        - isTargetPaused
+        - isTargetStopped
+        - organization
+        - range
+        - results
     ScanSurfaceEntry:
       type: object
+      description: Contains id, user, scan date, input, scanners
       properties:
         id:
           type: integer
@@ -7720,6 +8827,7 @@ components:
         - user
     ScanSurfacePotentialTarget:
       type: object
+      description: Contains value and source
       properties:
         value:
           type: string
@@ -7730,8 +8838,24 @@ components:
       required:
         - source
         - value
+    ScanSurfacePotentialTargetRequest:
+      type: object
+      description: Contains value and source
+      properties:
+        value:
+          type: string
+          minLength: 1
+          description: Value discovered
+        source:
+          type: string
+          minLength: 1
+          description: Where the value was extracted from
+      required:
+        - source
+        - value
     ScanSurfaceScannerEntry:
       type: object
+      description: Contains id, label, is active, potential targets and current targets
       properties:
         id:
           type: integer
@@ -7739,6 +8863,9 @@ components:
         label:
           type: string
           description: Scanner Label
+        isActive:
+          type: boolean
+          description: Scanner Status
         potentialTargets:
           type: array
           items:
@@ -7752,10 +8879,42 @@ components:
       required:
         - currentTargets
         - id
+        - isActive
+        - label
+        - potentialTargets
+    ScanSurfaceScannerEntryRequest:
+      type: object
+      description: Contains id, label, is active, potential targets and current targets
+      properties:
+        id:
+          type: integer
+          description: Scanner ID
+        label:
+          type: string
+          minLength: 1
+          description: Scanner Label
+        isActive:
+          type: boolean
+          description: Scanner Status
+        potentialTargets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanSurfacePotentialTargetRequest'
+          description: Suggested targets based on input
+        currentTargets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScanSurfaceCurrentTargetRequest'
+          description: Discovered associated targets
+      required:
+        - currentTargets
+        - id
+        - isActive
         - label
         - potentialTargets
     ScanSurfaceUser:
       type: object
+      description: Contains fist name, last name and photo
       properties:
         firstName:
           type: string
@@ -7772,13 +8931,39 @@ components:
         - photo
     ScanSurfaceUserInputRequestRequest:
       type: object
+      description: Includes list of user input tags and credentials id
       properties:
         userInputTags:
           type: array
           items: { }
           description: List of dictionaries having the following keys
+        credentialsId:
+          type: integer
+          nullable: true
+          description: The id of the edited credentials
       required:
+        - credentialsId
         - userInputTags
+    ScanSurfaceUserRequest:
+      type: object
+      description: Contains fist name, last name and photo
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          description: User first name
+        lastName:
+          type: string
+          minLength: 1
+          description: User last name
+        photo:
+          type: string
+          minLength: 1
+          description: Base64-encoded photo of the user
+      required:
+        - firstName
+        - lastName
+        - photo
     ScanUuidScannerId:
       type: object
       description: Rescan accepted and will start in a few moments.
@@ -7820,12 +9005,20 @@ components:
             - snmp
             - rdp
           type: string
+          description: |-
+            * `ssh_password` - ssh_password
+            * `ssh_key` - ssh_key
+            * `snmp` - snmp
+            * `rdp` - rdp
           readOnly: true
         state:
           enum:
             - valid
             - invalid
           type: string
+          description: |-
+            * `valid` - Credentials can be used for scans
+            * `invalid` - Credentials cannot be used for new scans
           readOnly: true
         createdOn:
           type: string
@@ -7841,10 +9034,187 @@ components:
         - label
         - state
         - userInputsCount
+    SecurityCheckCategory:
+      type: object
+      description: Security Check Category Serializer
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        tests:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityCheckTestResult'
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        httpPassedTestsCount:
+          type: string
+          readOnly: true
+        httpsPassedTestsCount:
+          type: string
+          readOnly: true
+        httpTestsCount:
+          type: string
+          readOnly: true
+        httpsTestsCount:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        passedTestsCount:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+      required:
+        - description
+        - httpPassedTestsCount
+        - httpTestsCount
+        - httpsPassedTestsCount
+        - httpsTestsCount
+        - id
+        - passedTestsCount
+        - tests
+        - title
+    SecurityCheckDetail:
+      type: object
+      description: Security used to return a Network Edge result
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityCheckCategory'
+          readOnly: true
+        invitationCompanyName:
+          type: string
+          readOnly: true
+        timestamp:
+          type: string
+          format: date-time
+        userAgent:
+          type: string
+          maxLength: 255
+        ip:
+          type: string
+          nullable: true
+          maxLength: 255
+        userName:
+          type: string
+          maxLength: 512
+        passedTestsCount:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        httpCompleted:
+          type: boolean
+        httpsCompleted:
+          type: boolean
+        registration:
+          type: integer
+          nullable: true
+        invitation:
+          type: integer
+          nullable: true
+        device:
+          type: integer
+          nullable: true
+      required:
+        - categories
+        - id
+        - invitationCompanyName
+        - passedTestsCount
+        - userAgent
+    SecurityCheckList:
+      type: object
+      description: Serializer used for returning a complete list of Network Edge entries
+        with minimal information
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        timestamp:
+          type: string
+          format: date-time
+        ip:
+          type: string
+          nullable: true
+          maxLength: 255
+        userName:
+          type: string
+          maxLength: 512
+        invitation:
+          type: integer
+          nullable: true
+        httpCompleted:
+          type: boolean
+        httpsCompleted:
+          type: boolean
+        invitationCompanyName:
+          type: string
+          readOnly: true
+      required:
+        - id
+        - invitationCompanyName
+    SecurityCheckSubTestResult:
+      type: object
+      description: |-
+        Security Check Subtest Serializer
+
+        We use this because it is a bit complicated to have self-calling serializers.
+        Because we only go 2 levels deep, it is easier to make a separate serializer
+        for the model which omits the 'subtests' recursive key.
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          readOnly: true
+        passed:
+          type: boolean
+      required:
+        - description
+        - passed
+        - title
+    SecurityCheckTestResult:
+      type: object
+      description: Security Check Test Result Serializer
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        subtests:
+          type: array
+          items:
+            $ref: '#/components/schemas/SecurityCheckSubTestResult'
+        description:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        passed:
+          type: boolean
+        isHttp:
+          type: boolean
+          nullable: true
+      required:
+        - description
+        - id
+        - passed
+        - subtests
+        - title
     SessionLoggedInSrz:
       type: object
       description: Response when user is logged in
       properties:
+        isSsoOnly:
+          type: boolean
         isLoggedIn:
           type: boolean
         isOtpEnabled:
@@ -7898,6 +9268,22 @@ components:
         tenantPhoto:
           type: string
           description: Base64-encoded tenant photo
+        newVulnsEmails:
+          type: array
+          items:
+            enum:
+              - none
+              - low
+              - medium
+              - high
+              - critical
+            type: string
+            description: |-
+              * `none` - none
+              * `low` - low
+              * `medium` - medium
+              * `high` - high
+              * `critical` - critical
         syncEmails:
           type: boolean
           description: Whether periodic e-mail reports are enabled
@@ -7920,6 +9306,12 @@ components:
         weeklyCvrEnabled:
           type: boolean
           description: Whether weekly CVR report e-mail notifications are enabled
+        remediationReportEmailsEnable:
+          type: boolean
+        technicalReportEmailsEnable:
+          type: boolean
+        contextualRiskReportEmailsEnable:
+          type: boolean
         isInstallationAdmin:
           type: boolean
           description: Whether the user is an installation admin
@@ -7930,10 +9322,17 @@ components:
           type: string
           readOnly: true
           description: Footprint installation release channel
+        apiKeyGenerationDate:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Date when the API key was generated
       required:
         - access
         - accountId
+        - apiKeyGenerationDate
         - asyncEmails
+        - contextualRiskReportEmailsEnable
         - email
         - firstName
         - id
@@ -7941,6 +9340,7 @@ components:
         - isInstallationAdmin
         - isLoggedIn
         - isOtpEnabled
+        - isSsoOnly
         - lastName
         - newVulnsEmails
         - photo
@@ -7948,9 +9348,11 @@ components:
         - registrationId
         - registrationToken
         - releaseChannel
+        - remediationReportEmailsEnable
         - role
         - syncEmails
-        - syncPeriod
+        - syncEmailsPeriod
+        - technicalReportEmailsEnable
         - tenantPhoto
         - usageReportEmails
         - username
@@ -7977,6 +9379,7 @@ components:
           description: OTP Token, if available
     Stat:
       type: object
+      description: Serializer for RAM, Disk and CPU values from one machine
       properties:
         type:
           enum:
@@ -7984,7 +9387,12 @@ components:
             - Disk
             - CPU
           type: string
-          description: Type of the stat
+          description: |-
+            Type of the stat
+
+            * `RAM` - RAM
+            * `Disk` - Disk
+            * `CPU` - CPU
         currentValue:
           type: integer
           description: Last value of the stat
@@ -8003,6 +9411,9 @@ components:
         - type
     StatsView:
       type: object
+      description: |-
+        Serializer which contains information about the overall status of a machine.
+        It includes data from e2e results, stats(CPU, RAM, Disk) and docker containers.
       properties:
         e2e:
           allOf:
@@ -8039,6 +9450,7 @@ components:
         - internalScanners
     Task:
       type: object
+      description: Serialize for the Task model
       properties:
         id:
           type: integer
@@ -8109,6 +9521,7 @@ components:
         - isPortEditable
         - isRunning
         - lastDurationSec
+        - lastRun
         - meta
         - name
         - priority
@@ -8116,6 +9529,7 @@ components:
         - scannerId
     TaskEditRequest:
       type: object
+      description: Used in Scheduler View
       properties:
         priority:
           type: integer
@@ -8158,22 +9572,15 @@ components:
         - page
         - totalCount
         - totalPages
-    TechnicalContextDeviceSrz:
+    TechnicalContextDevice:
       type: object
-      description: Serializer for the technical context device listing
+      description: Serializer for the Technical Context device listing.
       properties:
-        type:
-          enum:
-            - Server
-          type: string
-          readOnly: true
         id:
           type: integer
         name:
           type: string
-        state:
-          type: string
-        status:
+        riskLevel:
           type: string
         discoveredOn:
           type: string
@@ -8183,30 +9590,56 @@ components:
           format: date-time
         ip:
           type: string
-        numberOfCves:
-          type: integer
-          readOnly: true
-        numberOfAttackAvenues:
-          type: integer
-          readOnly: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceTags'
+        deviceCrs:
+          type: number
+          format: double
+        riskLevelByCrs:
+          type: string
+        crsColor:
+          type: string
       required:
+        - crsColor
+        - deviceCrs
         - discoveredOn
         - id
         - ip
         - lastSeen
         - name
-        - numberOfAttackAvenues
-        - numberOfCves
-        - state
-        - status
-        - type
+        - riskLevel
+        - riskLevelByCrs
+        - tags
     TenantInfoEdit:
       type: object
-      description: Serializer for Tenant Info edit.
+      description: Tenant settings serializer
       properties:
         isAutoContextsGenerationEnabled:
           type: boolean
-          description: Auto contexts generation enabled or disabled
+        isOnboardingMode:
+          type: boolean
+          description: Restrict features for tenant in onboarding mode
+        scanType:
+          enum:
+            - agentless
+            - agent_based
+            - hybrid
+          type: string
+          description: |-
+            Tenant Scanning Type
+
+            * `agentless` - Agentless
+            * `agent_based` - Agent Based
+            * `hybrid` - Hybrid
+        isBuyNowClicked:
+          type: boolean
+          description: Whether the user has clicked the Buy Now button in trial mode
+        isRequestDemoClicked:
+          type: boolean
+          description: Whether the user has clicked the Request Demo button in trial
+            mode
     TokenObtainPair:
       type: object
       properties:
@@ -8258,10 +9691,15 @@ components:
         status:
           enum:
             - secure
-            - nonvisible
+            - unknown
             - vulnerable
             - critical
           type: string
+          description: |-
+            * `secure` - secure
+            * `unknown` - unknown
+            * `vulnerable` - vulnerable
+            * `critical` - critical
       required:
         - name
         - status
@@ -8280,10 +9718,17 @@ components:
             - managed
             - nonmanaged
           type: string
-          description: Client type
+          description: |-
+            Client type
+
+            * `managed` - managed
+            * `nonmanaged` - nonmanaged
         currentAssets:
           type: integer
           description: Number of currently available assets (same as MSP listing)
+        targetsCount:
+          type: integer
+          description: Last targets_count day value for the current month
         billableAssets:
           type: integer
           description: Max number of assets in report
@@ -8292,11 +9737,16 @@ components:
           description: Max number of billable assets in report
         billingPlanType:
           enum:
-            - monthly
-            - weekly
             - continuous
+            - weekly
+            - monthly
           type: string
-          description: Billing plan type
+          description: |-
+            Billing plan type
+
+            * `continuous` - continuous
+            * `weekly` - weekly
+            * `monthly` - monthly
         reportYear:
           type: integer
           description: The year of the report
@@ -8307,35 +9757,52 @@ components:
         timestamp:
           type: string
           description: The date the report was generated (e.g. now())
+        uniqueDevices:
+          type: integer
+          description: Number of unique devices
+        deltaAssets:
+          type: integer
+          description: Current assets - max billable assets
         assetsCountHistory:
           type: array
           items:
             $ref: '#/components/schemas/UsageReportHistoryCountEntry'
           description: Historic entry list. Used for charts
+        billingModel:
+          enum:
+            - per_device
+            - per_user
+          type: string
+          description: |-
+            Billing model (per user/per device)
+
+            * `per_device` - Per Device
+            * `per_user` - Per User
       required:
         - assetsCountHistory
         - billableAssets
+        - billingModel
         - billingPlanType
         - clientName
         - clientType
         - currentAssets
+        - deltaAssets
         - maxBillableAssets
         - photo
         - reportMonth
         - reportYear
+        - targetsCount
         - timestamp
+        - uniqueDevices
     UsageReportHistoryCountEntry:
       type: object
-      description: |-
-        Serializers for Usage Report History
-
-        TODO: Replace type with serializer
+      description: Serializers for Usage Report History
       properties:
         timestamp:
           type: string
           format: date-time
           description: The timestamp of the recorded entry (multiple entries can exist
-            for same day
+            for same day)
         assetCount:
           type: integer
           description: The number of assets recorded at that day.
@@ -8344,57 +9811,91 @@ components:
         - timestamp
     VirtualVulnerability:
       type: object
+      description: Serializer used for Virtual Vulnerability Element listing in Application
+        and Device pages
       properties:
         id:
           type: integer
           description: Vulnerability ID
         elementId:
           type: integer
-          description: Related element ID
+          readOnly: true
         title:
           type: string
           description: Vulnerability title
         state:
+          enum:
+            - discovered
+            - addedToActionPlan
+            - fixPendingConfirmation
+            - fixNotConfirmed
+            - fixConfirmed
+            - falsePositive
+            - acceptRisk
+            - reopen
           type: string
           description: Vulnerability state
+          readOnly: true
         motivationText:
           type: string
-          description: Vulnerability motivation
+          maxLength: 255
         discoveredOn:
           type: string
           format: date-time
-          description: Date the vulnerability was discovered on
-        cvssBase:
+          description: When the vulnerability was discovered
+        lastScanned:
           type: string
-          description: Base CVSS score
+          readOnly: true
+          description: Date when the vulnerability was scanned last time
+        lastUpdate:
+          type: string
+          format: date-time
+          description: Date when the vulnerability was last updated
+        # disabled by Tag
+        #        cvssBase:
+        #          oneOf:
+        #            - type: number
+        #              format: double
+        #            - type: string
+        #          readOnly: true
+        #          description: Base CVSS score
         impact:
           type: string
+          nullable: true
           description: Vulnerability impact
         severity:
           type: string
           description: Vulnerability severity
         vulnerabilityDetectionResult:
           type: string
+          nullable: true
           description: Vulnerability detection result
         vulnerabilityDetectionMethod:
           type: string
+          nullable: true
           description: Vulnerability detection method
         vulnerabilityInsight:
           type: string
+          nullable: true
           description: Vulnerability insight
+        relatedApplication:
+          allOf:
+            - $ref: '#/components/schemas/VirtualVulnerabilityRelatedApplication'
+          readOnly: true
+          description: Extra information about vulnerability's related application
         solution:
           type: string
+          readOnly: true
           description: Vulnerability solution
-        ref:
-          type: array
-          items:
-            type: string
-          description: References
+        stateFixedReason:
+          type: string
+          description: State fixed reason
         affectedSoftwareOS:
           type: string
+          nullable: true
           description: Affected operating system
         qualityOfDetection:
-          type: string
+          type: integer
           description: Quality of detection
         summary:
           type: string
@@ -8402,29 +9903,55 @@ components:
         vulnerabilities:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/VulnerabilityElement'
+          readOnly: true
           description: Associated CVEs
       required:
         - affectedSoftwareOS
         - cvssBase
-        - discoveredOn
         - elementId
         - id
         - impact
-        - motivationText
+        - lastScanned
+        - lastUpdate
         - qualityOfDetection
-        - ref
+        - relatedApplication
         - severity
         - solution
         - state
+        - stateFixedReason
         - summary
         - title
         - vulnerabilities
         - vulnerabilityDetectionMethod
         - vulnerabilityDetectionResult
         - vulnerabilityInsight
+    VirtualVulnerabilityRelatedApplication:
+      type: object
+      description: Serializer used for extra information about virtual vulnerabilities'
+        related application
+      properties:
+        name:
+          type: string
+          description: The name of the application
+        version:
+          type: string
+          nullable: true
+          description: The version of the application
+        port:
+          type: integer
+          nullable: true
+          description: The port of the application
+      required:
+        - name
+        - port
+        - version
     Vulnerability:
       type: object
+      description: |-
+        Serializer for vulnerabilities;
+
+        NOTE: Class moved by @alexandrabalaci
       properties:
         id:
           type: integer
@@ -8444,27 +9971,37 @@ components:
         discovered:
           type: string
           format: date-time
-          description: 'Date when the vulnerability was '
+          description: Date when the vulnerability was discovered
         publishedDate:
           type: string
           format: date-time
-          description: 'Date when the vulnerability was '
+          description: Date when the vulnerability was published
         lastModified:
           type: string
           format: date-time
-          description: 'Date when the vulnerability was '
+          description: Date when the vulnerability was last modified
         cvssScore:
           type: number
-          format: float
+          format: double
           description: CVSS score of the vulnerability
         cvssImpact:
           type: number
-          format: float
+          format: double
           description: CVSS impact of the vulnerability
         cvssExploit:
           type: number
-          format: float
+          format: double
           description: CVSS exploit of the vulnerability
+        cvssPrivilegesRequired:
+          type: string
+          description: The degree of authorization of the attacker
+        cvssUserInteraction:
+          type: string
+          description: Whether the vulnerability requires user interaction to be exploited
+        cvssScope:
+          type: string
+          description: Whether the impacted component is the same as the vulnerable
+            component
         cvssConfidentialityImpact:
           type: string
           description: CVSS confidentiality impact of the vulnerability
@@ -8510,19 +10047,7 @@ components:
             type: string
             format: uri
           description: Links to publicly available exploits, if any
-        obtainAllPrivilege:
-          type: boolean
-          description: Whether the vulnerability has obtain_all_privilege risk
-        obtainOtherPrivilege:
-          type: boolean
-          description: Whether the vulnerability has obtain_other_privilege risk
-        obtainUserPrivilege:
-          type: boolean
-          description: Whether the vulnerability has obtain_user_privilege risk
-        userInteractionRequired:
-          type: boolean
-          description: Whether the vulnerability requires user interaction to be exploited
-        severity:
+        cvssBaseSeverity:
           type: string
           description: The vulnerability severity
         state:
@@ -8534,8 +10059,19 @@ components:
             - fixConfirmed
             - falsePositive
             - acceptRisk
+            - reopen
           type: string
-          description: State of the vulnerability
+          description: |-
+            State of the vulnerability
+
+            * `discovered` - discovered
+            * `addedToActionPlan` - addedToActionPlan
+            * `fixPendingConfirmation` - fixPendingConfirmation
+            * `fixNotConfirmed` - fixNotConfirmed
+            * `fixConfirmed` - fixConfirmed
+            * `falsePositive` - falsePositive
+            * `acceptRisk` - acceptRisk
+            * `reopen` - reopen
         motivationText:
           type: string
           description: Motivation text
@@ -8557,11 +10093,15 @@ components:
         - affected
         - cve
         - cvssAvailabilityImpact
+        - cvssBaseSeverity
         - cvssConfidentialityImpact
         - cvssExploit
         - cvssImpact
         - cvssIntegrityImpact
+        - cvssPrivilegesRequired
+        - cvssScope
         - cvssScore
+        - cvssUserInteraction
         - cvssVectorString
         - discovered
         - elementId
@@ -8577,18 +10117,13 @@ components:
         - isVulnerable
         - lastModified
         - motivationText
-        - obtainAllPrivilege
-        - obtainOtherPrivilege
-        - obtainUserPrivilege
         - publishedDate
         - references
         - remediation
-        - severity
         - state
         - stateFixedReason
         - stateLastChangedOn
         - summary
-        - userInteractionRequired
     VulnerabilityChangeRequest:
       type: object
       description: Request for changing a vulnerability's state
@@ -8607,8 +10142,19 @@ components:
             - fixConfirmed
             - falsePositive
             - acceptRisk
+            - reopen
           type: string
-          description: New state of vulnerability
+          description: |-
+            New state of vulnerability
+
+            * `discovered` - discovered
+            * `addedToActionPlan` - addedToActionPlan
+            * `fixPendingConfirmation` - fixPendingConfirmation
+            * `fixNotConfirmed` - fixNotConfirmed
+            * `fixConfirmed` - fixConfirmed
+            * `falsePositive` - falsePositive
+            * `acceptRisk` - acceptRisk
+            * `reopen` - reopen
         motivationText:
           type: string
           minLength: 1
@@ -8617,11 +10163,169 @@ components:
         - ids
         - motivationText
         - state
+    VulnerabilityElement:
+      type: object
+      description: Serializer used for vulnerabilities in Applications and Devices
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        discovered:
+          type: string
+          format: date-time
+        motivationText:
+          type: string
+          maxLength: 500
+        remediation:
+          type: string
+        elementId:
+          type: integer
+        cve:
+          type: string
+          maxLength: 16
+        summary:
+          type: string
+          nullable: true
+        published:
+          type: string
+          format: date-time
+          nullable: true
+        # disabled by Tag
+        #        cvssScore:
+        #          oneOf:
+        #            - type: number
+        #              format: double
+        #            - type: string
+        #          readOnly: true
+        #          nullable: true
+        cvssImpact:
+          type: number
+          format: double
+          nullable: true
+        cvssExploit:
+          type: number
+          format: double
+          nullable: true
+        cvssScope:
+          type: string
+          nullable: true
+        cvssPrivilegesRequired:
+          type: string
+          nullable: true
+        cvssConfidentialityImpact:
+          type: string
+          nullable: true
+        cvssAvailabilityImpact:
+          type: string
+          nullable: true
+        cvssVectorString:
+          type: string
+          nullable: true
+        cvssIntegrityImpact:
+          type: string
+          nullable: true
+        isPublicExploitAvailable:
+          type: boolean
+          default: false
+        cvssBaseSeverity:
+          type: string
+          nullable: true
+          maxLength: 50
+        attackVector:
+          $ref: '#/components/schemas/AttackVector'
+        isCritical:
+          type: boolean
+        isVulnerable:
+          type: boolean
+        isLowSeverity:
+          type: boolean
+        isMediumSeverity:
+          type: boolean
+        isHighSeverity:
+          type: boolean
+        isCriticalSeverity:
+          type: boolean
+        problemTypeData:
+          type: string
+          readOnly: true
+        state:
+          enum:
+            - discovered
+            - addedToActionPlan
+            - fixPendingConfirmation
+            - fixNotConfirmed
+            - fixConfirmed
+            - falsePositive
+            - acceptRisk
+            - reopen
+          type: string
+          readOnly: true
+        references:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        exploits:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        fixedReason:
+          type: string
+          readOnly: true
+        affected:
+          type: string
+          readOnly: true
+        informationOrigin:
+          allOf:
+            - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
+          readOnly: true
+        lastSeen:
+          type: string
+          format: date-time
+        lastStateChanged:
+          type: string
+          format: date-time
+        rleDetails:
+          type: string
+          readOnly: true
+      required:
+        - affected
+        - attackVector
+        - cve
+        - cvssAvailabilityImpact
+        - cvssBaseSeverity
+        - cvssConfidentialityImpact
+        - cvssExploit
+        - cvssImpact
+        - cvssIntegrityImpact
+        - cvssPrivilegesRequired
+        - cvssScope
+        - cvssScore
+        - cvssVectorString
+        - elementId
+        - exploits
+        - fixedReason
+        - id
+        - informationOrigin
+        - isCritical
+        - isCriticalSeverity
+        - isHighSeverity
+        - isLowSeverity
+        - isMediumSeverity
+        - isVulnerable
+        - problemTypeData
+        - published
+        - references
+        - rleDetails
+        - state
+        - summary
     WLBranding:
       type: object
       properties:
         appLogo:
           type: string
+          readOnly: true
         supportName:
           type: string
           readOnly: true
@@ -8650,6 +10354,8 @@ components:
           type: string
         fromEmailName:
           type: string
+        trialModeSupportEmail:
+          type: string
         appName:
           type: string
           maxLength: 256
@@ -8663,33 +10369,33 @@ components:
           type: boolean
         moderateSignups:
           type: boolean
-        hideInstallPatchesButton:
-          type: boolean
-        hideRemediateWithButton:
-          type: boolean
-        hideExtraBillingInfo:
-          type: boolean
-        hideZapScans:
-          type: boolean
-        hideSurveys:
-          type: boolean
-        hideActionPlan:
-          type: boolean
-        hideRemediationsList:
-          type: boolean
-        enforceActionPlan:
-          type: boolean
         allowedWhitelabelDomains:
           type: string
-        disableAllContextsInCrr:
-          type: boolean
+        defaultBillingModel:
+          enum:
+            - per_device
+            - per_user
+          type: string
+          description: |-
+            * `per_device` - Per Device
+            * `per_user` - Per User
+        defaultInstallationMode:
+          enum:
+            - agentless
+            - agent_based
+            - hybrid
+          type: string
+          description: |-
+            * `agentless` - Agentless
+            * `agent_based` - Agent Based
+            * `hybrid` - Hybrid
       required:
         - appLogo
         - supportEmail
         - supportName
     ZAPScannerReport:
       type: object
-      description: List of Web Applications that have one or many ZAP Report associated.
+      description: List of Web Applications that have one or more ZAP Reports associated.
       properties:
         applicationId:
           type: integer

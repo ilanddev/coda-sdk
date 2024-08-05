@@ -155,14 +155,19 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 		try {
 			return new ScanSurfaceBatcher().createBatches(filteredTargets)
-				.stream().map(batch -> batch.scanners(scanners)).map(batch -> {
+				.stream()
+				.map(batch -> batch.scanners(scanners))
+				.map(batch -> {
 					try {
 						return updateScanSurface(batch, isNoScanRequest,
 							accountId);
 					} catch (final ApiException e) {
 						throw new RuntimeException(e);
 					}
-				}).flatMap(List::stream).filter(Objects::nonNull).distinct()
+				})
+				.flatMap(List::stream)
+				.filter(Objects::nonNull)
+				.distinct()
 				.collect(Collectors.toList());
 		} catch (final RuntimeException e) {
 			throwIfInstanceOf(e.getCause(), ApiException.class);
@@ -216,11 +221,11 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 	@Override
 	public List<ScanSurfaceEntry> getScanSurface(final Integer scannerId,
-		final Integer accountId) throws ApiException {
+		final String textFilter, final Integer accountId) throws ApiException {
 		logger.debug("Retrieving scan surface...");
 		return new Paginator<>(
 			pageNo -> consoleApi.consoleScanSurfaceRetrieve(pageNo, scannerId,
-				accountId), PaginatedScanSurfaceEntryList::getPage,
+				textFilter, accountId), PaginatedScanSurfaceEntryList::getPage,
 			PaginatedScanSurfaceEntryList::getTotalPages,
 			PaginatedScanSurfaceEntryList::getTotalCount,
 			PaginatedScanSurfaceEntryList::getItems).fetchAll();
@@ -230,8 +235,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	public Map<LocalDateTime, LazyCVR> getReports(final ReportType reportType,
 		final Integer accountId) throws ApiException {
 		try {
-			return getReportTimestamps(reportType, accountId).stream().collect(
-				Collectors.toMap(GenerationDate::parse,
+			return getReportTimestamps(reportType, accountId).stream()
+				.collect(Collectors.toMap(GenerationDate::parse,
 					timestamp -> () -> getReport(timestamp, reportType,
 						accountId), throwDuplicateKeyException(),
 					LinkedHashMap::new));
@@ -251,8 +256,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	public Map<LocalDateTime, LazyCvrJson> getReportsJson(
 		final ReportType reportType, final Integer accountId)
 		throws ApiException {
-		return getReportTimestamps(reportType, accountId).stream().collect(
-			Collectors.toMap(GenerationDate::parse,
+		return getReportTimestamps(reportType, accountId).stream()
+			.collect(Collectors.toMap(GenerationDate::parse,
 				timestamp -> () -> getCvrJson(timestamp, reportType,
 					accountId)));
 	}
@@ -271,8 +276,10 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 	@Override
 	public List<String> getReportTimestamps(final ReportType reportType,
-		final Integer accountId) throws ApiException {
-		return consoleApi.allCvrDatesRetrieve(reportType.value(), accountId);
+		final Boolean isXlsxDownload, final Integer accountId)
+		throws ApiException {
+		return consoleApi.allCvrDatesRetrieve(reportType.value(),
+			isXlsxDownload, accountId);
 	}
 
 	CVR getReport(final String timestamp, final ReportType reportType,
@@ -280,7 +287,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		final Stopwatch stopwatch = Stopwatch.createStarted();
 
 		try {
-			return consoleApi.cvrRetrieve(timestamp, reportType.value(),
+			return consoleApi.cvrRetrieve(timestamp, reportType.value(), true,
 				accountId);
 		} finally {
 			logger.debug("Retrieved report after {}", stopwatch);
@@ -298,7 +305,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	 * PDF that is much larger than it should be. After hours wasted trying to
 	 * track down the problem I opted to use {@link URLConnection} instead.
 	 *
-	 * @see {@link ConsoleApi#consoleReportingCyberRiskReportRetrieve(Integer)}
+	 * @see {@link ConsoleApi#consoleReportingCyberRiskReportRetrieve(Boolean, Integer)}
 	 */
 	private File getCyberRiskReportViaUrlConnection(final Integer accountId)
 		throws ApiException {
@@ -358,7 +365,8 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		final List<Integer> associatedMspUserIds) {
 		final RegistrationCreateRequest allMspAccessible =
 			new RegistrationCreateRequest().label(label)
-				.description(description).manageType(
+				.description(description)
+				.manageType(
 					RegistrationCreateRequest.ManageTypeEnum.FULLY_MANAGED)
 				.signupData(request)
 				.associatedMspGroupIds(Collections.emptyList())
