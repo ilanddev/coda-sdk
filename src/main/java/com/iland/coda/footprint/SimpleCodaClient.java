@@ -268,7 +268,18 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		try {
 			getReport(timestamp, reportType, accountId);
 
-			return getRawJsonOfMostRecentCall();
+			final List<String> recentJson = getRawJsonOfRecentCalls();
+			final String cvr = recentJson.remove(0);
+			final String techReport = recentJson.remove(0);
+
+			if (cvr.contains("\"technicalReport\":[]")) {
+				final String technicalReport =
+					techReport.substring(1, techReport.length() - 1);
+
+				return cvr.replace("\"technicalReport\":[]", technicalReport);
+			}
+
+			return cvr;
 		} finally {
 			jsonLock.unlock();
 		}
@@ -287,8 +298,18 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		final Stopwatch stopwatch = Stopwatch.createStarted();
 
 		try {
-			return consoleApi.cvrRetrieve(timestamp, reportType.value(), true,
-				accountId);
+			final CVR cvr =
+				consoleApi.cvrRetrieve(timestamp, reportType.value(), null,
+					accountId);
+
+			if (cvr.getTechnicalReport().isEmpty()) {
+				final CVR techReport =
+					consoleApi.cvrRetrieve(timestamp, reportType.value(), true,
+						accountId);
+				cvr.setTechnicalReport(techReport.getTechnicalReport());
+			}
+
+			return cvr;
 		} finally {
 			logger.debug("Retrieved report after {}", stopwatch);
 		}

@@ -17,11 +17,7 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.TestValues.TEST_DESCRIPTION;
 import static com.iland.coda.footprint.TestValues.TEST_LABEL;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.File;
 import java.net.Inet4Address;
@@ -30,6 +26,7 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -102,7 +99,7 @@ class SimpleCodaClientTest {
 		final Map<String, Integer> scannerIdByLabel =
 			client.getScannerIdByLabel(accountId);
 
-		assertTrue(!scannerIdByLabel.isEmpty(), "scannerIdByLabel is empty");
+		assertFalse(scannerIdByLabel.isEmpty(), "scannerIdByLabel is empty");
 	}
 
 	@Test
@@ -125,16 +122,18 @@ class SimpleCodaClientTest {
 		final Integer accountId = client.registrationToAccountId(registration);
 
 		final InetAddress[] addresses = InetAddress.getAllByName("iland.com");
-		final List<String> targets = Arrays.asList(addresses).stream()
+		final List<String> targets = Arrays.asList(addresses)
+			.stream()
 			.filter(address -> address instanceof Inet4Address)
-			.map(InetAddress::getHostAddress).collect(Collectors.toList());
+			.map(InetAddress::getHostAddress)
+			.collect(Collectors.toList());
 		final int targetsSize = targets.size();
 		final String internalIp = "192.168.1.1";
 		targets.add(internalIp);
 
 		final Integer scannerId =
 			client.getDefaultCloudScanner(accountId).getId();
-		final List<Integer> scannerIds = Arrays.asList(scannerId);
+		final List<Integer> scannerIds = Collections.singletonList(scannerId);
 
 		// force multiple batches to check the behavior of `updateScanSurface`
 		ScanSurfaceBatcher.MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1;
@@ -145,7 +144,8 @@ class SimpleCodaClientTest {
 		final Set<ScanSurfaceEntry> scanSurface =
 			client.getScanSurface(accountId);
 		assertEquals(expectedSize, scanSurface.size(), "invalid scan surface");
-		assertFalse(scanSurface.stream().map(ScanSurfaceEntry::getInput)
+		assertFalse(scanSurface.stream()
+				.map(ScanSurfaceEntry::getInput)
 				.anyMatch(internalIp::equals),
 			"internal IP addresses were not filtered out");
 
@@ -162,15 +162,17 @@ class SimpleCodaClientTest {
 
 	@Test
 	void testScanStatus() throws ApiException {
-		final Optional<ScanStatus> anyScanStatus =
-			client.listAccounts(null).stream().map(Account::getId)
-				.map(accountId -> {
-					try {
-						return client.getScanStatus(accountId);
-					} catch (ApiException e) {
-						throw new RuntimeException(e);
-					}
-				}).findAny();
+		final Optional<ScanStatus> anyScanStatus = client.listAccounts(null)
+			.stream()
+			.map(Account::getId)
+			.map(accountId -> {
+				try {
+					return client.getScanStatus(accountId);
+				} catch (ApiException e) {
+					throw new RuntimeException(e);
+				}
+			})
+			.findAny();
 		assertTrue(anyScanStatus.isPresent(),
 			"at least one scan status must be present");
 	}
@@ -184,11 +186,16 @@ class SimpleCodaClientTest {
 
 	private int findAnAccountWithAtLeastOneReport() throws ApiException {
 		final AtomicInteger atomicAccountId = new AtomicInteger();
-		client.listAccounts(null).stream().map(Account::getId)
+		client.listAccounts(null)
+			.stream()
+			.map(Account::getId)
 			.map(accountId -> {
 				atomicAccountId.set(accountId);
 				return getReportTimestamps(accountId);
-			}).flatMap(List::stream).findFirst().get();
+			})
+			.flatMap(List::stream)
+			.findFirst()
+			.get();
 
 		return atomicAccountId.get();
 	}
@@ -196,13 +203,17 @@ class SimpleCodaClientTest {
 	@Test
 	void testReportsJson() throws ApiException {
 		final AtomicInteger atomicAccountId = new AtomicInteger();
-		final LocalDateTime generationDate =
-			client.listAccounts(null).stream().map(Account::getId)
-				.map(accountId -> {
-					atomicAccountId.set(accountId);
-					return getReportTimestamps(accountId);
-				}).flatMap(List::stream).findFirst().map(GenerationDate::parse)
-				.get();
+		final LocalDateTime generationDate = client.listAccounts(null)
+			.stream()
+			.map(Account::getId)
+			.map(accountId -> {
+				atomicAccountId.set(accountId);
+				return getReportTimestamps(accountId);
+			})
+			.flatMap(List::stream)
+			.findFirst()
+			.map(GenerationDate::parse)
+			.get();
 
 		final Map<LocalDateTime, CodaClient.LazyCvrJson> reportsJson =
 			client.getReportsJson(CodaClient.ReportType.SNAPSHOT,
@@ -226,12 +237,18 @@ class SimpleCodaClientTest {
 	@Test
 	void testThatTechnicalReportIsPopulated() throws Throwable {
 		final List<CVRMostVulnServer> technicalReport =
-			client.listAccounts(null).stream().map(Account::getId)
-				.map(this::getReports).map(Map::values)
+			client.listAccounts(null)
+				.stream()
+				.map(Account::getId)
+				.map(this::getReports)
+				.map(Map::values)
 				.flatMap(Collection::stream)
 				.map(CodaClient.LazyCVR::retrieveUnchecked)
-				.filter(Objects::nonNull).map(CVR::getTechnicalReport)
-				.filter(Objects::nonNull).findFirst().orElse(null);
+				.filter(Objects::nonNull)
+				.map(CVR::getTechnicalReport)
+				.filter(Objects::nonNull)
+				.findFirst()
+				.orElse(null);
 
 		assertFalse(technicalReport == null || technicalReport.isEmpty(),
 			"technical reports must not be empty");
@@ -243,7 +260,8 @@ class SimpleCodaClientTest {
 			final List<CVRVulnerability> vulnerabilities =
 				techReport.getVulnerabilities();
 			assertFalse(vulnerabilities.isEmpty());
-			vulnerabilities.stream().map(CVRVulnerability::getSummary)
+			vulnerabilities.stream()
+				.map(CVRVulnerability::getSummary)
 				.forEach(summary -> assertNotNullOrEmpty(summary, "summary"));
 		});
 	}

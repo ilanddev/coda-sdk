@@ -19,7 +19,9 @@ import static java.util.Objects.requireNonNull;
 
 import java.lang.reflect.Type;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -59,7 +61,7 @@ abstract class AbstractCodaClient implements CodaClient {
 	protected final CommonApi commonApi;
 	protected final ConsoleApi consoleApi;
 
-	private static final Queue<String> rawJsonQueue = EvictingQueue.create(1);
+	private static final Queue<String> rawJsonQueue = EvictingQueue.create(2);
 	protected static final Lock jsonLock = new ReentrantLock();
 
 	AbstractCodaClient(final String apiBasePath,
@@ -204,12 +206,15 @@ abstract class AbstractCodaClient implements CodaClient {
 	}
 
 	/**
-	 * @return the {@link String raw JSON body} of the most recent request or <code>null</code> if there are no recent requests
+	 * @return a {@link List list} of the {@link String raw JSON body} of the most recent requests in FIFO order
 	 */
-	protected final String getRawJsonOfMostRecentCall() {
+	protected final List<String> getRawJsonOfRecentCalls() {
 		jsonLock.lock();
 		try {
-			return rawJsonQueue.peek();
+			final List<String> list = new ArrayList<>();
+			list.addAll(rawJsonQueue);
+
+			return list;
 		} finally {
 			jsonLock.unlock();
 		}

@@ -6157,8 +6157,9 @@ components:
         cvssExploit:
           type: number
           format: double
+        # modified by Tag
         attackVector:
-          $ref: '#/components/schemas/CVRVulnerabilityAttackVector'
+          type: string
         integrityImpact:
           type: string
         discoveredOn:
