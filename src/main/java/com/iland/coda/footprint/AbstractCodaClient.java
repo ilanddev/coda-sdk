@@ -73,6 +73,7 @@ abstract class AbstractCodaClient implements CodaClient {
 		final OkHttpClient client =
 			createClient(authentication, xsrfInterceptor,
 				createEmptyStringInterceptor(),
+				createReportDataFromNoneInterceptor(),
 				createSchedulerConfigHackInterceptor(),
 				createDateTimeInterceptor());
 
@@ -106,6 +107,17 @@ abstract class AbstractCodaClient implements CodaClient {
 	private Interceptor createEmptyStringInterceptor() {
 		// empty Strings cause a JSON parse exception
 		return createBodyInterceptor(body -> body.replaceAll("\"\"", "null"));
+	}
+
+	/**
+	 * Replaces reportDataFrom value to bypass invalid OpenAPI declaration.
+	 *
+	 * @return an {@link Interceptor interceptor}
+	 */
+	private Interceptor createReportDataFromNoneInterceptor() {
+		return createBodyInterceptor(
+			body -> body.replaceAll("\"reportDataFrom\":\\s*\"None\"",
+				"\"reportDataFrom\":null"));
 	}
 
 	/**
