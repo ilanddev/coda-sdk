@@ -110,14 +110,13 @@ abstract class AbstractCodaClient implements CodaClient {
 	}
 
 	/**
-	 * Replaces reportDataFrom value to bypass invalid OpenAPI declaration.
+	 * Replaces "None" with {@literal null} value to bypass invalid OpenAPI declaration.
 	 *
 	 * @return an {@link Interceptor interceptor}
 	 */
 	private Interceptor createReportDataFromNoneInterceptor() {
 		return createBodyInterceptor(
-			body -> body.replaceAll("\"reportDataFrom\":\\s*\"None\"",
-				"\"reportDataFrom\":null"));
+			body -> body.replaceAll(":\\s*\"None\"", ":null"));
 	}
 
 	/**
