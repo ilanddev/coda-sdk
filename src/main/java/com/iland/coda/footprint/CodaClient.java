@@ -189,7 +189,7 @@ public interface CodaClient {
 	default Integer labelToAccountId(final String label) throws ApiException {
 		return findAccountWithName(label).map(Account::getId)
 			.orElseThrow(() -> new ApiException(
-				String.format("no account exists for name '%s'", label)));
+				"no account exists for name '%s'".formatted(label)));
 	}
 
 	/**
@@ -204,7 +204,7 @@ public interface CodaClient {
 		final String label = registration.getLabel();
 		return findAccountWithName(label).map(Account::getId)
 			.orElseThrow(() -> new ApiException(
-				String.format("no account exists for name '%s'", label)));
+				"no account exists for name '%s'".formatted(label)));
 	}
 
 	/**

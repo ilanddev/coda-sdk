@@ -84,8 +84,9 @@ final class RetryCodaClient implements CodaClient {
 
 	private final CodaClient delegatee;
 	private final Retryer retryer = RetryerBuilder.newBuilder()
-		.retryIfException(t -> t instanceof ApiException && retryCodes.contains(
-			((ApiException) t).getCode()))
+		.retryIfException(
+			t -> t instanceof ApiException ae && retryCodes.contains(
+				ae.getCode()))
 		.retryIfException(t -> t.getCause() instanceof SocketTimeoutException)
 		.withWaitStrategy(WaitStrategies.fibonacciWait(1L, TimeUnit.MINUTES))
 		.withStopStrategy(StopStrategies.stopAfterDelay(3L, TimeUnit.MINUTES))
@@ -106,9 +107,7 @@ final class RetryCodaClient implements CodaClient {
 	@Override
 	public Set<RegistrationLight> listRegistrations(final String category)
 		throws ApiException {
-		if (delegatee instanceof SimpleCodaClient) {
-			final SimpleCodaClient simpleCodaClient =
-				(SimpleCodaClient) delegatee;
+		if (delegatee instanceof SimpleCodaClient simpleCodaClient) {
 
 			return new Paginator<>(pageNo -> retryIfNecessary(
 				() -> simpleCodaClient.adminApi.adminRegistrationsLightRetrieve(
@@ -125,9 +124,7 @@ final class RetryCodaClient implements CodaClient {
 	@Override
 	public Set<Account> listAccounts(final Integer accountId)
 		throws ApiException {
-		if (delegatee instanceof SimpleCodaClient) {
-			final SimpleCodaClient simpleCodaClient =
-				(SimpleCodaClient) delegatee;
+		if (delegatee instanceof SimpleCodaClient simpleCodaClient) {
 
 			return new Paginator<>(pageNo -> retryIfNecessary(
 				() -> simpleCodaClient.commonApi.getAccounts(null, pageNo,
@@ -248,9 +245,7 @@ final class RetryCodaClient implements CodaClient {
 	@Override
 	public Map<LocalDateTime, LazyCVR> getReports(final ReportType reportType,
 		final Integer accountId) throws ApiException {
-		if (delegatee instanceof SimpleCodaClient) {
-			final SimpleCodaClient simpleCodaClient =
-				(SimpleCodaClient) delegatee;
+		if (delegatee instanceof SimpleCodaClient simpleCodaClient) {
 
 			return getReportTimestamps(reportType, accountId).stream()
 				.collect(Collectors.toMap(GenerationDate::parse,
@@ -268,9 +263,7 @@ final class RetryCodaClient implements CodaClient {
 	public Map<LocalDateTime, LazyCvrJson> getReportsJson(
 		final ReportType reportType, final Integer accountId)
 		throws ApiException {
-		if (delegatee instanceof SimpleCodaClient) {
-			final SimpleCodaClient simpleCodaClient =
-				(SimpleCodaClient) delegatee;
+		if (delegatee instanceof SimpleCodaClient simpleCodaClient) {
 
 			return getReportTimestamps(reportType, accountId).stream()
 				.collect(Collectors.toMap(GenerationDate::parse,
