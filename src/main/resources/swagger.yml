@@ -98,9 +98,8 @@ paths:
     put:
       operationId: adminRegistrationsUpdate
       description: |-
-        Registrations view endpoint for admin
-
-        This endpoint provides methods for managing any registration via the new RegistrationsController
+        Creates a new registration. The registration will automatically be marked as managed
+                by the current logged-in account
       tags:
         - admin/registrations
         - admin
@@ -124,7 +123,8 @@ paths:
           description: Returned if provided data is invalid
         '401':
           description: Returned if the logged in user is not a MSP user
-      summary: Registrations view endpoint for admin
+      summary: Creates a new registration. The registration will automatically be
+        marked as managed
   /admin/registrations/{registrationId}/:
     get:
       operationId: adminRegistrationsRetrieve2
@@ -310,7 +310,7 @@ paths:
   /admin/scanners/{scannerId}/:
     patch:
       operationId: adminScannersPartialUpdate
-      description: Edits values and parameters of a scanner
+      description: Edits values and parameters of a shared scanner
       parameters:
         - in: path
           name: scannerId
@@ -335,10 +335,10 @@ paths:
           description: Returned if an unexpected error occurs.
         '404':
           description: Returned if the scanner was not found.
-      summary: Edits values and parameters of a scanner
+      summary: Edits values and parameters of a shared scanner
     delete:
       operationId: adminScannersDestroy
-      description: Delete a configured internal scanner
+      description: Deletes a configured shared scanner
       parameters:
         - in: path
           name: scannerId
@@ -358,7 +358,7 @@ paths:
           description: Returned if an unexpected error occurs.
         '404':
           description: Returned if the scanner was not found.
-      summary: Delete a configured internal scanner
+      summary: Deletes a configured shared scanner
   /admin/scanners/setup/:
     get:
       operationId: adminScannersSetupRetrieve
@@ -425,7 +425,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Takes a set of user credentials and returns an access and refresh JSON
         web token pair to prove
@@ -463,7 +463,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Takes a refresh type JSON web token and returns an access type JSON
         web
@@ -481,7 +481,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - branding
@@ -517,7 +517,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Returns the current session information
     post:
@@ -550,7 +550,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Authenticates a user
     delete:
@@ -570,7 +570,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Logs out the current user
   /common/auth/session/accounts/:
@@ -597,7 +597,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - common
@@ -615,9 +615,8 @@ paths:
     post:
       operationId: switchAccount
       description: |-
-        🔃 Switches the current profile_fk tenant ID with the one provided.
-
-        This endpoint is only relevant for the Footprint client application
+        This endpoint only logs that a user logged in on a tenant
+        This endpoint no longer switches the tenant after we implemented this on frontend
       tags:
         - common
       requestBody:
@@ -647,13 +646,14 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
-      summary: 🔃 Switches the current profile_fk tenant ID with the one provided.
+      summary: This endpoint only logs that a user logged in on a tenant
   /console/actionPlan/:
     get:
       operationId: actionPlanRetrieve
-      description: Get all Action Plan entries that match GET parameters
+      description: Action Plan listing view. Provides methods to manipulate Action
+        Plan listings
       parameters:
         - in: query
           name: business_context_ids
@@ -661,6 +661,18 @@ paths:
             type: string
           description: List of business context IDs based on which the entities are
             filtered
+        - in: query
+          name: business_owner_group_ids
+          schema:
+            type: string
+          description: List of business owner group IDs based on which the entities
+            are filtered.The ID 0 is correspondent to unassigned (N/A) groups.
+        - in: query
+          name: business_owner_user_ids
+          schema:
+            type: string
+          description: List of business owner users IDs based on which the entities
+            are filtered.The ID 0 is correspondent to unassigned (N/A) users.
         - in: query
           name: closed_states
           schema:
@@ -679,6 +691,18 @@ paths:
               - json
               - pdf
         - in: query
+          name: it_owner_group_ids
+          schema:
+            type: string
+          description: List of it owner group IDs based on which the entities are filtered.The
+            ID 0 is correspondent to unassigned (N/A) groups.
+        - in: query
+          name: it_owner_user_ids
+          schema:
+            type: string
+          description: List of it owner users IDs based on which the entities are filtered.The
+            ID 0 is correspondent to unassigned (N/A) users.
+        - in: query
           name: owner_group_ids
           schema:
             type: string
@@ -695,11 +719,6 @@ paths:
           schema:
             type: integer
           description: Page to request
-        - in: query
-          name: page_size
-          schema:
-            type: integer
-          description: The size of each page
         - in: query
           name: page_type
           schema:
@@ -719,12 +738,35 @@ paths:
             type: string
           description: List of Plugin Names based on which the entities are filtered
         - in: query
+          name: previous_state
+          schema:
+            type: string
+            enum:
+              - ''
+              - APPROVAL
+              - APPROVAL_ACCEPT_RISK
+              - APPROVAL_FALSE_POSITIVE
+              - CLOSED
+              - DEADLINES_APPROVAL
+              - EXECUTION
+              - FIX_PENDING_CONFIRMATION
+              - NEW
+              - PLANNING
+              - REOPEN
+          description: Previous state of the entry
+        - in: query
+          name: size
+          schema:
+            type: integer
+          description: Number of elements on a page
+        - in: query
           name: state
           schema:
             type: string
             enum:
               - APPROVAL
               - CLOSED
+              - DEADLINES_APPROVAL
               - EXECUTION
               - FIX_PENDING_CONFIRMATION
               - PLANNING
@@ -751,7 +793,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -768,10 +810,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedActionPlanEntryList'
           description: ''
-      summary: Get all Action Plan entries that match GET parameters
+      summary: Action Plan listing view. Provides methods to manipulate Action Plan
+        listings
     post:
       operationId: actionPlanCreate
-      description: Creates an Action Plan
+      description: Creates a new Action Plan entry
       parameters:
         - in: query
           name: format
@@ -784,7 +827,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -816,7 +859,7 @@ paths:
           description: ''
         '400':
           description: Name is too long or other body parameters are wrongly configured
-      summary: Creates an Action Plan
+      summary: Creates a new Action Plan entry
     delete:
       operationId: actionPlanDelete
       description: Deletes a list of Action Plan entries
@@ -840,7 +883,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -877,7 +920,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -915,9 +958,34 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Lists installed agents
+  /console/agent/{agentId}/scap/results/:
+    get:
+      operationId: consoleAgentScapResultsRetrieve
+      description: Returns the latest OVAL Scan result file for the provided agent
+      parameters:
+        - in: path
+          name: agentId
+          schema:
+            type: integer
+          required: true
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for.If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          description: No response body
+      summary: Returns the latest OVAL Scan result file for the provided agent
   /console/elements/application/{applicationId}/:
     get:
       operationId: consoleElementsApplicationRetrieve
@@ -932,7 +1000,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -962,7 +1030,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1007,7 +1075,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1024,7 +1092,7 @@ paths:
       summary: Displays the Virtual Vulnerabilities for an Application
   /console/elements/application/{applicationId}/hierarchy/:
     get:
-      operationId: consoleElementsApplicationHierarchyRetrieve
+      operationId: getApplicationHierarchy
       description: Returns the application hierarchy
       parameters:
         - in: path
@@ -1036,7 +1104,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1070,7 +1138,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1098,7 +1166,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1127,8 +1195,8 @@ paths:
       summary: Updates the state of a vulnerability finding
   /console/elements/applications/:
     get:
-      operationId: consoleElementsApplicationsRetrieve
-      description: Lists the applications with optional filtering parameters
+      operationId: consoleElementsApplicationsList
+      description: Provides methods to manipulate paginated application listings
       parameters:
         - in: query
           name: filter
@@ -1191,15 +1259,17 @@ paths:
           schema:
             type: string
             enum:
-              - all
+              - decommissioned
+              - notSeenOnLastScan
               - offline
               - online
-          description: Status filter
+          description: 'Status of the applications. Valid values: online, offline, notSeenOnLastScan,
+          decommissioned'
         - in: header
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1213,7 +1283,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedApplicationInListingList'
           description: ''
-      summary: Lists the applications with optional filtering parameters
+      summary: Provides methods to manipulate paginated application listings
   /console/elements/contexts/business/:
     get:
       operationId: consoleElementsContextsBusinessRetrieve
@@ -1243,7 +1313,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1255,16 +1325,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedContextList'
+                $ref: '#/components/schemas/PaginatedBusinessContextList'
           description: ''
       summary: Returns listing of available business contexts
   /console/elements/contexts/business/{contextId}/:
     get:
       operationId: consoleElementsContextsBusinessRetrieve2
-      description: |-
-        Returns details of a certain context
-
-        NOTE: Class moved by @laurbtzt
+      description: Returns details of a certain context
       parameters:
         - in: path
           name: contextId
@@ -1275,7 +1342,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1287,81 +1354,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Context'
+                $ref: '#/components/schemas/BusinessContextDetails'
           description: ''
       summary: Returns details of a certain context
-  /console/elements/contexts/business/{contextId}/setOwnerGroup/:
-    patch:
-      operationId: consoleElementsContextsBusinessSetOwnerGroupPartialUpdate
-      description: ViewSet for Business Context Owner
-      parameters:
-        - in: path
-          name: contextId
-          schema:
-            type: integer
-          required: true
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBCOwnerGroupRequest'
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          description: No response body
-        '400':
-          description: Returned if provided data is invalid
-        '404':
-          description: Returned if context_id is not found
-        '500':
-          description: Returned if a server error occurs
-      summary: ViewSet for Business Context Owner
-  /console/elements/contexts/business/{contextId}/setOwnerUser/:
-    patch:
-      operationId: consoleElementsContextsBusinessSetOwnerUserPartialUpdate
-      description: ViewSet for Business Context Owner
-      parameters:
-        - in: path
-          name: contextId
-          schema:
-            type: integer
-          required: true
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedBCOwnerUserRequest'
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          description: No response body
-        '400':
-          description: Returned if provided data is invalid
-        '404':
-          description: Returned if context_id is not found
-        '500':
-          description: Returned if a server error occurs
-      summary: ViewSet for Business Context Owner
   /console/elements/contexts/technical/:
     get:
       operationId: consoleElementsContextsTechnicalRetrieve
@@ -1391,7 +1386,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1403,7 +1398,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TechnicalContext'
+                $ref: '#/components/schemas/PaginatedTechnicalContextList'
           description: ''
       summary: Returns list of available technical contexts
   /console/elements/contexts/technical/{contextId}/:
@@ -1420,7 +1415,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1432,7 +1427,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Context'
+                $ref: '#/components/schemas/TechnicalContextDetails'
           description: ''
       summary: Returns details of a certain Technical Context
   /console/elements/contexts/technical/{contextId}/applications/:
@@ -1457,7 +1452,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1494,7 +1489,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1509,78 +1504,6 @@ paths:
                 $ref: '#/components/schemas/PaginatedTechnicalContextDeviceList'
           description: ''
       summary: Returns a certain page of devices for a technical context
-  /console/elements/contexts/technical/{contextId}/setOwnerGroup/:
-    patch:
-      operationId: consoleElementsContextsTechnicalSetOwnerGroupPartialUpdate
-      description: ViewSet for the Technical Context Owner
-      parameters:
-        - in: path
-          name: contextId
-          schema:
-            type: integer
-          required: true
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTCOwnerGroupRequest'
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          description: No response body
-        '400':
-          description: Returned if provided data is invalid
-        '404':
-          description: Returned if context_id is not found
-        '500':
-          description: Returned if a server error occurs
-      summary: ViewSet for the Technical Context Owner
-  /console/elements/contexts/technical/{contextId}/setOwnerUser/:
-    patch:
-      operationId: consoleElementsContextsTechnicalSetOwnerUserPartialUpdate
-      description: ViewSet for the Technical Context Owner
-      parameters:
-        - in: path
-          name: contextId
-          schema:
-            type: integer
-          required: true
-        - in: header
-          name: FootprintTenantId
-          schema:
-            type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
-            back on `original_tenant_id` from the auth endpoint
-      tags:
-        - console
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedTCOwnerUserRequest'
-      security:
-        - jwtAuth: [ ]
-        - ApiKeyAuth: [ ]
-      responses:
-        '200':
-          description: No response body
-        '400':
-          description: Returned if provided data is invalid
-        '404':
-          description: Returned if context_id is not found
-        '500':
-          description: Returned if a server error occurs
-      summary: ViewSet for the Technical Context Owner
   /console/elements/device/{deviceId}/applications/:
     get:
       operationId: consoleElementsDeviceApplicationsRetrieve
@@ -1595,7 +1518,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1613,7 +1536,7 @@ paths:
   /console/elements/device/{deviceId}/attackavenues/:
     get:
       operationId: deviceVirtualVulnerabilitiesRetrieve
-      description: View for managing Attack Avenues for applications on a device
+      description: Lists available attack avenues on a device
       parameters:
         - in: path
           name: deviceId
@@ -1644,7 +1567,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1658,12 +1581,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedVirtualVulnerabilityList'
           description: ''
-      summary: View for managing Attack Avenues for applications on a device
+      summary: Lists available attack avenues on a device
   /console/elements/device/{deviceId}/dnsEntries/:
     get:
       operationId: consoleElementsDeviceDnsEntriesList
-      description: View for managing the DNS entries for a device when scanned by
-        an agentless scanner
+      description: Returns DNS entries for a device scanned by an agentless scanner
       parameters:
         - in: path
           name: deviceId
@@ -1674,7 +1596,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1693,12 +1615,11 @@ paths:
         '501':
           description: Returned when attempting to retrieve DNS entries on agent-based
             devices. Feature not supported yet.
-      summary: View for managing the DNS entries for a device when scanned by an agentless
-        scanner
+      summary: Returns DNS entries for a device scanned by an agentless scanner
   /console/elements/device/{deviceId}/drivers/:
     get:
       operationId: consoleElementsDeviceDriversList
-      description: View for managing the list of drivers for a device
+      description: Returns the list of drivers for a provided device ID
       parameters:
         - in: path
           name: deviceId
@@ -1709,7 +1630,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1725,10 +1646,10 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceDrivers'
           description: ''
-      summary: View for managing the list of drivers for a device
+      summary: Returns the list of drivers for a provided device ID
   /console/elements/device/{deviceId}/hierarchy/:
     get:
-      operationId: consoleElementsDeviceHierarchyRetrieve
+      operationId: getDeviceHierarchy
       description: View for managing a device's hierarchy
       parameters:
         - in: path
@@ -1740,7 +1661,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1758,7 +1679,7 @@ paths:
   /console/elements/device/{deviceId}/installedUpdates/:
     get:
       operationId: consoleElementsDeviceInstalledUpdatesRetrieve
-      description: View for managing a device's installed updates and patches
+      description: Returns the provided device ID's installed updates
       parameters:
         - in: path
           name: deviceId
@@ -1769,7 +1690,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1783,11 +1704,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceInstalledUpdates'
           description: ''
-      summary: View for managing a device's installed updates and patches
+      summary: Returns the provided device ID's installed updates
   /console/elements/device/{deviceId}/jobs/:
     get:
       operationId: consoleElementsDeviceJobsList
-      description: View for managing information about the jobs running on a device
+      description: Returns the provided device ID's currently-running jobs
       parameters:
         - in: path
           name: deviceId
@@ -1798,7 +1719,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1814,11 +1735,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceJobs'
           description: ''
-      summary: View for managing information about the jobs running on a device
+      summary: Returns the provided device ID's currently-running jobs
   /console/elements/device/{deviceId}/networkConnections/:
     get:
       operationId: consoleElementsDeviceNetworkConnectionsRetrieve
-      description: View for returning the list of Network Connections for a Device
+      description: Returns the provided device ID's list of Network Connections
       parameters:
         - in: path
           name: deviceId
@@ -1829,7 +1750,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1839,11 +1760,11 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: View for returning the list of Network Connections for a Device
+      summary: Returns the provided device ID's list of Network Connections
   /console/elements/device/{deviceId}/networkDevices/:
     get:
       operationId: consoleElementsDeviceNetworkDevicesRetrieve
-      description: View for managing a device's network information
+      description: Returns the provided device ID's network information
       parameters:
         - in: path
           name: deviceId
@@ -1854,7 +1775,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1864,11 +1785,11 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: View for managing a device's network information
+      summary: Returns the provided device ID's network information
   /console/elements/device/{deviceId}/networkEdge/:
     get:
       operationId: consoleElementsDeviceNetworkEdgeList
-      description: View for returning a device's available Network Edge scan results
+      description: Returns the provided device ID's Network Edge scan results
       parameters:
         - in: path
           name: deviceId
@@ -1879,7 +1800,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1895,11 +1816,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/SecurityCheckList'
           description: ''
-      summary: View for returning a device's available Network Edge scan results
+      summary: Returns the provided device ID's Network Edge scan results
   /console/elements/device/{deviceId}/networkEdge/{testId}/:
     get:
       operationId: consoleElementsDeviceNetworkEdgeRetrieve
-      description: View for returning a certain network edge result for a device
+      description: Returns the specific Network Edge Scan by the provided test ID
+        and device ID
       parameters:
         - in: path
           name: deviceId
@@ -1915,7 +1837,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1929,11 +1851,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/SecurityCheckDetail'
           description: ''
-      summary: View for returning a certain network edge result for a device
+      summary: Returns the specific Network Edge Scan by the provided test ID and
+        device ID
   /console/elements/device/{deviceId}/os/:
     get:
       operationId: consoleElementsDeviceOsRetrieve
-      description: View for managing information on a certain device's operating system
+      description: Returns the provided device ID's operating system information
       parameters:
         - in: path
           name: deviceId
@@ -1944,7 +1867,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1958,12 +1881,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceOS'
           description: ''
-      summary: View for managing information on a certain device's operating system
+      summary: Returns the provided device ID's operating system information
   /console/elements/device/{deviceId}/overview/:
     get:
       operationId: consoleElementsDeviceOverviewRetrieve
-      description: View for returning general information of a device discovered by
-        an agent;
+      description: Returns general information about the provided device which has
+        been discovered by an agent
       parameters:
         - in: path
           name: deviceId
@@ -1974,7 +1897,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -1988,12 +1911,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/DeviceOverview'
           description: ''
-      summary: View for returning general information of a device discovered by an
-        agent;
+      summary: Returns general information about the provided device which has been
+        discovered by an agent
   /console/elements/device/{deviceId}/patches/:
     get:
       operationId: consoleElementsDevicePatchesList
-      description: View for managing patches for a device
+      description: Returns the provided device ID's patches
       parameters:
         - in: path
           name: deviceId
@@ -2004,7 +1927,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2020,11 +1943,11 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceInstalledUpdates'
           description: ''
-      summary: View for managing patches for a device
+      summary: Returns the provided device ID's patches
   /console/elements/device/{deviceId}/processes/:
     get:
       operationId: consoleElementsDeviceProcessesRetrieve
-      description: View for managing the list of processes for a device
+      description: Returns the provided device ID's processes
       parameters:
         - in: path
           name: deviceId
@@ -2035,7 +1958,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2045,11 +1968,11 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: View for managing the list of processes for a device
+      summary: Returns the provided device ID's processes
   /console/elements/device/{deviceId}/system/:
     get:
       operationId: consoleElementsDeviceSystemRetrieve
-      description: View for returning the system information provided by an agent
+      description: Returns the provided device ID's system information
       parameters:
         - in: path
           name: deviceId
@@ -2060,7 +1983,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2070,7 +1993,7 @@ paths:
       responses:
         '200':
           description: No response body
-      summary: View for returning the system information provided by an agent
+      summary: Returns the provided device ID's system information
   /console/elements/device/{deviceId}/updateTags/:
     post:
       operationId: consoleElementsDeviceUpdateTagsCreate
@@ -2085,7 +2008,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2111,7 +2034,8 @@ paths:
   /console/elements/device/{deviceId}/users/:
     get:
       operationId: consoleElementsDeviceUsersList
-      description: View for providing information on device users
+      description: Returns information about the users associated with the provided
+        device ID
       parameters:
         - in: path
           name: deviceId
@@ -2122,7 +2046,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2138,11 +2062,13 @@ paths:
                 items:
                   $ref: '#/components/schemas/DeviceUser'
           description: ''
-      summary: View for providing information on device users
+      summary: Returns information about the users associated with the provided device
+        ID
   /console/elements/device/{deviceId}/vulnerabilities/:
     get:
       operationId: deviceVulnerabilitiesRetrieve
-      description: View for managing device vulnerabilities
+      description: Returns information regarding the vulnerabilities associated with
+        the provided device ID
       parameters:
         - in: path
           name: deviceId
@@ -2158,7 +2084,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2172,7 +2098,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedVulnerabilityElementList'
           description: ''
-      summary: View for managing device vulnerabilities
+      summary: Returns information regarding the vulnerabilities associated with the
+        provided device ID
   /console/elements/device/{deviceId}/zapScans/:
     get:
       operationId: consoleElementsDeviceZapScansList
@@ -2187,7 +2114,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2290,6 +2217,17 @@ paths:
               - nessusimport
           description: Source filter
         - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              - decommissioned
+              - notSeenOnLastScan
+              - offline
+              - online
+          description: 'Comma-separated list of device statuses used for filtering.Valid
+          values: online, offline, notSeenOnLastScan, decommissioned'
+        - in: query
           name: tags
           schema:
             type: string
@@ -2298,7 +2236,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2412,7 +2350,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2459,7 +2397,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2482,6 +2420,11 @@ paths:
         risk accepted
       parameters:
         - in: query
+          name: isXlsxDownload
+          schema:
+            type: boolean
+          description: 'Whether the report downloads the XLSX version '
+        - in: query
           name: page
           schema:
             type: integer
@@ -2489,7 +2432,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2501,7 +2444,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedVulnerabilityList'
+                $ref: '#/components/schemas/PaginatedInReviewReportList'
           description: ''
       summary: Provides a listing of vulnerabilities that have been marked as risk
         accepted
@@ -2523,7 +2466,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2541,7 +2484,7 @@ paths:
         plan
   /console/reporting/contextualRiskReport/:
     get:
-      operationId: consoleReportingContextualRiskReportRetrieve
+      operationId: consoleReportingContextualRiskReportList
       description: Retrieves the contextual risk report
       parameters:
         - in: query
@@ -2570,7 +2513,7 @@ paths:
           name: page
           schema:
             type: integer
-          description: Page you want to request
+          description: Page to request
         - in: query
           name: riskLevel
           schema:
@@ -2580,12 +2523,12 @@ paths:
           name: size
           schema:
             type: integer
-          description: Number of items you want on a page
+          description: Number of elements on a page
         - in: header
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2628,7 +2571,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Get list of contexts for which a CRS report is available
   /console/reporting/contextualRiskReport/devicesLabels/:
@@ -2645,7 +2588,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2705,7 +2648,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Retrieves the contextual risk reports status for a certain tenant.
   /console/reporting/cyberRiskReport/:
@@ -2723,7 +2666,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2745,7 +2688,7 @@ paths:
       summary: Generates the Contextual Risk Scoring report and returns it as PDF
   /console/reporting/remediationReport/:
     get:
-      operationId: consoleReportingRemediationReportRetrieve
+      operationId: consoleReportingRemediationReportList
       description: Retrieves the remediation report
       parameters:
         - in: query
@@ -2753,11 +2696,6 @@ paths:
           schema:
             type: string
           description: Business Contexts IDs list you want the RR for
-        - in: query
-          name: custom_tags
-          schema:
-            type: string
-          description: The custom tags you want the RR for
         - in: query
           name: device
           schema:
@@ -2798,7 +2736,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2813,6 +2751,77 @@ paths:
                 $ref: '#/components/schemas/PaginatedRemediationReportList'
           description: ''
       summary: Retrieves the remediation report
+  /console/reporting/vveList/xlsx/:
+    get:
+      operationId: downloadVveXlsx
+      description: Download the XLSX file
+      parameters:
+        - in: query
+          name: businessContexts
+          schema:
+            type: string
+          description: Business context ID filter
+        - in: query
+          name: devices
+          schema:
+            type: string
+          description: Devices ID filter. Comma-separated values.
+        - in: query
+          name: filter
+          schema:
+            type: string
+          description: Free-text filter
+        - in: query
+          name: isEntriesAddedToActionPlanOnly
+          schema:
+            type: boolean
+          description: Filter items that have not been added to an Action Plan entry
+        - in: query
+          name: isHidingEntriesAddedToActionPlan
+          schema:
+            type: boolean
+          description: Filter items that have been added to an action plan entry
+        - in: query
+          name: pluginFamilies
+          schema:
+            type: string
+          description: Plugin family filter
+        - in: query
+          name: pluginNames
+          schema:
+            type: string
+          description: Plugin name filter
+        - in: query
+          name: technicalContexts
+          schema:
+            type: string
+          description: Technical Contexts ID filter. Comma-separated values.
+        - in: query
+          name: vveIds
+          schema:
+            type: string
+          description: Optional list of VVE IDs to include in the export. If not provided,
+            includes all matching VVEs
+        - in: header
+          name: FootprintTenantId
+          schema:
+            type: integer
+          description: Tenant ID you want to receive request for.If not provided, falls
+            back on `original_tenant_id` from the auth endpoint
+      tags:
+        - console
+      security:
+        - jwtAuth: [ ]
+        - ApiKeyAuth: [ ]
+      responses:
+        '200':
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
+      summary: Download the XLSX file
   /console/scanSurface/:
     get:
       operationId: consoleScanSurfaceRetrieve
@@ -2838,7 +2847,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2868,7 +2877,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2908,7 +2917,7 @@ paths:
         surface modal)
     patch:
       operationId: scanSurfaceBulkRescan
-      description: Responsible for bulk rescanning
+      description: Starts bulk rescanning for the provided inputs
       parameters:
         - in: query
           name: userInputsIds
@@ -2919,7 +2928,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2946,10 +2955,10 @@ paths:
                     1}]'
                   summary: Example for scan uuid
           description: ''
-      summary: Responsible for bulk rescanning
+      summary: Starts bulk rescanning for the provided inputs
     delete:
       operationId: scanSurfaceBulkDelete
-      description: Endpoint that manages all scan surface related actions
+      description: Deletes scan entry assets
       parameters:
         - in: query
           name: deleteAssets
@@ -2965,7 +2974,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -2975,7 +2984,7 @@ paths:
       responses:
         '204':
           description: No response body
-      summary: Endpoint that manages all scan surface related actions
+      summary: Deletes scan entry assets
   # added by Tag
   /console/scanSurface/{entryId}/:
     delete:
@@ -3014,7 +3023,7 @@ paths:
   /console/scanSurface/currentTargets/{targetId}/:
     patch:
       operationId: consoleScanSurfaceCurrentTargetsPartialUpdate
-      description: 🎯 Endpoint that edits existing scan entries scope (in/out)
+      description: Marking devices as out of scope
       parameters:
         - in: path
           name: targetId
@@ -3025,7 +3034,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3041,11 +3050,11 @@ paths:
         '200':
           description: Scope successfully changed for a current target
         '400':
-          description: Returned if requested scope is invalid
+          description: Returned if requested scope is not OUT
         '401':
           description: Returned if user does not have necessary permissions to change
             a current target scope
-      summary: 🎯 Endpoint that edits existing scan entries scope (in/out)
+      summary: Marking devices as out of scope
   /console/scanSurface/currentTargets/ports/:
     get:
       operationId: consoleScanSurfaceCurrentTargetsPortsRetrieve
@@ -3065,7 +3074,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3099,7 +3108,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3117,8 +3126,7 @@ paths:
   /console/scanSurface/rescan/:
     patch:
       operationId: consoleScanSurfaceRescanPartialUpdate
-      description: |-
-        🎯 Endpoint that rescans all user inputs from Scan Surface for each
+      description: 🎯 Endpoint that rescans all user inputs from Scan Surface for each
         active Agentless Scanner.
       tags:
         - console
@@ -3154,15 +3162,15 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for each
+        active Agentless Scanner.
   /console/scanSurface/rescan/{scannerId}/:
     patch:
       operationId: consoleScanSurfaceRescanPartialUpdate2
-      description: |-
-        🎯 Endpoint that rescans all user inputs from Scan Surface for
-        requested Agentless Scanner.
+      description: 🎯 Endpoint that rescans all user inputs from Scan Surface for requested
+        Agentless Scanner.
       parameters:
         - in: path
           name: scannerId
@@ -3173,7 +3181,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3207,12 +3215,13 @@ paths:
           description: The requested scanner is already running an extend scan
         '406':
           description: User attempts to rescan user inputs from an inactive scanner
-      summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for
+      summary: 🎯 Endpoint that rescans all user inputs from Scan Surface for requested
+        Agentless Scanner.
   /console/scanSurface/scanners/:
     get:
       operationId: consoleScanSurfaceScannersList
       description: |-
-        Get list of available scanners.
+        Retrieves list of available scanners.
 
         This includes the internal scanners and the default Cloud Scanner
         only if "enable_cross_sell_mode" feature flag is not set.
@@ -3235,14 +3244,13 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
-      summary: Get list of available scanners.
+      summary: Retrieves list of available scanners.
   /console/scanSurface/userInputs/{userInputId}/rescan/:
     patch:
       operationId: consoleScanSurfaceUserInputsRescanPartialUpdate
-      description: Allows uploading a file that defines tags to be automatically added
-        on devices
+      description: Rescans the provided user input from Scan Surface
       parameters:
         - in: path
           name: userInputId
@@ -3253,7 +3261,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3282,8 +3290,7 @@ paths:
         '406':
           description: If an extend scan is already running on the scanner related
             to the user input
-      summary: Allows uploading a file that defines tags to be automatically added
-        on devices
+      summary: Rescans the provided user input from Scan Surface
   /console/scanSurface/userInputs/customTags/:
     put:
       operationId: consoleScanSurfaceUserInputsCustomTagsUpdate
@@ -3312,14 +3319,14 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Allows uploading a file that defines tags to be automatically added
         on devices
   /console/scans/:
     get:
       operationId: consoleScansList
-      description: ViewSet for managing scans options
+      description: Return scan history listing for all user-initiated scans
       parameters:
         - in: query
           name: endDate
@@ -3396,7 +3403,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3410,7 +3417,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedScanList'
           description: ''
-      summary: ViewSet for managing scans options
+      summary: Return scan history listing for all user-initiated scans
   /console/scans/{scanUuid}/:
     get:
       operationId: consoleScansRetrieve
@@ -3425,7 +3432,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3444,7 +3451,7 @@ paths:
     get:
       operationId: consoleSchedulerList
       description: |-
-        ⌚ Retrieves schedulers listing
+        Retrieves schedulers listing
 
         This lists all available background services that Footprint runs periodically
       parameters:
@@ -3459,7 +3466,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3477,11 +3484,11 @@ paths:
           description: ''
         '404':
           description: Returned if no scanner ID is specified
-      summary: ⌚ Retrieves schedulers listing
+      summary: Retrieves schedulers listing
   /console/scheduler/{taskId}/:
     post:
       operationId: consoleSchedulerCreate
-      description: ⌚ Edits a task's parameters
+      description: Edits a task's parameters
       parameters:
         - in: path
           name: taskId
@@ -3493,7 +3500,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3519,7 +3526,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Task'
           description: ''
-      summary: ⌚ Edits a task's parameters
+      summary: Edits a task's parameters
   /console/scheduler/{taskId}/{action}/:
     post:
       operationId: consoleSchedulerCreate2
@@ -3552,7 +3559,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       tags:
         - console
@@ -3577,7 +3584,7 @@ paths:
   /console/settings/tenant/:
     get:
       operationId: consoleSettingsTenantRetrieve
-      description: Change tenant field from settings.
+      description: Get tenant field from settings.
       tags:
         - console
       security:
@@ -3595,9 +3602,9 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
-      summary: Change tenant field from settings.
+      summary: Get tenant field from settings.
     patch:
       operationId: consoleSettingsTenantPartialUpdate
       description: Change tenant field from settings.
@@ -3624,7 +3631,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Change tenant field from settings.
   /console/status/:
@@ -3648,7 +3655,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Retrieves current server status.
   /console/status/scan/:
@@ -3672,7 +3679,7 @@ paths:
           name: FootprintTenantId
           schema:
             type: integer
-          description: Tenant ID you want to receive request for. If not provided, falls
+          description: Tenant ID you want to receive request for.If not provided, falls
             back on `original_tenant_id` from the auth endpoint
       summary: Provides information regarding currently active scans
 components:
@@ -3714,6 +3721,10 @@ components:
             * `continuous` - continuous
             * `weekly` - weekly
             * `monthly` - monthly
+        isBillingDayLastOfMonth:
+          type: boolean
+          default: false
+          description: Whether or not billing day is the last day of month
         billingDay:
           type: integer
           description: Billing day
@@ -3796,18 +3807,45 @@ components:
           type: boolean
           description: Whether or not to display the pmf survey
           readOnly: true
+        devicesCount:
+          type: integer
+          readOnly: true
+          description: Number of devices based the current tenant has
+        maxBillableAssets:
+          type: integer
+          description: Maximum amount of billable assets
+        enforceMaxBillableAssets:
+          type: boolean
+          description: If this option is enabled, we will create a maximum of `max_billable_assets`
+            devices
+        isDemoAccount:
+          type: boolean
+          description: Whether the account is used for demo scanning purposes or not
+        isDemoScanRunning:
+          type: boolean
+          description: Whether the demo scan is running on the tenant or not
+        isOneClickRemediationRequested:
+          type: boolean
+          description: Whether the user has clicked the I Want One Click Remediation
+            button
       required:
         - clearDatabaseRemaining
+        - devicesCount
         - domainsRemaining
+        - enforceMaxBillableAssets
         - id
         - initialScanType
         - isCustomBrandingApplied
+        - isDemoAccount
+        - isDemoScanRunning
         - isMspAccessible
         - isOnboardingMode
+        - isOneClickRemediationRequested
         - isPrimaryAccount
         - isTrialExpired
         - isTrialMode
         - managedType
+        - maxBillableAssets
         - name
         - photo
         - registrationId
@@ -3924,6 +3962,7 @@ components:
           enum:
             - PLANNING
             - REOPEN
+            - DEADLINES_APPROVAL
             - EXECUTION
             - APPROVAL
             - FIX_PENDING_CONFIRMATION
@@ -3931,10 +3970,11 @@ components:
           type: string
           readOnly: true
           description: |-
-            Action Plan Entry current state
+            The current state of the entry
 
             * `PLANNING` - planning
             * `REOPEN` - reopen
+            * `DEADLINES_APPROVAL` - deadlinesApproval
             * `EXECUTION` - execution
             * `APPROVAL` - approval
             * `FIX_PENDING_CONFIRMATION` - fixPendingConfirmation
@@ -4022,12 +4062,42 @@ components:
           type: integer
           nullable: true
           description: Owner Group ID
+        itOwnerUserId:
+          type: integer
+          nullable: true
+          readOnly: true
+        itOwnerGroupId:
+          type: integer
+          nullable: true
+          readOnly: true
+        businessOwnerUserId:
+          type: integer
+          nullable: true
+          description: Business Owner User ID
         ownerUser:
           type: string
           readOnly: true
           nullable: true
         ownerGroup:
           type: string
+          readOnly: true
+          nullable: true
+        itOwnerUser:
+          type: string
+          readOnly: true
+        itOwnerGroup:
+          type: string
+          readOnly: true
+        businessOwnerUser:
+          type: string
+          readOnly: true
+          nullable: true
+        businessOwnerGroup:
+          type: string
+          readOnly: true
+          nullable: true
+        businessOwnerGroupId:
+          type: integer
           readOnly: true
           nullable: true
         businessContextId:
@@ -4042,11 +4112,22 @@ components:
           format: date-time
           readOnly: true
           description: Action Plan Entry creation date
+        updatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: Date of the latest metadata or state update to the Action Plan
+            entry
+        updatedBy:
+          type: string
+          readOnly: true
+          nullable: true
         lastStateUpdatedAt:
           type: string
           format: date-time
           readOnly: true
-          description: Action plan last modification date
+          description: Date of the latest state update to the Action Plan entry
         planId:
           type: string
           readOnly: true
@@ -4076,12 +4157,45 @@ components:
           type: number
           format: double
           readOnly: true
+        previousState:
+          enum:
+            - NEW
+            - PLANNING
+            - REOPEN
+            - DEADLINES_APPROVAL
+            - EXECUTION
+            - APPROVAL
+            - APPROVAL_FALSE_POSITIVE
+            - APPROVAL_ACCEPT_RISK
+            - FIX_PENDING_CONFIRMATION
+            - CLOSED
+            - null
+          type: string
+          readOnly: true
+          nullable: true
+          description: |-
+            The previous state from which the entry was transitioned
+
+            * `NEW` - new
+            * `PLANNING` - planning
+            * `REOPEN` - reopen
+            * `DEADLINES_APPROVAL` - deadlinesApproval
+            * `EXECUTION` - execution
+            * `APPROVAL` - approval
+            * `APPROVAL_FALSE_POSITIVE` - approvalFalsePositive
+            * `APPROVAL_ACCEPT_RISK` - approvalAcceptRisk
+            * `FIX_PENDING_CONFIRMATION` - fixPendingConfirmation
+            * `CLOSED` - closed
       required:
         - acceptRiskDeadline
         - acceptRiskReason
         - approvalState
         - averageCrs
         - businessContextId
+        - businessOwnerGroup
+        - businessOwnerGroupId
+        - businessOwnerUser
+        - businessOwnerUserId
         - closedState
         - createdAt
         - createdBy
@@ -4089,6 +4203,10 @@ components:
         - falsePositiveReason
         - id
         - impliedDeadline
+        - itOwnerGroup
+        - itOwnerGroupId
+        - itOwnerUser
+        - itOwnerUserId
         - lastStateUpdatedAt
         - maxCrs
         - mitigatedCrs
@@ -4102,8 +4220,11 @@ components:
         - ownerUser
         - ownerUserId
         - planId
+        - previousState
         - state
         - treatedReason
+        - updatedAt
+        - updatedBy
         - uploadedFiles
     ActionPlanEntryRemediation:
       type: object
@@ -4189,6 +4310,10 @@ components:
           type: integer
           nullable: true
           description: Owner Group ID
+        businessOwnerUserId:
+          type: integer
+          nullable: true
+          description: Business Owner User ID
         businessContextId:
           type: integer
           description: Business Context ID
@@ -4199,6 +4324,7 @@ components:
           description: Development environments completion deadline
       required:
         - businessContextId
+        - businessOwnerUserId
         - executionDeadline
         - name
         - ownerGroupId
@@ -4371,6 +4497,7 @@ components:
         - cvssBase
     ActiveTaskStatus:
       type: object
+      description: Active task status serializer
       properties:
         isRunning:
           type: boolean
@@ -4573,13 +4700,13 @@ components:
             - windows_packages
           type: string
           description: |-
-            * `registries` - Registries
-            * `store_apps` - Store Apps
-            * `processes` - Processes
-            * `drivers` - Drivers
-            * `optional_features` - Optional Features
-            * `executables` - Executables
-            * `windows_packages` - Windows Packages
+            * `registries` - registries
+            * `store_apps` - store_apps
+            * `processes` - processes
+            * `drivers` - drivers
+            * `optional_features` - optional_features
+            * `executables` - executables
+            * `windows_packages` - windows_packages
         lastModified:
           type: string
           format: date-time
@@ -4648,6 +4775,9 @@ components:
         id:
           type: integer
           description: ID of the agent
+        guid:
+          type: string
+          description: GUID of the agent
         label:
           type: string
           description: Label of the agent
@@ -4749,6 +4879,7 @@ components:
         - agentVersion
         - associatedElements
         - domainName
+        - guid
         - hostname
         - id
         - installProgressIS
@@ -4809,6 +4940,8 @@ components:
             - Offline
             - Shut Down
             - Incompatible hardware
+            - Upgrading OS
+            - OS Upgrade failed
           type: string
           description: |-
             * `Starting` - Starting
@@ -4817,6 +4950,8 @@ components:
             * `Offline` - Offline
             * `Shut Down` - Shut Down
             * `Incompatible hardware` - Incompatible hardware
+            * `Upgrading OS` - Upgrading OS
+            * `OS Upgrade failed` - OS Upgrade failed
           readOnly: true
         state:
           type: string
@@ -4827,6 +4962,7 @@ components:
         - state
     AgentlessScannerSrz:
       type: object
+      description: Serializer for the agentless scanner
       properties:
         id:
           type: integer
@@ -4840,6 +4976,11 @@ components:
             * `Online` - Online
             * `Offline` - Offline
           readOnly: true
+        isOsOutdated:
+          type: boolean
+          description: Get OS outdated status - used to see if we can trigger the
+            OS update process
+          readOnly: true
         administrativeState:
           enum:
             - Starting
@@ -4848,6 +4989,8 @@ components:
             - Offline
             - Shut Down
             - Incompatible hardware
+            - Upgrading OS
+            - OS Upgrade failed
           type: string
           description: |-
             * `Starting` - Starting
@@ -4856,6 +4999,8 @@ components:
             * `Offline` - Offline
             * `Shut Down` - Shut Down
             * `Incompatible hardware` - Incompatible hardware
+            * `Upgrading OS` - Upgrading OS
+            * `OS Upgrade failed` - OS Upgrade failed
           readOnly: true
         schedulerConfig:
           allOf:
@@ -4887,6 +5032,13 @@ components:
           nullable: true
           description: Associated credentials for this scanner
           readOnly: true
+        containersStatus:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContainersStatus'
+          nullable: true
+          description: Status of internal scanner containers
+          readOnly: true
         guid:
           type: string
           nullable: true
@@ -4915,12 +5067,6 @@ components:
           maxLength: 100
         isBrokerAccessibleByScanner:
           type: boolean
-        containersStatus:
-          # modified by Tag
-          type: array
-          items:
-            type: object
-            additionalProperties: { }
         isDefaultCloudScanner:
           type: boolean
         operatingSystem:
@@ -4942,6 +5088,10 @@ components:
         remoteCommand:
           type: string
           nullable: true
+        osUpgradeLog:
+          type: string
+          nullable: true
+          description: Log for the OS upgrade process
         installType:
           enum:
             - agent_based
@@ -5027,6 +5177,10 @@ components:
           type: boolean
         isShared:
           type: boolean
+        remoteCommandUser:
+          type: integer
+          nullable: true
+          description: User which executed the last remote command
         tenant:
           type: integer
         agent:
@@ -5035,9 +5189,11 @@ components:
           nullable: true
       required:
         - administrativeState
+        - containersStatus
         - credentials
         - hostname
         - id
+        - isOsOutdated
         - numberOfIpsFromAllScopes
         - numberOfIpsScanned
         - numberOfUserInputs
@@ -5048,6 +5204,7 @@ components:
         - tenantName
     AgentlessSchedulerConfig:
       type: object
+      description: Serializer for the scheduler configuration endpoint for a scanner
       properties:
         noScanWindowStartInterval:
           type: string
@@ -5067,6 +5224,7 @@ components:
         Serializer for Application Details;
 
         NOTE: Class moved by @alexandrabalaci
+        NOTE: Heavy serializer, if it's used on many=True, it should be paginated
       properties:
         id:
           type: integer
@@ -5076,21 +5234,24 @@ components:
         name:
           type: string
         type:
+          enum:
+            - Application
           type: string
-          default: Application
+          readOnly: true
         riskLevel:
           enum:
-            - 0
-            - 2
-            - 1
-            - 3
-          type: integer
+            - secure
+            - unknown
+            - vulnerable
+            - critical
+          type: string
           description: |-
-            * `0` - 0
-            * `2` - 2
-            * `1` - 1
-            * `3` - 3
-          readOnly: true
+            App risk level
+
+            * `secure` - secure
+            * `unknown` - unknown
+            * `vulnerable` - vulnerable
+            * `critical` - critical
         isOnline:
           type: boolean
         applicationType:
@@ -5195,8 +5356,9 @@ components:
           type: boolean
           readOnly: true
         portInfo:
-          type: object
-          additionalProperties: { }
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationPortInfo'
           readOnly: true
         transportProtocol:
           type: string
@@ -5213,6 +5375,10 @@ components:
         informationOrigin:
           allOf:
             - $ref: '#/components/schemas/AgentApplicationInformationOrigin'
+          readOnly: true
+          nullable: true
+        status:
+          type: string
           readOnly: true
         crss:
           type: number
@@ -5240,7 +5406,9 @@ components:
         - portInfo
         - protocol
         - riskLevel
+        - status
         - transportProtocol
+        - type
         - url
         - userEdited
         - version
@@ -5398,6 +5566,9 @@ components:
         crsColor:
           type: string
           readOnly: true
+        status:
+          type: string
+          readOnly: true
       required:
         - applicationCrs
         - applicationType
@@ -5420,10 +5591,28 @@ components:
         - protocol
         - riskLevel
         - riskLevelByCrs
+        - status
         - transportProtocol
         - url
         - userEdited
         - version
+    ApplicationPortInfo:
+      type: object
+      description: Serializer for application port info
+      properties:
+        port:
+          type: integer
+          nullable: true
+        transportProtocol:
+          type: string
+          nullable: true
+        protocol:
+          type: string
+          nullable: true
+      required:
+        - port
+        - protocol
+        - transportProtocol
     AttackVector:
       type: object
       description: Serializer for Attack Vector
@@ -5452,6 +5641,227 @@ components:
       required:
         - data
         - success
+    BusinessContext:
+      type: object
+      description: Serializer for business context
+      properties:
+        id:
+          type: integer
+          description: ID of the context
+        name:
+          type: string
+          description: Name of the context
+        icon:
+          type: string
+          description: Base64-encoded icon of the context, if provided
+        isAutomaticallyGenerated:
+          type: boolean
+          description: If the context is automatically generated
+        # Modified by Tag
+        riskLevel:
+          enum:
+            - secure
+            - unknown
+            - vulnerable
+            - critical
+          type: string
+          readOnly: true
+          description: 'Context risk level: secure, unknown, vulnerable or critical '
+        type:
+          enum:
+            - bs
+            - ts
+          type: string
+          readOnly: true
+          description: This is the type of the context
+        info:
+          allOf:
+            - $ref: '#/components/schemas/BusinessContextInfo'
+          readOnly: true
+          description: Context details such as statistics on asset counts inside of
+            the business context
+      required:
+        - icon
+        - id
+        - info
+        - isAutomaticallyGenerated
+        - name
+        - riskLevel
+        - type
+    BusinessContextDetails:
+      type: object
+      description: Serializer for business context details
+      properties:
+        id:
+          type: integer
+          description: ID of the context
+        name:
+          type: string
+          description: Name of the context
+        icon:
+          type: string
+          description: Base64-encoded icon of the context, if provided
+        isAutomaticallyGenerated:
+          type: boolean
+          description: If the context is automatically generated
+        # Modified by Tag
+        riskLevel:
+          enum:
+            - secure
+            - unknown
+            - vulnerable
+            - critical
+          type: string
+          readOnly: true
+          description: 'Context risk level: secure, unknown, vulnerable or critical '
+        type:
+          enum:
+            - bs
+            - ts
+          type: string
+          readOnly: true
+          description: This is the type of the context
+        created:
+          type: string
+          format: date-time
+          description: Date when the context was created
+        modified:
+          type: string
+          format: date-time
+          description: Timestamp when the context was last modified
+        createdBy:
+          type: string
+          description: Name of the user who created the context
+        technicalContexts:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechnicalContextMeta'
+          readOnly: true
+          description: Technical contexts inside the context
+        itOwnerGroupId:
+          type: integer
+          nullable: true
+          description: Technical it owner group id of the context
+        itOwnerUserId:
+          type: integer
+          nullable: true
+          description: Technical it owner user id of the context
+        itOwnerUserName:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Technical it owner user name of the context
+        itOwnerGroupName:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Technical it owner group name of the context
+        businessOwnerGroupId:
+          type: integer
+          description: Business owner group id of the context
+        businessOwnerUserId:
+          type: integer
+          description: Business owner user id of the context
+        businessOwnerUserName:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Business owner user name of the context
+        businessOwnerGroupName:
+          type: string
+          nullable: true
+          readOnly: true
+          description: Business owner group name of the context
+        crs:
+          type: string
+          readOnly: true
+          description: Business context crs
+        info:
+          allOf:
+            - $ref: '#/components/schemas/BusinessContextInfo'
+          readOnly: true
+          description: Context details such as statistics on asset counts inside of
+            the business context
+      required:
+        - businessOwnerGroupId
+        - businessOwnerGroupName
+        - businessOwnerUserId
+        - businessOwnerUserName
+        - created
+        - createdBy
+        - crs
+        - icon
+        - id
+        - info
+        - isAutomaticallyGenerated
+        - itOwnerGroupId
+        - itOwnerGroupName
+        - itOwnerUserId
+        - itOwnerUserName
+        - modified
+        - name
+        - riskLevel
+        - technicalContexts
+        - type
+    BusinessContextInfo:
+      type: object
+      description: Serializer for business context info
+      properties:
+        levels:
+          allOf:
+            - $ref: '#/components/schemas/ContextLevels'
+          readOnly: true
+          description: Risk levels of the elements in the context
+        applications:
+          type: integer
+          description: Number of applications in the context
+        applicationsUp:
+          type: integer
+          description: Number of applications detected as online in the context
+        devicesCount:
+          type: integer
+          readOnly: true
+          description: Number of devices in the context
+        accessibleBy:
+          enum:
+            - Servers & Users
+            - Only Users
+            - Only Servers
+            - Nobody
+          type: string
+          description: |-
+            The Accessibility posture of the context
+
+            * `Servers & Users` - Servers & Users
+            * `Only Users` - Only Users
+            * `Only Servers` - Only Servers
+            * `Nobody` - Nobody
+        assetZone:
+          enum:
+            - Internet
+            - WAN
+            - Isolated
+            - Nobody
+          type: string
+          description: |-
+            The Asset Zone posture of the context
+
+            * `Internet` - Internet
+            * `WAN` - WAN
+            * `Isolated` - Isolated
+            * `Nobody` - Nobody
+        businessImpact:
+          type: integer
+          readOnly: true
+          description: Business impact level of the context
+      required:
+        - accessibleBy
+        - applications
+        - applicationsUp
+        - assetZone
+        - businessImpact
+        - devicesCount
+        - levels
     CVR:
       type: object
       properties:
@@ -5554,9 +5964,6 @@ components:
     CVRContextStats:
       type: object
       properties:
-        uptime:
-          type: number
-          format: double
         applications:
           type: integer
         applicationsUp:
@@ -5564,7 +5971,6 @@ components:
       required:
         - applications
         - applicationsUp
-        - uptime
     CVRESOrgExposure:
       type: object
       properties:
@@ -5575,7 +5981,7 @@ components:
         newIndicators:
           allOf:
             - $ref: '#/components/schemas/CVROrgExpIndicators'
-          description: Potential outlook if top vulnerabilities are fixed
+          description: Potential outlooCVRVulnerableAppabilities are fixed
         topScenarios:
           # modified by Tag
           type: array
@@ -6158,8 +6564,8 @@ components:
           type: number
           format: double
         # disabled by Tag
-#        attackVector:
-#          $ref: '#/components/schemas/CVRVulnerabilityAttackVector'
+        #        attackVector:
+        #          $ref: '#/components/schemas/CVRVulnerabilityAttackVector'
         integrityImpact:
           type: string
         discoveredOn:
@@ -6262,73 +6668,48 @@ components:
       required:
         - count
         - cpe
-    Context:
+    ContainersStatus:
       type: object
-      description: Serializer for context
+      description: Serializer for the list of container statuses
       properties:
-        id:
-          type: integer
-          description: ID of the context
         name:
           type: string
-          description: Name of the context
-        modified:
-          type: string
-          format: date-time
-          description: Timestamp when the context was last modified
-        state:
+          description: Name of the container
+        status:
           enum:
-            - 0
-            - 1
-            - 2
-            - 3
-          type: integer
-          description: |-
-            Security state of the context
-
-            * `0` - 0
-            * `1` - 1
-            * `2` - 2
-            * `3` - 3
-        type:
-          enum:
-            - bs
-            - ts
+            - online
+            - offline
           type: string
           description: |-
-            Type of the context - bs = business, ts = technical
+            Status of the container
 
-            * `bs` - bs
-            * `ts` - ts
-        icon:
+            * `online` - online
+            * `offline` - offline
+        cpuUsage:
+          type: number
+          format: double
+          description: Percentage of CPU usage
+        memUsage:
           type: string
-          description: Base64-encoded icon of the context, if provided
-        info:
-          allOf:
-            - $ref: '#/components/schemas/ContextInfo'
-          description: Details on the context
+          description: Value of memory usage with unit
+        memLimit:
+          type: string
+          description: Memory usage limit
       required:
-        - icon
-        - id
-        - info
-        - modified
+        - cpuUsage
+        - memLimit
+        - memUsage
         - name
-        - state
-        - type
+        - status
     ContextInfo:
       type: object
-      description: Serializer for context info
+      description: Common base serializer for context info
       properties:
         levels:
           allOf:
             - $ref: '#/components/schemas/ContextLevels'
+          readOnly: true
           description: Risk levels of the elements in the context
-        uptime:
-          type: integer
-          description: Uptime percentage of devices in the context
-        businessImpact:
-          type: integer
-          description: Business impact level of the context
         applications:
           type: integer
           description: Number of applications in the context
@@ -6337,22 +6718,43 @@ components:
           description: Number of applications detected as online in the context
         devicesCount:
           type: integer
+          readOnly: true
           description: Number of devices in the context
         accessibleBy:
+          enum:
+            - Servers & Users
+            - Only Users
+            - Only Servers
+            - Nobody
           type: string
-          description: The Accessibility posture of the context
+          description: |-
+            The Accessibility posture of the context
+
+            * `Servers & Users` - Servers & Users
+            * `Only Users` - Only Users
+            * `Only Servers` - Only Servers
+            * `Nobody` - Nobody
         assetZone:
+          enum:
+            - Internet
+            - WAN
+            - Isolated
+            - Nobody
           type: string
-          description: The Asset Zone posture of the context
+          description: |-
+            The Asset Zone posture of the context
+
+            * `Internet` - Internet
+            * `WAN` - WAN
+            * `Isolated` - Isolated
+            * `Nobody` - Nobody
       required:
         - accessibleBy
         - applications
         - applicationsUp
         - assetZone
-        - businessImpact
         - devicesCount
         - levels
-        - uptime
     ContextLevels:
       type: object
       description: Serializer for context security levels
@@ -6478,21 +6880,33 @@ components:
         crsProbability:
           type: number
           format: double
-        crss:
+        vulnerabilityCrs:
           type: number
           format: double
-        applicationCrs:
-          type: number
-          format: double
-          maximum: 100.0
-          minimum: 0.0
-          description: Application CRS for a certain Business Context
-        deviceCrs:
+        applicationAvgCrs:
           type: number
           format: double
           maximum: 100.0
           minimum: 0.0
-          description: Device CRS for a certain Business Context
+          description: Application average CRS for a certain Business Context
+        applicationMaxCrs:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          description: Application maximum CRS among all TCs for a certain BC
+        deviceAvgCrs:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          description: Device average CRS for a certain Business Context
+        deviceMaxCrs:
+          type: number
+          format: double
+          maximum: 100.0
+          minimum: 0.0
+          description: Device maximum CRS among all TCs for a certain BC
         deviceSeverity:
           type: string
           readOnly: true
@@ -6537,16 +6951,16 @@ components:
           type: string
           readOnly: true
         businessContextId:
-          type: string
+          type: integer
           readOnly: true
         technicalContextId:
-          type: string
+          type: integer
           readOnly: true
         virtualVulnerabilityElementId:
-          type: string
+          type: integer
           readOnly: true
         vulnerabilityElementId:
-          type: string
+          type: integer
           readOnly: true
       required:
         - accessibleBy
@@ -6556,7 +6970,6 @@ components:
         - businessContextName
         - businessImpact
         - crsProbability
-        - crss
         - crssColor
         - crssSeverity
         - cvssV3BaseScore
@@ -6573,11 +6986,13 @@ components:
         - technicalContextId
         - userExposure
         - virtualVulnerabilityElementId
+        - vulnerabilityCrs
         - vulnerabilityElementId
         - vulnerabilityState
         - zoneExposure
     ContextualRiskReportStatus:
       type: object
+      description: Contextual risk report status serializer
       properties:
         state:
           type: string
@@ -6589,6 +7004,7 @@ components:
         - state
     Count:
       type: object
+      description: Count serializer
       properties:
         applications:
           type: integer
@@ -6646,6 +7062,7 @@ components:
         - devices
     CurrentTargetsPort:
       type: object
+      description: Current targets port serializer
       properties:
         port:
           type: integer
@@ -6664,6 +7081,7 @@ components:
         - transportProtocol
     CurrentTargetsPorts:
       type: object
+      description: Current targets ports serializer
       properties:
         userInput:
           type: string
@@ -6686,6 +7104,7 @@ components:
         - userInput
     CurrentTargetsReachableDevices:
       type: object
+      description: Current targets reachable devices serializer
       properties:
         userInput:
           type: string
@@ -6705,6 +7124,19 @@ components:
       type: object
       description: Serializer for device management
       properties:
+        id:
+          type: integer
+          description: ID of the device
+        isOnline:
+          type: string
+          description: Whether device is online
+        name:
+          type: string
+          description: Name of the device
+          maxLength: 100
+        ip:
+          type: string
+          description: IP address of the device
         type:
           enum:
             - AgentDevice
@@ -6715,24 +7147,27 @@ components:
 
             * `AgentDevice` - AgentDevice
             * `Server` - Server
-        id:
-          type: integer
-          description: ID of the device
-        agentStatus:
+        scannerName:
           type: string
-          description: Status of the linked agent, if device came from one
-        disclaimer:
+          nullable: true
+          description: Name of the scanner which discovered this device. Null if agent
+            based
+        lastSeen:
           type: string
-          description: Disclaimer notice for special cases
-        provider:
+          format: date-time
+          description: Date the device was last seen
+        lastScanned:
           type: string
-          description: Cloud provider of the device
-        isScanned:
-          type: boolean
-          description: Whether device has attack avenues available
-        isOnline:
+          format: date-time
+          description: Date the device was last scanned
+        ports:
+          allOf:
+            - $ref: '#/components/schemas/DevicePorts'
+          description: List of ports on the device
+        discoveredOn:
           type: string
-          description: Whether device is online
+          format: date-time
+          description: Date the device was discovered
         riskLevel:
           enum:
             - 0
@@ -6747,102 +7182,99 @@ components:
             * `1` - 1
             * `2` - 2
             * `3` - 3
-        ip:
+        deviceState:
+          enum:
+            - AVAILABLE
+            - DECOMMISSIONED
           type: string
-          description: IP address of the device
-        name:
-          type: string
-          description: Name of the device
-          maxLength: 100
-        originalName:
-          type: string
-          description: Original name of the device (from scan)
-        discoveredOn:
-          type: string
-          format: date-time
-          description: Date the device was discovered
-        lastSeen:
-          type: string
-          format: date-time
-          description: Date the device was last seen
-        hostnames:
-          type: array
-          items:
-            type: string
-          description: List of hostnames of the device
-        applicationsCount:
-          type: integer
-          description: Number of applications on the device
-        protocols:
-          type: array
-          items:
-            type: string
-          description: Protocols running on the device
-        agentId:
-          type: integer
-          description: Agent ID (if device from agent)
-        hasScapResults:
+          description: |-
+            State of the device
+
+            * `AVAILABLE` - AVAILABLE
+            * `DECOMMISSIONED` - DECOMMISSIONED
+        isScanned:
           type: boolean
-          description: Whether the device has SCAP results available
-        hasAgentInstalled:
+          description: Whether device has gone through an advanced scan
+        isScannerDeleted:
           type: boolean
-          description: Whether the device has agent installed
-        isNetworkEdgeScanDisabled:
-          type: string
-          description: Whether the device has network edge scans disabled
-        numberOfCves:
-          type: integer
-          description: Number of CVEs discovered on the device
-        numberOfAttackAvenues:
-          type: integer
-          description: Number of virtual vulnerabilities discovered on the device
-        avoidBruteForce:
-          type: boolean
-          description: Whether to avoid brute force scans on this device
-        businessImpact:
-          type: integer
-          description: Business impact of the device
+          description: Whether the scanner that detected this device was deleted
+        agentStatus:
+          allOf:
+            - $ref: '#/components/schemas/DeviceAgentStatus'
+          nullable: true
+          description: Status of the agent, if scanned via agent
         tags:
           type: array
           items:
             $ref: '#/components/schemas/DeviceTags'
           description: Tags set on the device
-        isAdvancedScanPossible:
-          type: boolean
-          description: 'Whether an Advanced scan is possible on this device: the task
-            should be enabled and the device should have open ports'
-        isZapScanPossible:
-          type: boolean
-          description: 'Whether a ZAP scan is possible on this device: the task should
-            be enabled and at least one web application must be up and running'
       required:
-        - agentId
         - agentStatus
-        - applicationsCount
-        - avoidBruteForce
-        - businessImpact
-        - disclaimer
+        - deviceState
         - discoveredOn
-        - hasAgentInstalled
-        - hasScapResults
-        - hostnames
         - id
         - ip
-        - isAdvancedScanPossible
-        - isNetworkEdgeScanDisabled
         - isOnline
         - isScanned
-        - isZapScanPossible
+        - isScannerDeleted
+        - lastScanned
         - lastSeen
         - name
-        - numberOfAttackAvenues
-        - numberOfCves
-        - originalName
-        - protocols
-        - provider
+        - ports
         - riskLevel
+        - scannerName
         - tags
         - type
+    DeviceAgentStatus:
+      type: object
+      description: 'Serializer for agent device status: status, version, last update,
+        last checkin, os type'
+      properties:
+        hostname:
+          type: string
+          description: Agent hostname
+        osType:
+          enum:
+            - WIN
+            - MAC
+            - LNX
+          type: string
+          description: |-
+            OS type
+
+            * `WIN` - WIN
+            * `MAC` - MAC
+            * `LNX` - LNX
+        version:
+          type: string
+          description: Agent version
+        status:
+          enum:
+            - online
+            - offline
+            - deleted
+          type: string
+          readOnly: true
+          description: Whether the agent is online or offline
+        guid:
+          type: string
+          description: Agent GUID
+        lastUpdate:
+          type: string
+          format: date-time
+          description: Date when the agent last sent scan data
+        lastCheckin:
+          type: string
+          format: date-time
+          description: Date when the agent last sent a heartbeat message
+      required:
+        - guid
+        - hostname
+        - lastCheckin
+        - lastUpdate
+        - osType
+        - status
+        - version
     DeviceDNSEntries:
       type: object
       description: Serializer for managing DNS entries for a device when scanned by
@@ -6996,6 +7428,23 @@ components:
         - lastBootupDate
         - os
         - securityProducts
+    DevicePorts:
+      type: object
+      description: Serializer for TCP and UDP ports on device
+      properties:
+        tcp:
+          type: array
+          items:
+            type: integer
+          description: Discovered TCP ports
+        udp:
+          type: array
+          items:
+            type: integer
+          description: Discovered UDP ports
+      required:
+        - tcp
+        - udp
     DeviceTags:
       type: object
       description: The serializer for one device tag entry
@@ -7244,8 +7693,9 @@ components:
         - type
     InReviewReport:
       type: object
-      description: Serializer for in-review report data, including vulnerability element
-        details, device information, and report state
+      description: |-
+        Serializer for in-review report data, including vulnerability element details,
+        device information, and report state
       properties:
         vulnerabilityElement:
           allOf:
@@ -7289,24 +7739,24 @@ components:
           description: ID of the referred element
         module:
           enum:
-            - Vulnerability
-            - Configuration
-            - Availability
-            - Platform
             - Agents
-            - InternalScanner
+            - Availability
+            - Configuration
             - Email
+            - InternalScanner
+            - Platform
+            - Vulnerability
           type: string
           description: |-
             Module which the alert refers to
 
-            * `Vulnerability` - Vulnerability
-            * `Configuration` - Configuration
-            * `Availability` - Availability
-            * `Platform` - Platform
             * `Agents` - Agents
-            * `InternalScanner` - InternalScanner
+            * `Availability` - Availability
+            * `Configuration` - Configuration
             * `Email` - Email
+            * `InternalScanner` - InternalScanner
+            * `Platform` - Platform
+            * `Vulnerability` - Vulnerability
         type:
           enum:
             - New
@@ -7430,7 +7880,7 @@ components:
         - page
         - totalCount
         - totalPages
-    PaginatedContextList:
+    PaginatedBusinessContextList:
       type: object
       properties:
         page:
@@ -7445,7 +7895,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Context'
+            $ref: '#/components/schemas/BusinessContext'
       required:
         - items
         - page
@@ -7703,6 +8153,27 @@ components:
         - page
         - totalCount
         - totalPages
+    PaginatedTechnicalContextList:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Page this response contains
+        totalPages:
+          type: integer
+          description: Number of total pages
+        totalCount:
+          type: integer
+          description: Number of total elements
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechnicalContext'
+      required:
+        - items
+        - page
+        - totalCount
+        - totalPages
     PaginatedUsageReportList:
       type: object
       properties:
@@ -7766,41 +8237,6 @@ components:
         - page
         - totalCount
         - totalPages
-    PaginatedVulnerabilityList:
-      type: object
-      properties:
-        page:
-          type: integer
-          description: Page this response contains
-        totalPages:
-          type: integer
-          description: Number of total pages
-        totalCount:
-          type: integer
-          description: Number of total elements
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/Vulnerability'
-      required:
-        - items
-        - page
-        - totalCount
-        - totalPages
-    PatchedBCOwnerGroupRequest:
-      type: object
-      description: Serializer for Business Context Owner Group
-      properties:
-        ownerGroupId:
-          type: integer
-          nullable: true
-    PatchedBCOwnerUserRequest:
-      type: object
-      description: Serializer for Business Context Owner User
-      properties:
-        ownerUserId:
-          type: integer
-          nullable: true
     PatchedScanSurfaceEntryRequest:
       type: object
       description: Contains id, user, scan date, input, scanners
@@ -7824,6 +8260,7 @@ components:
             $ref: '#/components/schemas/ScanSurfaceScannerEntryRequest'
     PatchedScanSurfaceRescanRequest:
       type: object
+      description: Serializer for Scan Surface Rescan Endpoint
       properties:
         success:
           type: boolean
@@ -7842,11 +8279,16 @@ components:
           description: The id of the edited credentials
     PatchedScannerEditRequest:
       type: object
+      description: Serializer for editing parameters of the scanner
       properties:
         label:
           type: string
           minLength: 1
           description: Label of the scanner
+        schedulerConfig:
+          allOf:
+            - $ref: '#/components/schemas/SchedulerConfigRequest'
+          description: Scheduler configuration for the scanner
     PatchedScopeChangeRequest:
       type: object
       description: Serializer that validates a scope change value
@@ -7854,20 +8296,6 @@ components:
         scope:
           type: string
           minLength: 1
-    PatchedTCOwnerGroupRequest:
-      type: object
-      description: Serializer for Technical Context Owner Group
-      properties:
-        ownerGroupId:
-          type: integer
-          nullable: true
-    PatchedTCOwnerUserRequest:
-      type: object
-      description: Serializer for Technical Context Owner User
-      properties:
-        ownerUserId:
-          type: integer
-          nullable: true
     PatchedTenantInfoEditRequest:
       type: object
       description: Tenant settings serializer
@@ -7896,6 +8324,9 @@ components:
           type: boolean
           description: Whether the user has clicked the Request Demo button in trial
             mode
+        isDemoAccount:
+          type: boolean
+          description: Whether the account is used for demo scanning purposes or not
     RRDeviceEntry:
       type: object
       description: Serializer for remediation report device entry
@@ -8142,6 +8573,12 @@ components:
             - $ref: '#/components/schemas/RegistrationStatistics'
           readOnly: true
           description: Statistics on elements that have been scanned with this tenant
+        tenantSettings:
+          allOf:
+            - $ref: '#/components/schemas/TenantSettings'
+          readOnly: true
+          nullable: true
+          description: The settings assigned to correspondent tenant
         managedType:
           # modified by Tag; formerly oneOf
           enum:
@@ -8166,11 +8603,19 @@ components:
           description: Whether the user can edit scanning configurations like plan
             type or scanning day.
           readOnly: true
+        devicesCount:
+          type: integer
+          readOnly: true
+          description: Number of tenant devices
         maxBillableAssets:
           type: integer
           maximum: 2147483647
           minimum: -2147483648
           description: Maximum amount of billable assets
+        enforceMaxBillableAssets:
+          type: boolean
+          description: If this option is enabled, we will create a maximum of `max_billable_assets`
+            devices
         billingPlanType:
           enum:
             - continuous
@@ -8215,6 +8660,7 @@ components:
           description: Estimated number of devices
       required:
         - canEditScanningConfig
+        - devicesCount
         - friendlyType
         - groups
         - history
@@ -8229,6 +8675,7 @@ components:
         - state
         - statistics
         - tenantId
+        - tenantSettings
         - token
         - type
         - users
@@ -8315,6 +8762,8 @@ components:
         maxBillableAssets:
           type: integer
           description: Max number of billable assets
+        enforceMaxBillableAssets:
+          type: boolean
         billingPlanType:
           enum:
             - monthly
@@ -8421,6 +8870,8 @@ components:
         maxBillableAssets:
           type: integer
           description: Max number of billable assets
+        enforceMaxBillableAssets:
+          type: boolean
         billingPlanType:
           enum:
             - continuous
@@ -8683,6 +9134,7 @@ components:
         - userInputs
     ScanStatus:
       type: object
+      description: Scan status serializer
       properties:
         areaScanJobs:
           type: array
@@ -8980,6 +9432,7 @@ components:
         - scannerId
     ScannerSetup:
       type: object
+      description: Scanner setup serializer
       properties:
         serverUrl:
           type: string
@@ -8992,6 +9445,7 @@ components:
         - token
     ScanningCredentials:
       type: object
+      description: ScanningCredential fields
       properties:
         id:
           type: integer
@@ -8999,19 +9453,6 @@ components:
         label:
           type: string
           maxLength: 100
-        credentialsType:
-          enum:
-            - ssh_password
-            - ssh_key
-            - snmp
-            - rdp
-          type: string
-          description: |-
-            * `ssh_password` - ssh_password
-            * `ssh_key` - ssh_key
-            * `snmp` - snmp
-            * `rdp` - rdp
-          readOnly: true
         state:
           enum:
             - valid
@@ -9028,6 +9469,18 @@ components:
         userInputsCount:
           type: integer
           readOnly: true
+        credentialsType:
+          enum:
+            - ssh_password
+            - ssh_key
+            - snmp
+            - smb
+          type: string
+          description: |-
+            * `ssh_password` - SSH with password
+            * `ssh_key` - SSH with key
+            * `snmp` - SNMP protocol
+            * `smb` - SMB protocol
       required:
         - createdOn
         - credentialsType
@@ -9035,6 +9488,21 @@ components:
         - label
         - state
         - userInputsCount
+    SchedulerConfigRequest:
+      type: object
+      description: Serializer for configuring the scanner
+      properties:
+        noScanWindowStartInterval:
+          type: string
+          format: time
+          description: Start of no scan window interval
+        noScanWindowStopInterval:
+          type: string
+          format: time
+          description: Stop of no scan window interval
+      required:
+        - noScanWindowStartInterval
+        - noScanWindowStopInterval
     SecurityCheckCategory:
       type: object
       description: Security Check Category Serializer
@@ -9328,12 +9796,16 @@ components:
           nullable: true
           readOnly: true
           description: Date when the API key was generated
+        dashboardLikePoints:
+          type: integer
+          description: How much a user likes or dislikes the new dashboard
       required:
         - access
         - accountId
         - apiKeyGenerationDate
         - asyncEmails
         - contextualRiskReportEmailsEnable
+        - dashboardLikePoints
         - email
         - firstName
         - id
@@ -9436,6 +9908,7 @@ components:
         - stats
     Status:
       type: object
+      description: Status serializer
       properties:
         count:
           allOf:
@@ -9499,8 +9972,7 @@ components:
         #          readOnly: true
         lastRun:
           type: string
-          format: date-time
-          nullable: true
+          readOnly: true
         firstRun:
           type: string
           format: date-time
@@ -9541,6 +10013,7 @@ components:
         - priority
     TaskScanner:
       type: object
+      description: Task scanner serializer
       properties:
         scannerId:
           type: integer
@@ -9554,25 +10027,145 @@ components:
         - taskId
     TechnicalContext:
       type: object
+      description: Serializer for technical context
       properties:
-        page:
+        id:
           type: integer
-          description: Page this response contains
-        totalPages:
+          description: ID of the context
+        name:
+          type: string
+          description: Name of the context
+        icon:
+          type: string
+          description: Base64-encoded icon of the context, if provided
+        isAutomaticallyGenerated:
+          type: boolean
+          description: If the context is automatically generated
+        # Modified by Tag
+        riskLevel:
+          enum:
+            - secure
+            - unknown
+            - vulnerable
+            - critical
+          type: string
+          readOnly: true
+          description: 'Context risk level: secure, unknown, vulnerable or critical '
+        type:
+          enum:
+            - bs
+            - ts
+          type: string
+          readOnly: true
+          description: This is the type of the context
+        info:
+          allOf:
+            - $ref: '#/components/schemas/ContextInfo'
+          readOnly: true
+          description: Context details such as statistics on asset counts inside of
+            the technical context
+      required:
+        - icon
+        - id
+        - info
+        - isAutomaticallyGenerated
+        - name
+        - riskLevel
+        - type
+    TechnicalContextDetails:
+      type: object
+      description: Serializer for technical context details
+      properties:
+        id:
           type: integer
-          description: Number of total pages
-        totalCount:
-          type: integer
-          description: Number of total elements
-        items:
+          description: ID of the context
+        name:
+          type: string
+          description: Name of the context
+        icon:
+          type: string
+          description: Base64-encoded icon of the context, if provided
+        isAutomaticallyGenerated:
+          type: boolean
+          description: If the context is automatically generated
+        # Modified by Tag
+        riskLevel:
+          enum:
+            - secure
+            - unknown
+            - vulnerable
+            - critical
+          type: string
+          readOnly: true
+          description: 'Context risk level: secure, unknown, vulnerable or critical '
+        type:
+          enum:
+            - bs
+            - ts
+          type: string
+          readOnly: true
+          description: This is the type of the context
+        created:
+          type: string
+          format: date-time
+          description: Date when the context was created
+        modified:
+          type: string
+          format: date-time
+          description: Timestamp when the context was last modified
+        createdBy:
+          type: string
+          description: Name of the user who created the context
+        technicalContexts:
           type: array
           items:
-            $ref: '#/components/schemas/Context'
+            $ref: '#/components/schemas/TechnicalContextMeta'
+          readOnly: true
+          description: Technical contexts inside the context
+        itOwnerGroupId:
+          type: integer
+          description: IT Owner group id of the context
+        itOwnerUserId:
+          type: integer
+          description: IT Owner user id of the context
+        itOwnerUserName:
+          type: string
+          nullable: true
+          readOnly: true
+          description: IT Owner user name of the context
+        itOwnerGroupName:
+          type: string
+          nullable: true
+          readOnly: true
+          description: IT Owner group name of the context
+        crs:
+          type: number
+          format: double
+          readOnly: true
+          description: Technical context crs
+        info:
+          allOf:
+            - $ref: '#/components/schemas/ContextInfo'
+          readOnly: true
+          description: Context details such as statistics on asset counts inside of
+            the technical context
       required:
-        - items
-        - page
-        - totalCount
-        - totalPages
+        - created
+        - createdBy
+        - crs
+        - icon
+        - id
+        - info
+        - isAutomaticallyGenerated
+        - itOwnerGroupId
+        - itOwnerGroupName
+        - itOwnerUserId
+        - itOwnerUserName
+        - modified
+        - name
+        - riskLevel
+        - technicalContexts
+        - type
     TechnicalContextDevice:
       type: object
       description: Serializer for the Technical Context device listing.
@@ -9613,6 +10206,20 @@ components:
         - riskLevel
         - riskLevelByCrs
         - tags
+    TechnicalContextMeta:
+      type: object
+      description: Serializer for context security levels
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        applicationsCounter:
+          type: integer
+      required:
+        - applicationsCounter
+        - id
+        - name
     TenantInfoEdit:
       type: object
       description: Tenant settings serializer
@@ -9641,6 +10248,135 @@ components:
           type: boolean
           description: Whether the user has clicked the Request Demo button in trial
             mode
+        isDemoAccount:
+          type: boolean
+          description: Whether the account is used for demo scanning purposes or not
+    TenantSettings:
+      type: object
+      description: Serializer for tenant specific configs and settings
+      properties:
+        isAutoContextsGenerationEnabled:
+          type: boolean
+        isOnboardingMode:
+          type: boolean
+          description: Restrict features for tenant in onboarding mode
+        isBuyNowClicked:
+          type: boolean
+          description: Whether the user has clicked the Buy Now button in trial mode
+        buyNowClickedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp when the user has clicked the Buy Now button
+            in trial mode
+        isRequestDemoClicked:
+          type: boolean
+          description: Whether the user has clicked the Request Demo button in trial
+            mode
+        requestDemoClickedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp when the user has clicked the Request Demo button
+            in trial mode
+        isOneClickRemediationRequested:
+          type: boolean
+          description: Whether the user has clicked the I Want One Click Remediation
+            button
+        oneClickRemediationRequestedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp when the user has clicked the I Want One Click
+            Remediation button
+        initialClickAction:
+          type: string
+          nullable: true
+          description: The action the user chose in the initial loading screen
+          maxLength: 60
+        initialScanType:
+          enum:
+            - agentless
+            - agent_based
+            - hybrid
+            - null
+          type: string
+          nullable: true
+          description: |-
+            The initial scanning type set on tenant
+
+            * `agentless` - Agentless
+            * `agent_based` - Agent Based
+            * `hybrid` - Hybrid
+        scanType:
+          enum:
+            - agentless
+            - agent_based
+            - hybrid
+          type: string
+          description: |-
+            Tenant Scanning Type
+
+            * `agentless` - Agentless
+            * `agent_based` - Agent Based
+            * `hybrid` - Hybrid
+        onboardingPage:
+          enum:
+            - WELCOME
+            - AGENTLESS_TYPE_SELECTION
+            - AGENT_TYPE_SELECTION
+            - AGENTLESS_CONFIG
+            - AGENT_LINUX_CONFIG
+            - AGENT_MAC_CONFIG
+            - AGENT_WINDOWS_EXE_CONFIG
+            - AGENT_WINDOWS_MSI_CONFIG
+            - AGENTLESS_WAITING
+            - AGENTLESS_START_SCAN
+            - WAITING_FOR_DATA
+            - END_OPTIONS
+            - null
+          type: string
+          nullable: true
+          description: |-
+            Current onboarding page. This is used in the new onboarding flow.
+
+            * `WELCOME` - Welcome
+            * `AGENTLESS_TYPE_SELECTION` - Agentless Type Selection
+            * `AGENT_TYPE_SELECTION` - Agent Type Selection
+            * `AGENTLESS_CONFIG` - Agentless Config
+            * `AGENT_LINUX_CONFIG` - Agent Linux Config
+            * `AGENT_MAC_CONFIG` - Agent Mac Config
+            * `AGENT_WINDOWS_EXE_CONFIG` - Agent Windows Exe Config
+            * `AGENT_WINDOWS_MSI_CONFIG` - Agent Windows Msi Config
+            * `AGENTLESS_WAITING` - Agentless Waiting
+            * `AGENTLESS_START_SCAN` - Agentless Start Scan
+            * `WAITING_FOR_DATA` - Waiting For Data
+            * `END_OPTIONS` - End Options
+        onboardingPageSwitch:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp on the last page switch in onboarding. Used to decide
+            whether to show experiencing issues message when loading
+        maxBillableAssets:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          description: Maximum amount of billable assets
+        enforceMaxBillableAssets:
+          type: boolean
+          description: If this option is enabled, we will create a maximum of `max_billable_assets`
+            devices
+        isDemoAccount:
+          type: boolean
+          description: Whether the account is used for demo scanning purposes or not
+        isDemoScanRunning:
+          type: boolean
+          description: Whether the demo scan is running on the tenant or not
+        tenant:
+          type: integer
+      required:
+        - tenant
     TokenObtainPair:
       type: object
       properties:
@@ -9947,184 +10683,6 @@ components:
         - name
         - port
         - version
-    Vulnerability:
-      type: object
-      description: |-
-        Serializer for vulnerabilities;
-
-        NOTE: Class moved by @alexandrabalaci
-      properties:
-        id:
-          type: integer
-          description: Vulnerability ID
-        elementId:
-          type: integer
-          description: Associated element ID
-        cve:
-          type: string
-          description: CVE of the vulnerability
-        affected:
-          type: string
-          description: Affected software
-        summary:
-          type: string
-          description: Vulnerability Summary
-        discovered:
-          type: string
-          format: date-time
-          description: Date when the vulnerability was discovered
-        publishedDate:
-          type: string
-          format: date-time
-          description: Date when the vulnerability was published
-        lastModified:
-          type: string
-          format: date-time
-          description: Date when the vulnerability was last modified
-        cvssScore:
-          type: number
-          format: double
-          description: CVSS score of the vulnerability
-        cvssImpact:
-          type: number
-          format: double
-          description: CVSS impact of the vulnerability
-        cvssExploit:
-          type: number
-          format: double
-          description: CVSS exploit of the vulnerability
-        cvssPrivilegesRequired:
-          type: string
-          description: The degree of authorization of the attacker
-        cvssUserInteraction:
-          type: string
-          description: Whether the vulnerability requires user interaction to be exploited
-        cvssScope:
-          type: string
-          description: Whether the impacted component is the same as the vulnerable
-            component
-        cvssConfidentialityImpact:
-          type: string
-          description: CVSS confidentiality impact of the vulnerability
-        cvssAvailabilityImpact:
-          type: string
-          description: CVSS availability impact of the vulnerability
-        cvssVectorString:
-          type: string
-          description: CVSS vector string of the vulnerability
-        cvssIntegrityImpact:
-          type: string
-          description: CVSS integrity impact of the vulnerability
-        isCritical:
-          type: boolean
-          description: Whether the vulnerability is critical
-        isVulnerable:
-          type: boolean
-          description: Whether the vulnerability is vulnerable
-        isLowSeverity:
-          type: boolean
-          description: Whether the vulnerability is low severity
-        isMediumSeverity:
-          type: boolean
-          description: Whether the vulnerability is medium severity
-        isHighSeverity:
-          type: boolean
-          description: Whether the vulnerability is high severity
-        isCriticalSeverity:
-          type: boolean
-          description: Whether the vulnerability is critical severity
-        isPublicExploitAvailable:
-          type: boolean
-          description: Whether the vulnerability has a public exploit available
-        references:
-          type: array
-          items:
-            type: string
-            format: uri
-          description: Useful references relating to the vulnerabilities
-        exploits:
-          type: array
-          items:
-            type: string
-            format: uri
-          description: Links to publicly available exploits, if any
-        cvssBaseSeverity:
-          type: string
-          description: The vulnerability severity
-        state:
-          enum:
-            - discovered
-            - addedToActionPlan
-            - fixPendingConfirmation
-            - fixNotConfirmed
-            - fixConfirmed
-            - falsePositive
-            - acceptRisk
-            - reopen
-          type: string
-          description: |-
-            State of the vulnerability
-
-            * `discovered` - discovered
-            * `addedToActionPlan` - addedToActionPlan
-            * `fixPendingConfirmation` - fixPendingConfirmation
-            * `fixNotConfirmed` - fixNotConfirmed
-            * `fixConfirmed` - fixConfirmed
-            * `falsePositive` - falsePositive
-            * `acceptRisk` - acceptRisk
-            * `reopen` - reopen
-        motivationText:
-          type: string
-          description: Motivation text
-        stateFixedReason:
-          type: string
-          nullable: true
-          description: Reason why the vulnerability was fixed
-        stateLastChangedOn:
-          type: string
-          format: date-time
-          description: Date when the vulnerability last changed state
-        remediation:
-          type: string
-          description: Vulnerability remediation
-        hasRLE:
-          type: boolean
-          description: Whether the vulnerability has a Real Life Exploitation module
-      required:
-        - affected
-        - cve
-        - cvssAvailabilityImpact
-        - cvssBaseSeverity
-        - cvssConfidentialityImpact
-        - cvssExploit
-        - cvssImpact
-        - cvssIntegrityImpact
-        - cvssPrivilegesRequired
-        - cvssScope
-        - cvssScore
-        - cvssUserInteraction
-        - cvssVectorString
-        - discovered
-        - elementId
-        - exploits
-        - hasRLE
-        - id
-        - isCritical
-        - isCriticalSeverity
-        - isHighSeverity
-        - isLowSeverity
-        - isMediumSeverity
-        - isPublicExploitAvailable
-        - isVulnerable
-        - lastModified
-        - motivationText
-        - publishedDate
-        - references
-        - remediation
-        - state
-        - stateFixedReason
-        - stateLastChangedOn
-        - summary
     VulnerabilityChangeRequest:
       type: object
       description: Request for changing a vulnerability's state
@@ -10323,6 +10881,8 @@ components:
         - summary
     WLBranding:
       type: object
+      description: Branding for the Whitelabel information that the frontend uses
+        for colors + instance settings
       properties:
         appLogo:
           type: string
@@ -10332,6 +10892,14 @@ components:
           readOnly: true
         supportEmail:
           type: string
+          readOnly: true
+        samlLoginUrl:
+          type: string
+          description: |-
+            Returns the login URL for SAML.
+            If the login URL is empty, then SAML is not configured correctly
+
+            TODO: This should be a separate field when we will have the SAML panel (FN-7652 - see comment above)
           readOnly: true
         mainLogo:
           type: string
@@ -10366,6 +10934,8 @@ components:
         timezone:
           type: string
           maxLength: 512
+        enableMicrosoftSso:
+          type: boolean
         enableCaptcha:
           type: boolean
         moderateSignups:
@@ -10390,8 +10960,31 @@ components:
             * `agentless` - Agentless
             * `agent_based` - Agent Based
             * `hybrid` - Hybrid
+        passwordHasCapitalLetter:
+          type: boolean
+          description: Indicates whether the password contains at least one capital
+            letter
+        passwordHasDigit:
+          type: boolean
+          description: Indicates whether the password contains at least one digit
+        passwordHasSpecialCharacter:
+          type: boolean
+          description: Indicates whether the password contains at least one special
+            character
+        passwordComplexity:
+          type: integer
+          maximum: 100
+          minimum: 0
+          description: The minimum complexity allowed for the password
+        passwordCharacterCount:
+          type: integer
+          maximum: 25
+          minimum: 0
+          description: The minimum number of characters in the password, with a range
+            of 0 to 25
       required:
         - appLogo
+        - samlLoginUrl
         - supportEmail
         - supportName
     ZAPScannerReport:
