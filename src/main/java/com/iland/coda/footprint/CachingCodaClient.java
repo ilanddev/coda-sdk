@@ -50,6 +50,7 @@ import net.codacloud.model.ScanSurfaceEntry;
 import net.codacloud.model.ScanUuidScannerId;
 import net.codacloud.model.Task;
 import net.codacloud.model.TaskEditRequest;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,9 +78,10 @@ final class CachingCodaClient implements CodaClient {
 		.removalListener(
 			CachingCodaClient.<String, Set<RegistrationLight>>createRemovalListener(
 				"Registration cache"))
-		.build(new CacheLoader<String, Set<RegistrationLight>>() {
+		.build(new CacheLoader<>() {
+			@NotNull
 			@Override
-			public Set<RegistrationLight> load(final String category)
+			public Set<RegistrationLight> load(@NotNull final String category)
 				throws Exception {
 				return delegatee.listRegistrations(
 					Objects.equals(category, DEFAULT_CATEGORY) ?
@@ -95,9 +97,10 @@ final class CachingCodaClient implements CodaClient {
 			.removalListener(
 				CachingCodaClient.<Integer, Set<Account>>createRemovalListener(
 					"Account cache"))
-			.build(new CacheLoader<Integer, Set<Account>>() {
+			.build(new CacheLoader<>() {
+				@NotNull
 				@Override
-				public Set<Account> load(final Integer accountId)
+				public Set<Account> load(@NotNull final Integer accountId)
 					throws Exception {
 					return delegatee.listAccounts(
 						Objects.equals(accountId, DEFAULT_ACCOUNT_ID) ?
@@ -113,10 +116,11 @@ final class CachingCodaClient implements CodaClient {
 		.removalListener(
 			CachingCodaClient.<Integer, List<AgentlessScannerSrz>>createRemovalListener(
 				"Scanner cache"))
-		.build(new CacheLoader<Integer, List<AgentlessScannerSrz>>() {
+		.build(new CacheLoader<>() {
+			@NotNull
 			@Override
-			public List<AgentlessScannerSrz> load(final Integer accountId)
-				throws Exception {
+			public List<AgentlessScannerSrz> load(
+				@NotNull final Integer accountId) throws Exception {
 				return delegatee.getScanners(
 					Objects.equals(accountId, DEFAULT_ACCOUNT_ID) ?
 						null :
@@ -130,9 +134,10 @@ final class CachingCodaClient implements CodaClient {
 			.removalListener(
 				CachingCodaClient.<String, List<AdminUser>>createRemovalListener(
 					"User cache"))
-			.build(new CacheLoader<String, List<AdminUser>>() {
+			.build(new CacheLoader<>() {
+				@NotNull
 				@Override
-				public List<AdminUser> load(final String value)
+				public List<AdminUser> load(@NotNull final String value)
 					throws Exception {
 					return delegatee.listUsers();
 				}

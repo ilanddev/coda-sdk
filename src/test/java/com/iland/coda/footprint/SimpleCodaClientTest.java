@@ -268,8 +268,8 @@ class SimpleCodaClientTest {
 
 	private static void assertNotNullOrEmpty(final String value,
 		final String name) {
-		assertNotNull(value, String.format("%s must not be null", name));
-		assertNotEquals("", value, String.format("%s must not be empty", name));
+		assertNotNull(value, "%s must not be null".formatted(name));
+		assertNotEquals("", value, "%s must not be empty".formatted(name));
 	}
 
 	private Map<LocalDateTime, CodaClient.LazyCVR> getReports(

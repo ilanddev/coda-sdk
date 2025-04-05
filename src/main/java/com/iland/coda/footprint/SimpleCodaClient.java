@@ -247,8 +247,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 
 	static <T> BinaryOperator<T> throwDuplicateKeyException() {
 		return (k, v) -> {
-			throw new IllegalStateException(
-				String.format("Duplicate key %s", k));
+			throw new IllegalStateException("Duplicate key %s".formatted(k));
 		};
 	}
 
@@ -339,9 +338,7 @@ final class SimpleCodaClient extends AbstractCodaClient {
 			urlConnection.setRequestProperty("Accept", "application/pdf");
 			urlConnection.setRequestProperty("FootprintTenantId",
 				accountId.toString());
-			if (authentication instanceof KeyAuthentication) {
-				final KeyAuthentication keyAuthentication =
-					(KeyAuthentication) authentication;
+			if (authentication instanceof KeyAuthentication keyAuthentication) {
 				urlConnection.setRequestProperty("FootprintApiKey",
 					keyAuthentication.getApiKey());
 			}
@@ -350,8 +347,9 @@ final class SimpleCodaClient extends AbstractCodaClient {
 			int code = urlConnection.getResponseCode();
 			final String contentType = urlConnection.getContentType();
 			if (code != 200 || !"application/pdf".equals(contentType)) {
-				throw new ApiException(String.format(
-					"Failed to retrieve cyber risk report with code=%d", code));
+				throw new ApiException(
+					"Failed to retrieve cyber risk report with code=%d".formatted(
+						code));
 			}
 
 			final String contentDispositionUnchecked =

@@ -51,15 +51,19 @@ public final class NetworkUtils {
 	 * @return a {@link Stream stream} of individual hostnames and IP addresses
 	 */
 	public static Stream<String> toStream(final Collection<String> targets) {
-		final List<String> addresses = targets.stream().map(String::trim)
+		final List<String> addresses = targets.stream()
+			.map(String::trim)
 			.filter(Predicates.not(NetworkUtils::isCidr))
 			.collect(Collectors.toList());
 
-		final List<String> cidrAddresses =
-			targets.stream().map(String::trim).filter(NetworkUtils::isCidr)
-				.map(SubnetUtils::new).map(SubnetUtils::getInfo)
-				.map(SubnetUtils.SubnetInfo::getAllAddresses)
-				.flatMap(Stream::of).collect(Collectors.toList());
+		final List<String> cidrAddresses = targets.stream()
+			.map(String::trim)
+			.filter(NetworkUtils::isCidr)
+			.map(SubnetUtils::new)
+			.map(SubnetUtils::getInfo)
+			.map(SubnetUtils.SubnetInfo::getAllAddresses)
+			.flatMap(Stream::of)
+			.collect(Collectors.toList());
 
 		return Stream.of(addresses, cidrAddresses).flatMap(List::stream);
 	}
@@ -85,8 +89,9 @@ public final class NetworkUtils {
 		try {
 			return Inet4Address.getByName(ip).isSiteLocalAddress();
 		} catch (final UnknownHostException e) {
-			final String errorMessage = String.format(
-				"Error determining if \"%s\" is an RFC1918 local address", ip);
+			final String errorMessage =
+				"Error determining if \"%s\" is an RFC1918 local address".formatted(
+					ip);
 			logger.error(errorMessage, e);
 		}
 

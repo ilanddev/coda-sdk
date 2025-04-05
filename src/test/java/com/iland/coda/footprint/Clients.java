@@ -38,7 +38,8 @@ final class Clients {
 	static {
 		final String missingEnv =
 			Arrays.asList("FOOTPRINT_SUBDOMAIN", "FOOTPRINT_API_KEY",
-					"FOOTPRINT_USERNAME", "FOOTPRINT_PASSWORD").stream()
+					"FOOTPRINT_USERNAME", "FOOTPRINT_PASSWORD")
+				.stream()
 				.filter(Predicates.not(System.getenv()::containsKey))
 				.collect(Collectors.joining(","));
 		if (!missingEnv.isEmpty()) {
@@ -70,7 +71,7 @@ final class Clients {
 	}
 
 	private static String createApiBasePath(final String subdomain) {
-		return String.format("https://%s.codacloud.net/api", subdomain);
+		return "https://%s.codacloud.net/api".formatted(subdomain);
 	}
 
 	/**
@@ -81,8 +82,11 @@ final class Clients {
 	 */
 	static void deleteTestRegistrations(final CodaClient client)
 		throws ApiException {
-		client.listRegistrations().stream()
+		client.listRegistrations()
+			.stream()
 			.filter(r -> TEST_LABEL.equals(r.getLabel()))
+			// must collect here to avoid ConcurrentModificationException
+			.toList()
 			.forEach(registration -> {
 				try {
 					client.deleteRegistration(registration);
