@@ -23,7 +23,6 @@
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <jackson-databind-nullable.version>0.2.4</jackson-databind-nullable.version>
         <threetenbp.version>1.6.5</threetenbp.version>
-        <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
         <spotless.version>2.30.0</spotless.version>
         <jsr305.version>3.0.2</jsr305.version>
         <!-- CODA -->
@@ -413,12 +412,6 @@
             <groupId>org.threeten</groupId>
             <artifactId>threetenbp</artifactId>
             <version>${threetenbp.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.annotation</groupId>
-            <artifactId>jakarta.annotation-api</artifactId>
-            <version>${jakarta-annotation.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>

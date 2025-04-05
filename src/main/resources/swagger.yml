@@ -6676,9 +6676,6 @@ components:
           type: string
           description: Name of the container
         status:
-          enum:
-            - online
-            - offline
           type: string
           description: |-
             Status of the container

@@ -85,6 +85,8 @@ final class Clients {
 		client.listRegistrations()
 			.stream()
 			.filter(r -> TEST_LABEL.equals(r.getLabel()))
+			// must collect here to avoid ConcurrentModificationException
+			.toList()
 			.forEach(registration -> {
 				try {
 					client.deleteRegistration(registration);

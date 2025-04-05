@@ -153,9 +153,13 @@ public interface CodaClient {
 	 */
 	default Optional<RegistrationLight> getRegistrationForLabel(
 		final String label) throws ApiException {
+		if (label.isBlank()) {
+			return Optional.empty();
+		}
+
 		return listRegistrations().stream()
 			.sorted(Comparator.comparingLong(RegistrationLight::getId))
-			.filter(r -> label.startsWith(r.getLabel()))
+			.filter(r -> r.getLabel().startsWith(label))
 			.findFirst();
 	}
 
@@ -216,8 +220,12 @@ public interface CodaClient {
 	 */
 	default Optional<Account> findAccountWithName(final String name)
 		throws ApiException {
+		if (name.isBlank()) {
+			return Optional.empty();
+		}
+
 		return listAccounts(null).stream()
-			.filter(account -> Objects.equals(account.getName(), name))
+			.filter(account -> account.getName().startsWith(name))
 			.findFirst();
 	}
 
@@ -429,6 +437,7 @@ public interface CodaClient {
 	 * @throws ApiException ...
 	 * @deprecated use {@link #getScanStatus(String, Integer)} instead!
 	 */
+	@Deprecated
 	ScanStatus getScanStatus(Integer accountId) throws ApiException;
 
 	/**
