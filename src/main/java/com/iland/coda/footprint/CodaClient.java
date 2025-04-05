@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import net.codacloud.ApiException;
@@ -157,10 +158,28 @@ public interface CodaClient {
 			return Optional.empty();
 		}
 
-		return listRegistrations().stream()
-			.sorted(Comparator.comparingLong(RegistrationLight::getId))
-			.filter(r -> r.getLabel().startsWith(label))
-			.findFirst();
+		final Map<String, RegistrationLight> registrationByLabel =
+			listRegistrations().stream()
+				.collect(
+					toMap(RegistrationLight::getLabel, Function.identity()));
+
+		if (registrationByLabel.containsKey(label)) {
+			return Optional.of(label).map(registrationByLabel::get);
+		}
+
+		final int length64 = 64;
+		final String label64 = label.substring(0, length64);
+		if (registrationByLabel.containsKey(label64)) {
+			return Optional.of(label64).map(registrationByLabel::get);
+		}
+
+		final int length60 = 60;
+		final String label60 = label.substring(0, length60);
+		if (registrationByLabel.containsKey(label60)) {
+			return Optional.of(label60).map(registrationByLabel::get);
+		}
+
+		return Optional.empty();
 	}
 
 	/**
@@ -224,9 +243,26 @@ public interface CodaClient {
 			return Optional.empty();
 		}
 
-		return listAccounts(null).stream()
-			.filter(account -> account.getName().startsWith(name))
-			.findFirst();
+		final Map<String, Account> accountsByName = listAccounts(null).stream()
+			.collect(toMap(Account::getName, Function.identity()));
+
+		if (accountsByName.containsKey(name)) {
+			return Optional.of(name).map(accountsByName::get);
+		}
+
+		final int length64 = 64;
+		final String label64 = name.substring(0, length64);
+		if (accountsByName.containsKey(label64)) {
+			return Optional.of(label64).map(accountsByName::get);
+		}
+
+		final int length60 = 60;
+		final String label60 = name.substring(0, length60);
+		if (accountsByName.containsKey(label60)) {
+			return Optional.of(label60).map(accountsByName::get);
+		}
+
+		return Optional.empty();
 	}
 
 	/**
