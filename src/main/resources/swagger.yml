@@ -1373,6 +1373,12 @@ paths:
             type: boolean
           description: Whether to hide auto-generated contexts
         - in: query
+          name: notIncludedInBc
+          schema:
+            type: boolean
+          description: Whether to show only technical contexts not included in business
+            contexts
+        - in: query
           name: page
           schema:
             type: integer
@@ -1650,7 +1656,7 @@ paths:
   /console/elements/device/{deviceId}/hierarchy/:
     get:
       operationId: getDeviceHierarchy
-      description: View for managing a device's hierarchy
+      description: Returns the provided device ID's hierarchy
       parameters:
         - in: path
           name: deviceId
@@ -1675,7 +1681,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/HierarchyResponse'
           description: ''
-      summary: View for managing a device's hierarchy
+      summary: Returns the provided device ID's hierarchy
   /console/elements/device/{deviceId}/installedUpdates/:
     get:
       operationId: consoleElementsDeviceInstalledUpdatesRetrieve
@@ -2251,83 +2257,85 @@ paths:
                 $ref: '#/components/schemas/PaginatedDeviceList'
           description: ''
       summary: Returns list of discovered devices
-  # disabled by Tag
-  #  /console/notifications/:
-  #    get:
-  #      operationId: listNotifications
-  #      description: Returns the list of available notifications (alerts) on the platform
-  #      parameters:
-  #        - in: query
-  #          name: isSystemTenant
-  #          schema:
-  #            type: boolean
-  #          description: Whether or not should retrieve alerts from system tenant
-  #        - in: query
-  #          name: level
-  #          schema:
-  #            type: string
-  #            enum:
-  #              - critical
-  #              - informational
-  #              - warnings
-  #          description: Risk level filter
-  #        - in: query
-  #          name: message
-  #          schema:
-  #            type: string
-  #          description: Free text filter based on alert message
-  #        - in: query
-  #          name: module
-  #          schema:
-  #            type: array
-  #            items:
-  #              type:
-  #                - Vulnerability
-  #                - Configuration
-  #                - Availability
-  #                - Platform
-  #                - Agents
-  #                - InternalScanner
-  #                - Email
-  #              enum:
-  #                - Agents
-  #                - Availability
-  #                - Configuration
-  #                - Email
-  #                - InternalScanner
-  #                - Platform
-  #                - Vulnerability
-  #          description: Comma-separated module filter values
-  #        - in: query
-  #          name: page
-  #          schema:
-  #            type: integer
-  #          description: Page you want to request
-  #        - in: query
-  #          name: size
-  #          schema:
-  #            type: integer
-  #          description: Number of items you want on a page
-  #        - in: header
-  #          name: FootprintTenantId
-  #          schema:
-  #            type: integer
-  #          description: Tenant ID you want to receive request for. If not provided, falls
-  #            back on `original_tenant_id` from the auth endpoint
-  #      tags:
-  #        - console
-  #      security:
-  #        - jwtAuth: [ ]
-  #        - ApiKeyAuth: [ ]
-  #      responses:
-  #        '200':
-  #          content:
-  #            application/json:
-  #              schema:
-  #                $ref: '#/components/schemas/PaginatedNotificationList'
-  #          description: ''
-  #      summary: Returns the list of available notifications (alerts) on the platform
-  /console/report/{reportType}/:
+# disabled by Tag
+#  /console/notifications/:
+#    get:
+#      operationId: listNotifications
+#      description: |-
+#        🔔 Notifications Listing View
+#        Provides methods for listing and manipulating notifications
+#      parameters:
+#        - in: query
+#          name: isSystemTenant
+#          schema:
+#            type: boolean
+#          description: Whether or not should retrieve alerts from system tenant
+#        - in: query
+#          name: level
+#          schema:
+#            type: string
+#            enum:
+#              - critical
+#              - informational
+#              - warnings
+#          description: Risk level filter
+#        - in: query
+#          name: message
+#          schema:
+#            type: string
+#          description: Free text filter based on alert message
+#        - in: query
+#          name: module
+#          schema:
+#            type: array
+#            items:
+#              type:
+#                - Agents
+#                - Availability
+#                - Configuration
+#                - Email
+#                - InternalScanner
+#                - Platform
+#                - Vulnerability
+#              enum:
+#                - Agents
+#                - Availability
+#                - Configuration
+#                - Email
+#                - InternalScanner
+#                - Platform
+#                - Vulnerability
+#          description: Comma-separated module filter values
+#        - in: query
+#          name: page
+#          schema:
+#            type: integer
+#          description: Page to request
+#        - in: query
+#          name: size
+#          schema:
+#            type: integer
+#          description: Number of elements on a page
+#        - in: header
+#          name: FootprintTenantId
+#          schema:
+#            type: integer
+#          description: Tenant ID you want to receive request for.If not provided, falls
+#            back on `original_tenant_id` from the auth endpoint
+#      tags:
+#        - console
+#      security:
+#        - jwtAuth: [ ]
+#        - ApiKeyAuth: [ ]
+#      responses:
+#        '200':
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/PaginatedNotificationList'
+#          description: ''
+#      summary: 🔔 Notifications Listing View
+  /console/report/reportDates:
     get:
       operationId: allCvrDatesRetrieve
       description: Returns available report dates
@@ -2367,7 +2375,7 @@ paths:
                   type: string
           description: List of datetime strings
       summary: Returns available report dates
-  /console/report/{reportType}/{reportDate}/:
+  /console/report/{reportDate}/:
     get:
       operationId: cvrRetrieve
       description: Returns the available CVR report, or the requested CVR report if
@@ -2488,11 +2496,6 @@ paths:
       description: Retrieves the contextual risk report
       parameters:
         - in: query
-          name: cveFilter
-          schema:
-            type: string
-          description: The vulnerability ID you want the report for
-        - in: query
           name: deviceLabel
           schema:
             type: string
@@ -2524,6 +2527,12 @@ paths:
           schema:
             type: integer
           description: Number of elements on a page
+        - in: query
+          name: textFilter
+          schema:
+            type: string
+          description: Filter the report based on applications, devices and vulnerability
+            ID
         - in: header
           name: FootprintTenantId
           schema:
@@ -2760,7 +2769,7 @@ paths:
           name: businessContexts
           schema:
             type: string
-          description: Business context ID filter
+          description: Business Contexts ID filter. Comma-separated values
         - in: query
           name: devices
           schema:
@@ -2771,6 +2780,11 @@ paths:
           schema:
             type: string
           description: Free-text filter
+        - in: query
+          name: ignoreFilters
+          schema:
+            type: boolean
+          description: If true, filters will be ignored,used for multiple business contexts
         - in: query
           name: isEntriesAddedToActionPlanOnly
           schema:
@@ -3595,7 +3609,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TenantInfoEdit'
+                $ref: '#/components/schemas/TenantInfo'
           description: ''
       parameters:
         - in: header
@@ -4065,11 +4079,11 @@ components:
         itOwnerUserId:
           type: integer
           nullable: true
-          readOnly: true
+          description: IT Owner User ID
         itOwnerGroupId:
           type: integer
           nullable: true
-          readOnly: true
+          description: IT Owner Group ID
         businessOwnerUserId:
           type: integer
           nullable: true
@@ -4098,8 +4112,8 @@ components:
           nullable: true
         businessOwnerGroupId:
           type: integer
-          readOnly: true
           nullable: true
+          description: Business Owner Group ID
         businessContextId:
           type: integer
           description: Business Context ID
@@ -4310,10 +4324,22 @@ components:
           type: integer
           nullable: true
           description: Owner Group ID
+        itOwnerUserId:
+          type: integer
+          nullable: true
+          description: IT Owner User ID
+        itOwnerGroupId:
+          type: integer
+          nullable: true
+          description: IT Owner Group ID
         businessOwnerUserId:
           type: integer
           nullable: true
           description: Business Owner User ID
+        businessOwnerGroupId:
+          type: integer
+          nullable: true
+          description: Business Owner Group ID
         businessContextId:
           type: integer
           description: Business Context ID
@@ -4324,8 +4350,11 @@ components:
           description: Development environments completion deadline
       required:
         - businessContextId
+        - businessOwnerGroupId
         - businessOwnerUserId
         - executionDeadline
+        - itOwnerGroupId
+        - itOwnerUserId
         - name
         - ownerGroupId
         - ownerUserId
@@ -4398,9 +4427,6 @@ components:
         summary:
           type: string
           nullable: true
-        severity:
-          type: string
-          nullable: true
         cvssBase:
           type: number
           format: double
@@ -4416,10 +4442,6 @@ components:
           type: string
           minLength: 1
         summary:
-          type: string
-          nullable: true
-          minLength: 1
-        severity:
           type: string
           nullable: true
           minLength: 1
@@ -6676,6 +6698,9 @@ components:
           type: string
           description: Name of the container
         status:
+          enum:
+            - online
+            - offline
           type: string
           description: |-
             Status of the container
@@ -6804,20 +6829,20 @@ components:
           type: string
           nullable: true
           maxLength: 300
-        # disabled by Tag
-        #        cvssV3BaseScore:
-        #          oneOf:
-        #            - type: number
-        #              format: double
-        #            - type: string
-        #          readOnly: true
-        # disabled by Tag
-        #        cvssNormalized:
-        #          oneOf:
-        #            - type: number
-        #              format: double
-        #            - type: string
-        #          readOnly: true
+# disabled by Tag
+#        cvssV3BaseScore:
+#          oneOf:
+#            - type: number
+#              format: double
+#            - type: string
+#          readOnly: true
+# disabled by Tag
+#        cvssNormalized:
+#          oneOf:
+#            - type: number
+#              format: double
+#            - type: string
+#          readOnly: true
         cvssNormalizedSeverity:
           type: string
           maxLength: 20
@@ -7683,7 +7708,6 @@ components:
           description: Server of the hierarchy. Always first and only child of the
             root element.
       required:
-        - children
         - depth
         - id
         - name
@@ -8295,7 +8319,7 @@ components:
           minLength: 1
     PatchedTenantInfoEditRequest:
       type: object
-      description: Tenant settings serializer
+      description: Tenant settings edit serializer
       properties:
         isAutoContextsGenerationEnabled:
           type: boolean
@@ -8324,6 +8348,18 @@ components:
         isDemoAccount:
           type: boolean
           description: Whether the account is used for demo scanning purposes or not
+        remediationsBundleType:
+          enum:
+            - manual
+            - all_per_business_context
+            - each_per_business_context
+          type: string
+          description: |-
+            Type of auto bundling between RemediationEntry and ActionPlanEntry
+
+            * `manual` - Manual
+            * `all_per_business_context` - All per business context
+            * `each_per_business_context` - Each per business context
     RRDeviceEntry:
       type: object
       description: Serializer for remediation report device entry
@@ -8383,14 +8419,14 @@ components:
           type: number
           format: double
           description: CRSS value
-        # disabled by Tag
-        #        cvssBase:
-        #          oneOf:
-        #            - type: number
-        #              format: double
-        #            - type: string
-        #          readOnly: true
-        #          description: CVSS Base value
+# disabled by Tag
+#        cvssBase:
+#          oneOf:
+#            - type: number
+#              format: double
+#            - type: string
+#          readOnly: true
+#          description: CVSS Base value
         isWeaponized:
           type: boolean
           description: Whether the vuln is weaponized
@@ -9470,13 +9506,15 @@ components:
           enum:
             - ssh_password
             - ssh_key
-            - snmp
+            - snmp_v2c
+            - snmp_v3
             - smb
           type: string
           description: |-
             * `ssh_password` - SSH with password
             * `ssh_key` - SSH with key
-            * `snmp` - SNMP protocol
+            * `snmp_v2c` - SNMP protocol version 2 community
+            * `snmp_v3` - SNMP protocol version 3
             * `smb` - SMB protocol
       required:
         - createdOn
@@ -9726,6 +9764,8 @@ components:
             - technical
             - business
             - clientAccess
+            - assignedOperations
+            - businessOwner
           type: string
           description: User Footprint role
         photo:
@@ -9753,7 +9793,7 @@ components:
         syncEmails:
           type: boolean
           description: Whether periodic e-mail reports are enabled
-        syncPeriod:
+        syncEmailsPeriod:
           # modified by Tag
           enum:
             - ''
@@ -9796,6 +9836,8 @@ components:
         dashboardLikePoints:
           type: integer
           description: How much a user likes or dislikes the new dashboard
+        mspRole:
+          type: string
       required:
         - access
         - accountId
@@ -10217,7 +10259,7 @@ components:
         - applicationsCounter
         - id
         - name
-    TenantInfoEdit:
+    TenantInfo:
       type: object
       description: Tenant settings serializer
       properties:
@@ -10248,6 +10290,18 @@ components:
         isDemoAccount:
           type: boolean
           description: Whether the account is used for demo scanning purposes or not
+        remediationsBundleType:
+          enum:
+            - manual
+            - all_per_business_context
+            - each_per_business_context
+          type: string
+          description: |-
+            Type of auto bundling between RemediationEntry and ActionPlanEntry
+
+            * `manual` - Manual
+            * `all_per_business_context` - All per business context
+            * `each_per_business_context` - Each per business context
     TenantSettings:
       type: object
       description: Serializer for tenant specific configs and settings
@@ -10349,6 +10403,18 @@ components:
             * `AGENTLESS_START_SCAN` - Agentless Start Scan
             * `WAITING_FOR_DATA` - Waiting For Data
             * `END_OPTIONS` - End Options
+        remediationsBundleType:
+          enum:
+            - manual
+            - all_per_business_context
+            - each_per_business_context
+          type: string
+          description: |-
+            Type of auto bundling between RemediationEntry and ActionPlanEntry
+
+            * `manual` - Manual
+            * `all_per_business_context` - All per business context
+            * `each_per_business_context` - Each per business context
         onboardingPageSwitch:
           type: string
           format: date-time
@@ -10417,6 +10483,7 @@ components:
           minLength: 1
       required:
         - refresh
+    # Added by Tag
     TopScenario:
       type: object
       properties:
