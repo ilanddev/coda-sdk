@@ -74,46 +74,21 @@
   </scm>
 
     <distributionManagement>
+        <repository>
+            <id>releases.artifacts.iland.test</id>
+            <url>
+                http://artifacts.iland.test/nexus/content/repositories/releases/
+            </url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
         <snapshotRepository>
-            <id>iland-maven-foss-snapshot</id>
+            <id>snapshots.artifacts.iland.test</id>
             <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
+                http://artifacts.iland.test/nexus/content/repositories/snapshots/
             </url>
+            <uniqueVersion>true</uniqueVersion>
         </snapshotRepository>
-        <repository>
-            <id>iland-maven-foss</id>
-            <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
-            </url>
-        </repository>
     </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>iland-maven-foss-snapshot</id>
-            <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
-            </url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>iland-maven-foss</id>
-            <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
-            </url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <build>
         <plugins>
