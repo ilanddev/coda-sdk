@@ -6701,12 +6701,16 @@ components:
           enum:
             - online
             - offline
+            - starting
+            - containerDown
           type: string
           description: |-
             Status of the container
 
             * `online` - online
             * `offline` - offline
+            * `starting` - starting
+            * `containerDown` - This is shown in rare cases where the container doesn't exist or has failed to start repeatedly
         cpuUsage:
           type: number
           format: double
