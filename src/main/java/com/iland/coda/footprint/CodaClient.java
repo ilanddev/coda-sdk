@@ -168,13 +168,15 @@ public interface CodaClient {
 						.orElseThrow()));
 
 		final int length64 = 64;
-		final String label64 = label.substring(0, length64);
+		final String label64 =
+			label.substring(0, Math.min(label.length(), length64));
 		if (registrationByLabel.containsKey(label64)) {
 			return Optional.of(label64).map(registrationByLabel::get);
 		}
 
 		final int length60 = 60;
-		final String label60 = label.substring(0, length60);
+		final String label60 =
+			label.substring(0, Math.min(label.length(), length60));
 		if (registrationByLabel.containsKey(label60)) {
 			return Optional.of(label60).map(registrationByLabel::get);
 		}
