@@ -19,21 +19,23 @@ import static com.iland.coda.footprint.Clients.simpleCodaClientPassword;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import net.codacloud.ApiException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class RetryCodaClientTest {
 
 	@Test
+	@Disabled("We no longer use password-based authentication.")
 	void testReauthentication() throws ApiException {
 		final RetryCodaClient retryCodaClient =
 			new RetryCodaClient(simpleCodaClientPassword);
 
-		retryCodaClient.getScanners(null); // test for proper authentication
-		simpleCodaClientPassword.xsrfInterceptor.xsrfToken.set(
-			"foo"); // invalidate access token
-		retryCodaClient.getScanners(
-			null); // re-authentication happens silently in the background
-
+		// test for proper authentication
+		retryCodaClient.getScanners(null);
+		// invalidate access token
+		simpleCodaClientPassword.xsrfInterceptor.xsrfToken.set("foo");
+		// re-authentication happens silently in the background
+		retryCodaClient.getScanners(null);
 
 		final PasswordAuthentication authentication =
 			(PasswordAuthentication) simpleCodaClientPassword.authentication;
