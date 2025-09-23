@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import net.codacloud.ApiException;
 import net.codacloud.model.Account;
@@ -160,21 +161,22 @@ public interface CodaClient {
 
 		final Map<String, RegistrationLight> registrationByLabel =
 			listRegistrations().stream()
-				.collect(
-					toMap(RegistrationLight::getLabel, Function.identity()));
-
-		if (registrationByLabel.containsKey(label)) {
-			return Optional.of(label).map(registrationByLabel::get);
-		}
+				.collect(toMap(RegistrationLight::getLabel, Function.identity(),
+					/* in the event of a duplicate key use the oldest registration */
+					(a, b) -> Stream.of(a, b)
+						.min(Comparator.comparing(RegistrationLight::getId))
+						.orElseThrow()));
 
 		final int length64 = 64;
-		final String label64 = label.substring(0, length64);
+		final String label64 =
+			label.substring(0, Math.min(label.length(), length64));
 		if (registrationByLabel.containsKey(label64)) {
 			return Optional.of(label64).map(registrationByLabel::get);
 		}
 
 		final int length60 = 60;
-		final String label60 = label.substring(0, length60);
+		final String label60 =
+			label.substring(0, Math.min(label.length(), length60));
 		if (registrationByLabel.containsKey(label60)) {
 			return Optional.of(label60).map(registrationByLabel::get);
 		}
@@ -244,7 +246,11 @@ public interface CodaClient {
 		}
 
 		final Map<String, Account> accountsByName = listAccounts(null).stream()
-			.collect(toMap(Account::getName, Function.identity()));
+			.collect(toMap(Account::getName, Function.identity(),
+				/* in the event of a duplicate key use the oldest account */
+				(a, b) -> Stream.of(a, b)
+					.min(Comparator.comparing(Account::getId))
+					.orElseThrow()));
 
 		if (accountsByName.containsKey(name)) {
 			return Optional.of(name).map(accountsByName::get);
