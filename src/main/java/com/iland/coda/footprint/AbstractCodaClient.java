@@ -17,7 +17,6 @@ package com.iland.coda.footprint;
 
 import static java.util.Objects.requireNonNull;
 
-import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,7 +29,6 @@ import java.util.function.Function;
 import com.google.common.collect.EvictingQueue;
 import net.codacloud.ApiClient;
 import net.codacloud.ApiException;
-import net.codacloud.JSON;
 import net.codacloud.api.AdminApi;
 import net.codacloud.api.BrandingApi;
 import net.codacloud.api.CommonApi;
@@ -44,8 +42,6 @@ import okhttp3.ResponseBody;
 
 /**
  * {@link AbstractCodaClient}.
- *
- * @author <a href="mailto:tagspilman@1111systems.com">Tag Spilman</a>
  */
 abstract class AbstractCodaClient implements CodaClient {
 
@@ -72,14 +68,13 @@ abstract class AbstractCodaClient implements CodaClient {
 
 		final OkHttpClient client =
 			createClient(authentication, xsrfInterceptor,
-				createEmptyStringInterceptor(),
+				createNullAndCriticalLevelInterceptor(), createEmptyStringInterceptor(),
 				createReportDataFromNoneInterceptor(),
 				createSchedulerConfigHackInterceptor(),
-				createDateTimeInterceptor());
+				createDateTimeInterceptor(), createCaptureInterceptor());
 
 		final ApiClient apiClient = new ApiClient(client);
 		apiClient.setBasePath(apiBasePath);
-		apiClient.setJSON(createJSON(apiClient));
 
 		this.apiClient = apiClient;
 		this.adminApi = new AdminApi(apiClient);
@@ -97,6 +92,19 @@ abstract class AbstractCodaClient implements CodaClient {
 			.readTimeout(Duration.ofSeconds(120));
 
 		return builder.build();
+	}
+
+	/**
+	 * Some double quotes in the snapshot reports are being replaced
+	 * with \null. I can't step through the code to find the cause
+	 * because it's happening in Kotlin. Wasted many hours trying to fix
+	 * it and settled on this hack to fix the problem. Please roll with
+	 * it.
+	 */
+	private Interceptor createNullAndCriticalLevelInterceptor() {
+		return createBodyInterceptor(body -> body.replaceAll("\\\\null", "\"")
+			.replaceAll("\"criticalLevel\":\"(\\w+)\"",
+				"\"criticalLevel\":-1"));
 	}
 
 	/**
@@ -154,6 +162,19 @@ abstract class AbstractCodaClient implements CodaClient {
 			"$1T$2$3$4");
 	}
 
+	private Interceptor createCaptureInterceptor() {
+		return createBodyInterceptor(body -> {
+			jsonLock.lock();
+			try {
+				rawJsonQueue.add(body);
+			} finally {
+				jsonLock.unlock();
+			}
+
+			return body;
+		});
+	}
+
 	private static Interceptor createBodyInterceptor(
 		final Function<String, String> function) {
 		return chain -> {
@@ -162,48 +183,20 @@ abstract class AbstractCodaClient implements CodaClient {
 
 			if (response.code() == 200) {
 				final ResponseBody body = response.body();
-				final String newResponseBody = function.apply(body.string());
+				if (body == null) {
+					return response;
+				}
+
+				final String newResponseBody =
+					function.apply(body.string());
 				MediaType contentType = body.contentType();
 				ResponseBody responseBody =
-					ResponseBody.Companion.create(newResponseBody, contentType);
+					ResponseBody.Companion.create(newResponseBody,
+						contentType);
 				return response.newBuilder().body(responseBody).build();
 			}
 
 			return response;
-		};
-	}
-
-	private static JSON createJSON(final ApiClient client) {
-		final JSON json = client.getJSON();
-
-		return new JSON() {
-			/**
-			 * Some double quotes in the snapshot reports are being replaced
-			 * with \null. I can't step through the code to find the cause
-			 * because it's happening in Kotlin. Wasted many hours trying to fix
-			 * it and settled on this hack to fix the problem. Please roll with
-			 * it.
-			 *
-			 * @param body       The JSON string
-			 * @param returnType The type to deserialize into
-			 * @param <T>        the return type
-			 * @return an instance of {@link T}
-			 */
-			@Override
-			public <T> T deserialize(final String body, final Type returnType) {
-				final String fixedBody = body.replaceAll("\\\\null", "\"")
-					.replaceAll("\"criticalLevel\":\"(\\w+)\"",
-						"\"criticalLevel\":-1");
-
-				jsonLock.lock();
-				try {
-					rawJsonQueue.add(fixedBody);
-				} finally {
-					jsonLock.unlock();
-				}
-
-				return json.deserialize(fixedBody, returnType);
-			}
 		};
 	}
 
@@ -222,10 +215,7 @@ abstract class AbstractCodaClient implements CodaClient {
 	protected final List<String> getRawJsonOfRecentCalls() {
 		jsonLock.lock();
 		try {
-			final List<String> list = new ArrayList<>();
-			list.addAll(rawJsonQueue);
-
-			return list;
+			return new ArrayList<>(rawJsonQueue);
 		} finally {
 			jsonLock.unlock();
 		}
