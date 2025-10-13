@@ -139,7 +139,7 @@ class SimpleCodaClientTest {
 		ScanSurfaceBatcher.MAX_IPS_PER_SCAN_SURFACE_UPDATE = 1;
 		final List<ScanUuidScannerId> scanIds =
 			client.updateScanSurface(targets, scannerIds, accountId);
-		assertEquals(3, scanIds.size());
+		assertEquals(targetsSize, scanIds.size());
 		final int expectedSize = targetsSize * scannerIds.size();
 		final Set<ScanSurfaceEntry> scanSurface =
 			client.getScanSurface(accountId);

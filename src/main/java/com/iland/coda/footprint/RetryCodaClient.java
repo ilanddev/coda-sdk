@@ -99,7 +99,7 @@ final class RetryCodaClient implements CodaClient {
 
 	@Override
 	public CodaClient login() throws ApiException {
-		retryIfNecessary(() -> delegatee.login());
+		retryIfNecessary(delegatee::login);
 
 		return this;
 	}
@@ -335,11 +335,15 @@ final class RetryCodaClient implements CodaClient {
 			return (V) retryer.call(() -> {
 				try {
 					return retryable.call();
-				} catch (ApiException e) {
+				} catch (final ApiException e) {
 					switch (e.getCode()) {
 						case 401:
 						case 403:
-							login();
+							try {
+								login();
+							} catch (final ApiException ee) {
+								// prevent stack overflow
+							}
 							break;
 					}
 
@@ -350,7 +354,7 @@ final class RetryCodaClient implements CodaClient {
 					throw e;
 				}
 			});
-		} catch (ExecutionException | RetryException e) {
+		} catch (final ExecutionException | RetryException e) {
 			throwIfInstanceOf(e.getCause(), ApiException.class);
 
 			throw new ApiException(e);

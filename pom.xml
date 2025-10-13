@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.codacloud</groupId>
     <artifactId>footprint</artifactId>
-    <version>7.18.20.j-SNAPSHOT</version>
+    <version>7.18.19.m-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>CODA Footprint</name>
@@ -45,7 +45,7 @@
         <commons-net.version>3.8.0</commons-net.version>
         <jakarta.annotation-api.version>1.3.5</jakarta.annotation-api.version>
         <mockito-core.version>3.12.4</mockito-core.version>
-        <openapi-generator-maven-plugin.version>5.4.0
+        <openapi-generator-maven-plugin.version>7.16.0
         </openapi-generator-maven-plugin.version>
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
@@ -55,6 +55,7 @@
         <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+        <argLine></argLine>
     </properties>
 
     <licenses>
@@ -74,46 +75,21 @@
   </scm>
 
     <distributionManagement>
+        <repository>
+            <id>releases.artifacts.iland.test</id>
+            <url>
+                http://artifacts.iland.test/nexus/content/repositories/releases/
+            </url>
+            <uniqueVersion>false</uniqueVersion>
+        </repository>
         <snapshotRepository>
-            <id>iland-maven-foss-snapshot</id>
+            <id>snapshots.artifacts.iland.test</id>
             <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
+                http://artifacts.iland.test/nexus/content/repositories/snapshots/
             </url>
+            <uniqueVersion>true</uniqueVersion>
         </snapshotRepository>
-        <repository>
-            <id>iland-maven-foss</id>
-            <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
-            </url>
-        </repository>
     </distributionManagement>
-
-    <repositories>
-        <repository>
-            <id>iland-maven-foss-snapshot</id>
-            <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss-snapshot
-            </url>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>iland-maven-foss</id>
-            <url>
-                https://us-central1-maven.pkg.dev/iland-software-engineering/iland-maven-foss
-            </url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 
     <build>
         <plugins>
@@ -146,6 +122,7 @@
                             <modelPackage>net.codacloud.model</modelPackage>
                             <generateApiTests>false</generateApiTests>
                             <generateModelTests>false</generateModelTests>
+                            <templateDirectory>src/main/resources/templates</templateDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -175,7 +152,7 @@
                             <value>conf/log4j.properties</value>
                         </property>
                     </systemProperties>
-                    <argLine>-Xms512m -Xmx1500m</argLine>
+                    <argLine>@{argLine} -Xms512m -Xmx1500m</argLine>
                     <parallel>methods</parallel>
                     <threadCount>10</threadCount>
                 </configuration>
@@ -356,6 +333,71 @@
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>pipeline</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.sonarsource.scanner.maven</groupId>
+                            <artifactId>sonar-maven-plugin</artifactId>
+                            <version>5.1.0.4751</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.jacoco</groupId>
+                            <artifactId>jacoco-maven-plugin</artifactId>
+                            <version>0.8.13</version>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-surefire-report-plugin</artifactId>
+                            <version>3.5.3</version>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>prepare-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>report</id>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                                <configuration>
+                                    <formats>
+                                        <format>XML</format>
+                                    </formats>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.sonarsource.scanner.maven</groupId>
+                        <artifactId>sonar-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sonar-verify</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sonar</goal>
                                 </goals>
                             </execution>
                         </executions>
