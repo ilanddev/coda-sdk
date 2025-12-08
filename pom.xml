@@ -1,4 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <groupId>com.iland.common.pom</groupId>
+        <artifactId>parent-pom</artifactId>
+        <version>1.0.1</version>
+    </parent>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.codacloud</groupId>
@@ -55,7 +60,6 @@
         <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
         <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
         <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
-        <argLine></argLine>
     </properties>
 
     <licenses>
@@ -73,23 +77,6 @@
         <url>https://github.com/ilanddev/coda-sdk.git</url>
       <tag>HEAD</tag>
   </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>releases.artifacts.iland.test</id>
-            <url>
-                http://artifacts.iland.test/nexus/content/repositories/releases/
-            </url>
-            <uniqueVersion>false</uniqueVersion>
-        </repository>
-        <snapshotRepository>
-            <id>snapshots.artifacts.iland.test</id>
-            <url>
-                http://artifacts.iland.test/nexus/content/repositories/snapshots/
-            </url>
-            <uniqueVersion>true</uniqueVersion>
-        </snapshotRepository>
-    </distributionManagement>
 
     <build>
         <plugins>
@@ -340,71 +327,6 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>pipeline</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <plugin>
-                            <groupId>org.sonarsource.scanner.maven</groupId>
-                            <artifactId>sonar-maven-plugin</artifactId>
-                            <version>5.1.0.4751</version>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.jacoco</groupId>
-                            <artifactId>jacoco-maven-plugin</artifactId>
-                            <version>0.8.13</version>
-                        </plugin>
-                        <plugin>
-                            <groupId>org.apache.maven.plugins</groupId>
-                            <artifactId>maven-surefire-report-plugin</artifactId>
-                            <version>3.5.3</version>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-                <plugins>
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>prepare-agent</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                            </execution>
-                            <execution>
-                                <id>report</id>
-                                <goals>
-                                    <goal>report</goal>
-                                </goals>
-                                <configuration>
-                                    <formats>
-                                        <format>XML</format>
-                                    </formats>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.sonarsource.scanner.maven</groupId>
-                        <artifactId>sonar-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>sonar-verify</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sonar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
     </profiles>
 
     <dependencies>
@@ -489,5 +411,19 @@
             <version>${commons-net.version}</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <!--
+              This repository is needed for the parent POM
+            -->
+            <id>artifacts.iland.test</id>
+            <name>iland artifacts repository</name>
+            <url>http://artifacts.iland.test/nexus/content/groups/public</url>
+            <snapshots>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
 
 </project>
