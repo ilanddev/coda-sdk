@@ -22,14 +22,21 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
+import com.google.common.util.concurrent.Futures;
 import net.codacloud.ApiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,25 +46,27 @@ import org.slf4j.LoggerFactory;
  *
  * @param <I> the paginated SDK type
  * @param <V> the item value type
- * @author <a href="mailto:tagspilman@1111systems.com">Tag Spilman</a>
  */
-public final class Paginator<I, V> {
+public final class Paginator<I, V> implements AutoCloseable {
 
 	private static final Logger logger =
 		LoggerFactory.getLogger(Paginator.class);
+
+	private final ExecutorService service = Executors.newFixedThreadPool(
+		Runtime.getRuntime().availableProcessors());
 
 	private final PageFetcher<I> fetcher;
 	private final Function<I, Page<V>> pageMapper;
 
 	public Paginator(final PageFetcher<I> fetcher,
-		final Function<I, Integer> pageNoMapper,
-		final Function<I, Integer> totalPageMapper,
-		final Function<I, Integer> totalCountMapper,
+		final ToIntFunction<I> pageNoMapper,
+		final ToIntFunction<I> totalPageMapper,
+		final ToIntFunction<I> totalCountMapper,
 		final Function<I, List<V>> itemsMapper) {
 		this.fetcher = fetcher;
-		this.pageMapper =
-			i -> new Page<>(pageNoMapper.apply(i), totalPageMapper.apply(i),
-				totalCountMapper.apply(i), itemsMapper.apply(i));
+		this.pageMapper = i -> new Page<>(pageNoMapper.applyAsInt(i),
+			totalPageMapper.applyAsInt(i), totalCountMapper.applyAsInt(i),
+			itemsMapper.apply(i));
 	}
 
 	/**
@@ -67,7 +76,7 @@ public final class Paginator<I, V> {
 	 * @throws ApiException ...
 	 */
 	public List<V> fetchAll() throws ApiException {
-		return fetchAll(Function.identity(), ArrayList::new);
+		return fetchAll(false, ArrayList::new);
 	}
 
 	/**
@@ -77,55 +86,77 @@ public final class Paginator<I, V> {
 	 * @throws ApiException ...
 	 */
 	public Set<V> fetchAllAsync() throws ApiException {
-		return fetchAll(IntStream::parallel, HashSet::new);
+		return fetchAll(true, HashSet::new);
 	}
 
-	private <C extends Collection<V>> C fetchAll(
-		final Function<IntStream, IntStream> streamMapper,
+	private <C extends Collection<V>> C fetchAll(final boolean parallel,
 		final Supplier<C> supplier) throws ApiException {
 		final I pageOfItems = fetcher.fetch(1);
 		final Page<V> firstPage = pageMapper.apply(pageOfItems);
 		final AtomicInteger count = new AtomicInteger(0);
 		try {
-			final C items = streamMapper.apply(
-					IntStream.range(2, firstPage.getTotalPages() + 1))
-				.mapToObj(pageNo -> fetch(pageNo, count)).map(pageMapper)
-				.map(Page::getItems).flatMap(List::stream)
+			return Stream.concat(
+					Stream.of(pageOfItems).map(CompletableFuture::completedFuture),
+					IntStream.range(2, firstPage.getTotalPages() + 1)
+						.mapToObj(pageNo -> submit(parallel, pageNo, count)))
+				// collect here to act as a latch
+				.toList()
+				.stream()
+				.map(Futures::getUnchecked)
+				.map(pageMapper)
+				.map(Page::getItems)
+				.flatMap(List::stream)
 				.collect(Collectors.toCollection(supplier));
-			items.addAll(firstPage.getItems());
-			return items;
-		} catch (RuntimeException e) {
+		} catch (final RuntimeException e) {
 			Throwables.throwIfInstanceOf(e.getCause(), ApiException.class);
 			throw e;
 		}
 	}
 
-	private I fetch(final Integer pageNo, final AtomicInteger count) {
-		final Stopwatch stopwatch = Stopwatch.createStarted();
+	private Future<I> submit(final boolean parallel, final int pageNo,
+		final AtomicInteger count) {
+		if (parallel) {
+			return service.submit(() -> fetch(pageNo, count));
+		}
 
 		try {
-			final I fetch = fetcher.fetch(pageNo);
+			final I result = fetch(pageNo, count);
 
-			if (logger.isDebugEnabled()) {
-				final Page<V> page = pageMapper.apply(fetch);
-				final Integer totalPages = page.getTotalPages();
-				final String percent =
-					calculatePercentage(count.incrementAndGet(), totalPages);
-				logger.debug("Page {}/{} ({} items) retrieved in {} ({}%)",
-					pageNo, totalPages, page.getItems().size(), stopwatch,
-					percent);
-			}
-
-			return fetch;
-		} catch (ApiException e) {
-			throw new RuntimeException(e);
+			return CompletableFuture.completedFuture(result);
+		} catch (final ApiException e) {
+			return CompletableFuture.failedFuture(e);
 		}
+	}
+
+	private I fetch(final Integer pageNo, final AtomicInteger count)
+		throws ApiException {
+		final Stopwatch stopwatch = Stopwatch.createStarted();
+
+		final I fetch = fetcher.fetch(pageNo);
+
+		if (logger.isDebugEnabled()) {
+			final Page<V> page = pageMapper.apply(fetch);
+			final Integer totalPages = page.getTotalPages();
+			final String percent =
+				calculatePercentage(count.incrementAndGet(), totalPages);
+			logger.debug("Page {}/{} ({} items) retrieved in {} ({}%)", pageNo,
+				totalPages, page.getItems().size(), stopwatch, percent);
+		}
+
+		return fetch;
 	}
 
 	private static String calculatePercentage(final int a, final int b) {
 		return new BigDecimal(a).divide(BigDecimal.valueOf(b), 3,
-				RoundingMode.FLOOR).multiply(BigDecimal.valueOf(100)).setScale(1)
+				RoundingMode.FLOOR)
+			.multiply(BigDecimal.valueOf(100))
+			.setScale(1, RoundingMode.UNNECESSARY)
 			.toString();
+	}
+
+	@Override
+	public void close() {
+		service.shutdown();
 	}
 
 }
