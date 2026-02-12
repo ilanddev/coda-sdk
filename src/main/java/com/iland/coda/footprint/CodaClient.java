@@ -256,13 +256,13 @@ public interface CodaClient {
 			return Optional.of(name).map(accountsByName::get);
 		}
 
-		final int length64 = 64;
+		final int length64 = Math.min(name.length(), 64);
 		final String label64 = name.substring(0, length64);
 		if (accountsByName.containsKey(label64)) {
 			return Optional.of(label64).map(accountsByName::get);
 		}
 
-		final int length60 = 60;
+		final int length60 = Math.min(name.length(), 60);
 		final String label60 = name.substring(0, length60);
 		if (accountsByName.containsKey(label60)) {
 			return Optional.of(label60).map(accountsByName::get);
