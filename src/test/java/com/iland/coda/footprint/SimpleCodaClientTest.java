@@ -122,6 +122,24 @@ class SimpleCodaClientTest {
 	}
 
 	@Test
+	void testFindAccountWithEmptyName() throws ApiException {
+		final Optional<Account> accountWithName =
+			client.findAccountWithName("");
+
+		assertTrue(accountWithName.isEmpty(),
+			"accountWithName must be empty");
+	}
+
+	@Test
+	void testFindAccountWithShortName() throws ApiException {
+		final Optional<Account> accountWithName =
+			client.findAccountWithName("foo");
+
+		assertTrue(accountWithName.isEmpty(),
+			"accountWithName must be empty");
+	}
+
+	@Test
 	@Disabled("CodaClient#rescan failing upstream with 500 error.")
 	void testScanSurfaceAndRescan() throws ApiException, UnknownHostException {
 		final RegistrationLight registration =
