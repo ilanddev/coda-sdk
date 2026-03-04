@@ -17,9 +17,7 @@ package com.iland.coda.footprint;
 
 import static com.iland.coda.footprint.TestValues.TEST_DESCRIPTION;
 import static com.iland.coda.footprint.TestValues.TEST_LABEL;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -30,7 +28,6 @@ import java.util.concurrent.TimeUnit;
 import com.google.common.base.Stopwatch;
 import net.codacloud.model.RegistrationEditRequest;
 import net.codacloud.model.RegistrationLight;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class CachingCodaClientTest {
@@ -43,7 +40,6 @@ class CachingCodaClientTest {
 	}
 
 	@Test
-	@Disabled("Failing upstream with 500 error.")
 	void testThatCreateAndDeleteRegistrationInvalidatesCache()
 		throws Throwable {
 		final CachingCodaClient client =
@@ -101,7 +97,6 @@ class CachingCodaClientTest {
 	}
 
 	@Test
-	@Disabled("Failing due to 404")
 	void testRegistrationEditReplacesCachedRegistration() throws Throwable {
 		final CodaClient client = Clients.cachingCodaClient.login();
 

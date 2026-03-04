@@ -140,7 +140,6 @@ class SimpleCodaClientTest {
 	}
 
 	@Test
-	@Disabled("CodaClient#rescan failing upstream with 500 error.")
 	void testScanSurfaceAndRescan() throws ApiException, UnknownHostException {
 		final RegistrationLight registration =
 			client.createRegistration(TEST_LABEL, TEST_DESCRIPTION);
