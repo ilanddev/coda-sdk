@@ -71,7 +71,7 @@
             scm:git:https://github.com/ilanddev/coda-sdk.git
         </developerConnection>
         <url>https://github.com/ilanddev/coda-sdk.git</url>
-      <tag>7.18.19.n</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <distributionManagement>

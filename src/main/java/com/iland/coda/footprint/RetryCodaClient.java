@@ -108,14 +108,16 @@ final class RetryCodaClient implements CodaClient {
 	public Set<RegistrationLight> listRegistrations(final String category)
 		throws ApiException {
 		if (delegatee instanceof SimpleCodaClient simpleCodaClient) {
-
-			return new Paginator<>(pageNo -> retryIfNecessary(
-				() -> simpleCodaClient.adminApi.adminRegistrationsLightRetrieve(
-					category, pageNo, MAX_PAGE_SIZE)),
+			try (final var paginator = new Paginator<>(
+				pageNo -> retryIfNecessary(
+					() -> simpleCodaClient.adminApi.adminRegistrationsLightRetrieve(
+						category, pageNo, MAX_PAGE_SIZE)),
 				PaginatedRegistrationLightList::getPage,
 				PaginatedRegistrationLightList::getTotalPages,
 				PaginatedRegistrationLightList::getTotalCount,
-				PaginatedRegistrationLightList::getItems).fetchAllAsync();
+				PaginatedRegistrationLightList::getItems)) {
+				return paginator.fetchAllAsync();
+			}
 		}
 
 		return retryIfNecessary(() -> delegatee.listRegistrations(category));
@@ -125,13 +127,16 @@ final class RetryCodaClient implements CodaClient {
 	public Set<Account> listAccounts(final Integer accountId)
 		throws ApiException {
 		if (delegatee instanceof SimpleCodaClient simpleCodaClient) {
-
-			return new Paginator<>(pageNo -> retryIfNecessary(
-				() -> simpleCodaClient.commonApi.getAccounts(null, pageNo,
-					MAX_PAGE_SIZE, accountId)), PaginatedAccountList::getPage,
+			try (final var paginator = new Paginator<>(
+				pageNo -> retryIfNecessary(
+					() -> simpleCodaClient.commonApi.getAccounts(null, pageNo,
+						MAX_PAGE_SIZE, accountId)),
+				PaginatedAccountList::getPage,
 				PaginatedAccountList::getTotalPages,
 				PaginatedAccountList::getTotalCount,
-				PaginatedAccountList::getItems).fetchAllAsync();
+				PaginatedAccountList::getItems)) {
+				return paginator.fetchAllAsync();
+			}
 		}
 
 		return retryIfNecessary(() -> delegatee.listAccounts(accountId));

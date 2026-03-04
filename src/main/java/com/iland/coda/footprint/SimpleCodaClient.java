@@ -89,14 +89,13 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		throws ApiException {
 		logger.debug("Retrieving registrations...");
 		final Stopwatch stopwatch = Stopwatch.createStarted();
-		try {
-			return new Paginator<>(
-				pageNo -> adminApi.adminRegistrationsLightRetrieve(category,
-					pageNo, DEFAULT_PAGE_SIZE),
-				PaginatedRegistrationLightList::getPage,
-				PaginatedRegistrationLightList::getTotalPages,
-				PaginatedRegistrationLightList::getTotalCount,
-				PaginatedRegistrationLightList::getItems).fetchAllAsync();
+		try (final var paginator = new Paginator<>(
+			pageNo -> adminApi.adminRegistrationsLightRetrieve(category, pageNo,
+				MAX_PAGE_SIZE), PaginatedRegistrationLightList::getPage,
+			PaginatedRegistrationLightList::getTotalPages,
+			PaginatedRegistrationLightList::getTotalCount,
+			PaginatedRegistrationLightList::getItems)) {
+			return paginator.fetchAllAsync();
 		} finally {
 			logger.debug("...registrations retrieved in {}", stopwatch);
 		}
@@ -107,13 +106,13 @@ final class SimpleCodaClient extends AbstractCodaClient {
 		throws ApiException {
 		logger.debug("Retrieving accounts...");
 		final Stopwatch stopwatch = Stopwatch.createStarted();
-		try {
-			return new Paginator<>(
-				pageNo -> commonApi.getAccounts(null, pageNo, DEFAULT_PAGE_SIZE,
-					accountId), PaginatedAccountList::getPage,
-				PaginatedAccountList::getTotalPages,
-				PaginatedAccountList::getTotalCount,
-				PaginatedAccountList::getItems).fetchAllAsync();
+		try (final var paginator = new Paginator<>(
+			pageNo -> commonApi.getAccounts(null, pageNo, MAX_PAGE_SIZE,
+				accountId), PaginatedAccountList::getPage,
+			PaginatedAccountList::getTotalPages,
+			PaginatedAccountList::getTotalCount,
+			PaginatedAccountList::getItems)) {
+			return paginator.fetchAllAsync();
 		} finally {
 			logger.debug("...registrations retrieved in {}", stopwatch);
 		}
@@ -223,12 +222,14 @@ final class SimpleCodaClient extends AbstractCodaClient {
 	public List<ScanSurfaceEntry> getScanSurface(final Integer scannerId,
 		final String textFilter, final Integer accountId) throws ApiException {
 		logger.debug("Retrieving scan surface...");
-		return new Paginator<>(
+		try (final var paginator = new Paginator<>(
 			pageNo -> consoleApi.consoleScanSurfaceRetrieve(pageNo, scannerId,
 				textFilter, accountId), PaginatedScanSurfaceEntryList::getPage,
 			PaginatedScanSurfaceEntryList::getTotalPages,
 			PaginatedScanSurfaceEntryList::getTotalCount,
-			PaginatedScanSurfaceEntryList::getItems).fetchAll();
+			PaginatedScanSurfaceEntryList::getItems)) {
+			return paginator.fetchAll();
+		}
 	}
 
 	@Override
