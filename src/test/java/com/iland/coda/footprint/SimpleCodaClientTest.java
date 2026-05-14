@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2022, iland Internet Solutions, Corp
+ * Copyright (c) 2013 - 2026, 11:11 Systems Inc.
  *
- * This software is licensed under the Terms and Conditions contained within the
- * "LICENSE.txt" file that accompanied this software. Any inquiries concerning
- * the scope or enforceability of the license should be addressed to:
+ *  This software is licensed under the Terms and Conditions contained within the
+ *  "LICENSE.txt" file that accompanied this software. Any inquiries concerning
+ *  the scope or enforceability of the license should be addressed to:
  *
- * iland Internet Solutions, Corp
- * 1235 North Loop West, Suite 800
- * Houston, TX 77008
- * USA
+ *  11:11 Systems
+ *  1235 North Loop West, Suite 800
+ *  Houston, TX 77008
+ *  USA
  *
- * http://www.iland.com
+ *  https://1111systems.com/
  */
 
 package com.iland.coda.footprint;
@@ -260,7 +260,7 @@ class SimpleCodaClientTest {
 
 	@Test
 	void testThatTechnicalReportIsPopulated() throws Throwable {
-		final Map<String,CVRMostVulnServer> technicalReports =
+		final Map<String, CVRMostVulnServer> technicalReports =
 			client.listAccounts(null)
 				.stream()
 				.map(Account::getId)
