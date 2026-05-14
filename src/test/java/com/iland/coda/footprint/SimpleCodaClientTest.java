@@ -260,7 +260,7 @@ class SimpleCodaClientTest {
 
 	@Test
 	void testThatTechnicalReportIsPopulated() throws Throwable {
-		final List<CVRMostVulnServer> technicalReport =
+		final Map<String,CVRMostVulnServer> technicalReports =
 			client.listAccounts(null)
 				.stream()
 				.map(Account::getId)
@@ -271,12 +271,12 @@ class SimpleCodaClientTest {
 				.filter(Objects::nonNull)
 				.map(CVR::getTechnicalReport)
 				.findFirst()
-				.orElse(null);
+				.orElseGet(Collections::emptyMap);
 
-		assertFalse(technicalReport == null || technicalReport.isEmpty(),
+		assertFalse(technicalReports.isEmpty(),
 			"technical reports must not be empty");
 
-		technicalReport.forEach(techReport -> {
+		technicalReports.forEach((id, techReport) -> {
 			assertNotNullOrEmpty(techReport.getHostname(), "hostname");
 			assertNotNullOrEmpty(techReport.getIp(), "IP");
 
