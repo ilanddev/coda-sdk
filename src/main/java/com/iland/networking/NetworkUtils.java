@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2023, iland Internet Solutions, Corp
+ * Copyright (c) 2013 - 2026, 11:11 Systems Inc.
  *
- * This software is licensed under the Terms and Conditions contained within the
- * "LICENSE.txt" file that accompanied this software. Any inquiries concerning
- * the scope or enforceability of the license should be addressed to:
+ *  This software is licensed under the Terms and Conditions contained within the
+ *  "LICENSE.txt" file that accompanied this software. Any inquiries concerning
+ *  the scope or enforceability of the license should be addressed to:
  *
- * iland Internet Solutions, Corp
- * 1235 North Loop West, Suite 800
- * Houston, TX 77008
- * USA
+ *  11:11 Systems
+ *  1235 North Loop West, Suite 800
+ *  Houston, TX 77008
+ *  USA
  *
- * http://www.iland.com
+ *  https://1111systems.com/
  */
 
 package com.iland.networking;
@@ -20,7 +20,6 @@ import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Predicates;
@@ -54,7 +53,7 @@ public final class NetworkUtils {
 		final List<String> addresses = targets.stream()
 			.map(String::trim)
 			.filter(Predicates.not(NetworkUtils::isCidr))
-			.collect(Collectors.toList());
+			.toList();
 
 		final List<String> cidrAddresses = targets.stream()
 			.map(String::trim)
@@ -63,7 +62,7 @@ public final class NetworkUtils {
 			.map(SubnetUtils::getInfo)
 			.map(SubnetUtils.SubnetInfo::getAllAddresses)
 			.flatMap(Stream::of)
-			.collect(Collectors.toList());
+			.toList();
 
 		return Stream.of(addresses, cidrAddresses).flatMap(List::stream);
 	}
