@@ -1,16 +1,16 @@
 /*
- * Copyright (c) 2022, iland Internet Solutions, Corp
+ * Copyright (c) 2013 - 2026, 11:11 Systems Inc.
  *
- * This software is licensed under the Terms and Conditions contained within the
- * "LICENSE.txt" file that accompanied this software. Any inquiries concerning
- * the scope or enforceability of the license should be addressed to:
+ *  This software is licensed under the Terms and Conditions contained within the
+ *  "LICENSE.txt" file that accompanied this software. Any inquiries concerning
+ *  the scope or enforceability of the license should be addressed to:
  *
- * iland Internet Solutions, Corp
- * 1235 North Loop West, Suite 800
- * Houston, TX 77008
- * USA
+ *  11:11 Systems
+ *  1235 North Loop West, Suite 800
+ *  Houston, TX 77008
+ *  USA
  *
- * http://www.iland.com
+ *  https://1111systems.com/
  */
 
 package com.iland.coda.footprint;
@@ -55,8 +55,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * {@link CodaClient}.
- *
- * @author <a href="mailto:tagspilman@1111systems.com">Tag Spilman</a>
  */
 public interface CodaClient {
 
@@ -166,6 +164,10 @@ public interface CodaClient {
 					(a, b) -> Stream.of(a, b)
 						.min(Comparator.comparing(RegistrationLight::getId))
 						.orElseThrow()));
+
+		if (registrationByLabel.containsKey(label)) {
+			return Optional.of(label).map(registrationByLabel::get);
+		}
 
 		final int length64 = 64;
 		final String label64 =
